@@ -96,7 +96,13 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           if (obj.dataId === 'headline') {
             onUpdateAssetProperty('headlineFontSize', Math.round(obj.fontSize * (obj.scaleY || 1)));
           } else if (obj.dataId === 'mainMedia') {
-            onUpdateAssetProperty('mainMediaScale', Number((obj.scaleX || 1).toFixed(2)));
+            const base = obj._baseScale || 1;
+            const currentScale = obj.scaleX || 1;
+            const normalized = Number((currentScale / base).toFixed(2));
+            onUpdateAssetProperty('mainMediaScale', Math.max(0.2, Math.min(3.5, normalized)));
+            onUpdateAssetProperty('mainMediaRotation', Math.round(obj.angle || 0));
+            onUpdateAssetProperty('mainMediaX', Math.round(obj.left));
+            onUpdateAssetProperty('mainMediaY', Math.round(obj.top));
           }
         });
       }
@@ -112,13 +118,14 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
         visibleBgLayers.forEach((layer, idx) => {
           fabric.Image.fromURL(layer.url, (bgImg: any) => {
             if (!isMounted || !canvas) return;
+            const layerScale = layer.scale || 1.0;
             bgImg.set({
               left: canvasWidth / 2,
               top: canvasHeight / 2,
               originX: 'center',
               originY: 'center',
-              scaleX: canvasWidth / (bgImg.width || 1080),
-              scaleY: canvasHeight / (bgImg.height || 1080),
+              scaleX: (canvasWidth / (bgImg.width || 1080)) * layerScale,
+              scaleY: (canvasHeight / (bgImg.height || 1080)) * layerScale,
               opacity: layer.opacity ?? 1.0,
               angle: layer.rotation || 0,
               flipX: !!layer.flipH,
@@ -156,10 +163,14 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           if (!isMounted || !canvas) return;
           const baseScale = (canvasWidth * 0.62) / Math.max(img.width || 500, img.height || 500);
           const finalScale = baseScale * (assets.mainMediaScale || 1.0);
+          img._baseScale = baseScale;
+
+          const posX = typeof assets.mainMediaX === 'number' ? assets.mainMediaX : canvasWidth * 0.5;
+          const posY = typeof assets.mainMediaY === 'number' ? assets.mainMediaY : canvasHeight * 0.52;
 
           img.set({
-            left: canvasWidth * 0.5,
-            top: canvasHeight * 0.52,
+            left: posX,
+            top: posY,
             originX: 'center',
             originY: 'center',
             scaleX: finalScale,
@@ -215,26 +226,30 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
 
       // 4. LAYER 4: EVENT CARD (SPMI) - Middle Bottom
       if (assets.showEventCard) {
+        const titleSize = assets.eventCardTitleFontSize || 13;
+        const subSize = assets.eventCardSubtitleFontSize || 18;
+
         const cardTitle = new fabric.Text(assets.eventCardTitle || 'Sistem Penjaminan Mutu Internal', {
-          fontSize: 13,
+          fontSize: titleSize,
           fontWeight: 'bold',
           fill: '#0F172A',
           fontFamily: "'Plus Jakarta Sans', sans-serif",
           originX: 'center',
-          top: -14,
+          top: -(subSize / 2) - 4,
         });
 
         const cardSub = new fabric.Text(assets.eventCardSubtitle || 'SPMI', {
-          fontSize: 18,
+          fontSize: subSize,
           fontWeight: '900',
           fill: '#0F172A',
           fontFamily: "'Plus Jakarta Sans', sans-serif",
           originX: 'center',
-          top: 4,
+          top: (titleSize / 2) - 2,
         });
 
-        const cardW = canvasWidth * 0.44;
-        const cardH = 54;
+        const textMaxW = Math.max(cardTitle.width || 120, cardSub.width || 80);
+        const cardW = Math.max(canvasWidth * 0.44, textMaxW + 36);
+        const cardH = Math.max(54, titleSize + subSize + 24);
 
         const cardBg = new fabric.Rect({
           width: cardW,
@@ -266,8 +281,9 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
 
       // 5. LAYER 5: DATE BADGE ("18 September 2026")
       if (assets.dateText) {
+        const dateSize = assets.dateFontSize || 11;
         const dateTextObj = new fabric.Text(assets.dateText, {
-          fontSize: 11,
+          fontSize: dateSize,
           fontWeight: 'bold',
           fill: assets.dateColor || '#FFFFFF',
           fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -275,14 +291,14 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           originY: 'center',
         });
 
-        const dBw = dateTextObj.width + 30;
-        const dBh = 24;
+        const dBw = (dateTextObj.width || 80) + 30;
+        const dBh = dateSize + 14;
 
         const dateBgObj = new fabric.Rect({
           width: dBw,
           height: dBh,
-          rx: 12,
-          ry: 12,
+          rx: dBh / 2,
+          ry: dBh / 2,
           fill: assets.dateBgColor || '#2563EB',
           originX: 'center',
           originY: 'center',

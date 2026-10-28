@@ -27,6 +27,7 @@ export interface BackgroundLayer {
   rotation?: number; // Rotation in degrees (0, 90, 180, 270)
   flipH?: boolean; // Flip horizontal (mirror)
   flipV?: boolean; // Flip vertical
+  scale?: number; // Zoom/scale factor (0.5 - 3.0)
 }
 
 export interface AssetInputs {
@@ -50,7 +51,9 @@ export interface AssetInputs {
 
   // Event Card / Sub-Information (Middle-Bottom)
   eventCardTitle: string; // e.g. "Sistem Penjaminan Mutu Internal"
+  eventCardTitleFontSize?: number; // Custom font size for event card title
   eventCardSubtitle: string; // e.g. "SPMI"
+  eventCardSubtitleFontSize?: number; // Custom font size for event card subtitle/code
   eventCardBorderColor: string; // e.g. "#F59E0B"
   showEventCard: boolean;
 
@@ -65,6 +68,7 @@ export interface AssetInputs {
 
   // Date Badge
   dateText: string;
+  dateFontSize?: number; // Custom font size for date badge
   dateColor: string;
   dateBgColor: string;
   dateBadgeStyle: 'pill' | 'rect' | 'glass';

@@ -92,8 +92,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div style={{ fontWeight: 800, fontSize: '14px', letterSpacing: '-0.3px', color: '#F8FAFC', lineHeight: '1.2' }}>
               VIBEGENESIS
             </div>
-            <div style={{ fontSize: '10px', color: '#64748B', fontWeight: 600 }}>
-              Reel & Poster Studio
+            <div style={{ fontSize: '10px', color: '#38BDF8', fontWeight: 700 }}>
+              Sosmed Reels & Poster Editor
             </div>
           </div>
         </div>
@@ -103,7 +103,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Preset Selector Dropdown */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 600 }}>Template:</span>
+          <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 600 }}>Template Sosmed:</span>
           <select
             value={activePresetId}
             onChange={(e) => onSelectPreset(e.target.value)}
@@ -117,7 +117,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               fontWeight: 600,
               cursor: 'pointer',
               outline: 'none',
-              maxWidth: '220px',
+              maxWidth: '240px',
             }}
           >
             {presets.map((p) => (
@@ -153,9 +153,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             color: currentFormat === 'poster_1_1' ? '#38BDF8' : '#94A3B8',
             border: currentFormat === 'poster_1_1' ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid transparent',
           }}
+          title="Format Poster Persegi 1:1 untuk Post Feed Instagram & Facebook"
         >
           <Square size={13} />
-          <span>1:1 Square</span>
+          <span>Poster 1:1</span>
         </button>
 
         <button
@@ -170,9 +171,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             color: currentFormat === 'poster_4_5' ? '#C084FC' : '#94A3B8',
             border: currentFormat === 'poster_4_5' ? '1px solid rgba(139, 92, 246, 0.35)' : '1px solid transparent',
           }}
+          title="Format Feed Portrait 4:5 Optimal Layar Handphone"
         >
           <Layout size={13} />
-          <span>4:5 Feed</span>
+          <span>Feed 4:5</span>
         </button>
 
         <button
@@ -187,9 +189,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             color: currentFormat === 'reels_9_16' ? '#F472B6' : '#94A3B8',
             border: currentFormat === 'reels_9_16' ? '1px solid rgba(236, 72, 153, 0.35)' : '1px solid transparent',
           }}
+          title="Format Video Gerak 9:16 untuk Reels Instagram, TikTok & YouTube Shorts"
         >
           <Smartphone size={13} />
-          <span>9:16 Reels</span>
+          <span>Reels 9:16 (Motion)</span>
         </button>
       </div>
 

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AssetInputs } from '@/types/design';
+import { dbSaveProject } from '@/lib/asset-database';
 import {
   Sparkles,
   Settings,
@@ -16,6 +17,8 @@ import {
   RefreshCw,
   Send,
   Zap,
+  Save,
+  Database,
 } from 'lucide-react';
 
 interface GeminiAIModalProps {
@@ -55,9 +58,12 @@ export const AI_DESIGN_RECOMMENDATIONS: AIDesignPreset[] = [
       topPillBgColor: '#05472A',
       topPillTextColor: '#86EFAC',
       eventCardTitle: 'Sistem Penjaminan Mutu Internal',
+      eventCardTitleFontSize: 13,
       eventCardSubtitle: 'SPMI',
+      eventCardSubtitleFontSize: 18,
       eventCardBorderColor: '#B45309',
       dateText: '18 September 2026',
+      dateFontSize: 11,
       dateBgColor: '#1D4ED8',
       dateColor: '#FFFFFF',
       headlineText: 'PENINGKATAN MUTU DAN KUALITAS PENDIDIKAN VOKASI',
@@ -83,9 +89,12 @@ export const AI_DESIGN_RECOMMENDATIONS: AIDesignPreset[] = [
       topPillBgColor: '#831843',
       topPillTextColor: '#FECACA',
       eventCardTitle: 'Semangat Patriotisme & Inovasi Vokasi',
+      eventCardTitleFontSize: 13,
       eventCardSubtitle: 'SMK BISA - SMK HEBAT',
+      eventCardSubtitleFontSize: 18,
       eventCardBorderColor: '#D97706',
       dateText: '10 November 2026',
+      dateFontSize: 11,
       dateBgColor: '#DC2626',
       dateColor: '#FFFFFF',
       headlineText: 'PAHLAWANKU TELADANKU, VOKASI UNGGUL INDONESIA MAJU',
@@ -95,6 +104,37 @@ export const AI_DESIGN_RECOMMENDATIONS: AIDesignPreset[] = [
       socialFooterBgColor: '#7F1D1D',
       socialFooterTextColor: '#FFFFFF',
       socialFooterBorderColor: '#F59E0B',
+      showTopPill: true,
+      showEventCard: true,
+    },
+  },
+  {
+    id: 'rec_ppdb_vokasi',
+    badge: '🎓 PPDB SISWA BARU',
+    title: 'Penerimaan Siswa Baru (PPDB) SMK Unggulan',
+    description: 'Palet biru navy dan oranye energik dengan hierarki teks jelas untuk menarik calon siswa berprestasi.',
+    category: 'Pendidikan & PPDB',
+    previewColors: ['#1E3A8A', '#93C5FD', '#EA580C', '#0284C7', '#0F172A'],
+    updates: {
+      topPillText: 'PENERIMAAN PESERTA DIDIK BARU 2026/2027',
+      topPillBgColor: '#1E3A8A',
+      topPillTextColor: '#93C5FD',
+      eventCardTitle: 'Jalur Prestasi, Zonasi & Afirmasi',
+      eventCardTitleFontSize: 13,
+      eventCardSubtitle: 'GELOMBANG 1 DIBUKA',
+      eventCardSubtitleFontSize: 18,
+      eventCardBorderColor: '#EA580C',
+      dateText: 'Pendaftaran: 1 - 30 Juni 2026',
+      dateFontSize: 11,
+      dateBgColor: '#EA580C',
+      dateColor: '#FFFFFF',
+      headlineText: 'SIAPKAN MASA DEPAN GEMILANG BERSAMA SMK PUSAT KEUNGGULAN',
+      headlineColor: '#0F172A',
+      subtitleText: 'Daftar sekarang melalui portal online resmi: ppdb.smkn1klk.sch.id',
+      subtitleColor: '#334155',
+      socialFooterBgColor: '#1E3A8A',
+      socialFooterTextColor: '#FFFFFF',
+      socialFooterBorderColor: '#EA580C',
       showTopPill: true,
       showEventCard: true,
     },
@@ -111,9 +151,12 @@ export const AI_DESIGN_RECOMMENDATIONS: AIDesignPreset[] = [
       topPillBgColor: '#4C1D95',
       topPillTextColor: '#DDD6FE',
       eventCardTitle: 'Pameran Produk Inovasi & Kewirausahaan',
+      eventCardTitleFontSize: 13,
       eventCardSubtitle: 'KREASI VOKASI',
+      eventCardSubtitleFontSize: 18,
       eventCardBorderColor: '#0D9488',
       dateText: '22 Desember 2026',
+      dateFontSize: 11,
       dateBgColor: '#6366F1',
       dateColor: '#FFFFFF',
       headlineText: 'KARYA NYATA GENERASI EMAS MENUJU INDUSTRI 4.0',
@@ -139,9 +182,12 @@ export const AI_DESIGN_RECOMMENDATIONS: AIDesignPreset[] = [
       topPillBgColor: '#0369A1',
       topPillTextColor: '#E0F2FE',
       eventCardTitle: 'Dedikasi Tanpa Batas Membangun Karakter',
+      eventCardTitleFontSize: 13,
       eventCardSubtitle: 'GURU PENGGERAK',
+      eventCardSubtitleFontSize: 18,
       eventCardBorderColor: '#15803D',
       dateText: '25 November 2026',
+      dateFontSize: 11,
       dateBgColor: '#0284C7',
       dateColor: '#FFFFFF',
       headlineText: 'GURU HEBAT, INDONESIA KUAT & BERMARTABAT',
@@ -151,6 +197,99 @@ export const AI_DESIGN_RECOMMENDATIONS: AIDesignPreset[] = [
       socialFooterBgColor: '#075985',
       socialFooterTextColor: '#FFFFFF',
       socialFooterBorderColor: '#86EFAC',
+      showTopPill: true,
+      showEventCard: true,
+    },
+  },
+  {
+    id: 'rec_seminar_ai',
+    badge: '🤖 TEKNOLOGI & DIGITAL',
+    title: 'Workshop & Seminar Nasional AI',
+    description: 'Cyber cyan dan biru gelap profesional dengan gaya teknologi masa depan untuk webinar dan workshop inovatif.',
+    category: 'Teknologi & Bisnis',
+    previewColors: ['#082F49', '#38BDF8', '#06B6D4', '#0284C7', '#0F172A'],
+    updates: {
+      topPillText: 'WORKSHOP TEKNOLOGI KECERDASAN BUATAN 2026',
+      topPillBgColor: '#082F49',
+      topPillTextColor: '#38BDF8',
+      eventCardTitle: 'Artificial Intelligence & Future Career',
+      eventCardTitleFontSize: 13,
+      eventCardSubtitle: 'KEYNOTE WORKSHOP',
+      eventCardSubtitleFontSize: 18,
+      eventCardBorderColor: '#06B6D4',
+      dateText: '14 November 2026',
+      dateFontSize: 11,
+      dateBgColor: '#38BDF8',
+      dateColor: '#0F172A',
+      headlineText: 'MENGUASAI AI UNTUK INDUSTRI KREATIF DAN REELS SOSMED',
+      headlineColor: '#FFFFFF',
+      subtitleText: 'Kupas Tuntas Otomasi Konten Digital dan Generative AI Multimodal',
+      subtitleColor: '#7DD3FC',
+      socialFooterBgColor: '#0C4A6E',
+      socialFooterTextColor: '#FFFFFF',
+      socialFooterBorderColor: '#38BDF8',
+      showTopPill: true,
+      showEventCard: true,
+    },
+  },
+  {
+    id: 'rec_esports_neon',
+    badge: '🎮 GAMING & YOUTH',
+    title: 'Turnamen E-Sport Championship Pelajar',
+    description: 'Nuansa gelap dengan aksen toxic neon lime dan ungu gaming untuk event kompetisi e-sport dan gaming sosmed.',
+    category: 'Gaming & Pemuda',
+    previewColors: ['#3B0764', '#BEF264', '#84CC16', '#2E1065', '#090514'],
+    updates: {
+      topPillText: 'PELAJAR ESPORTS CHAMPIONSHIP 2026',
+      topPillBgColor: '#3B0764',
+      topPillTextColor: '#BEF264',
+      eventCardTitle: 'Mobile Legends & Free Fire National Series',
+      eventCardTitleFontSize: 13,
+      eventCardSubtitle: 'TOTAL PRIZE 50 JUTA',
+      eventCardSubtitleFontSize: 18,
+      eventCardBorderColor: '#84CC16',
+      dateText: 'Grand Final: 5 Desember 2026',
+      dateFontSize: 11,
+      dateBgColor: '#84CC16',
+      dateColor: '#0F172A',
+      headlineText: 'BUKTIKAN KETANGGUHAN TIMMU DI ARENA JUARA',
+      headlineColor: '#FFFFFF',
+      subtitleText: 'Pendaftaran Terbuka untuk Seluruh Pelajar SMA/SMK se-Indonesia',
+      subtitleColor: '#BEF264',
+      socialFooterBgColor: '#2E1065',
+      socialFooterTextColor: '#FFFFFF',
+      socialFooterBorderColor: '#84CC16',
+      showTopPill: true,
+      showEventCard: true,
+    },
+  },
+  {
+    id: 'rec_kuliner_promo',
+    badge: '🍔 KULINER & BISNIS',
+    title: 'Festival Kuliner Nusantara & Grand Promo Resto',
+    description: 'Kombinasi amber hangat dan merah bata menggugah selera untuk promosi bisnis kuliner dan diskon makanan.',
+    category: 'Bisnis & Kuliner',
+    previewColors: ['#7C2D12', '#FEF08A', '#F59E0B', '#431407', '#EA580C'],
+    updates: {
+      topPillText: 'SPECIAL GRAND OPENING & PROMO DISKON 50%',
+      topPillBgColor: '#7C2D12',
+      topPillTextColor: '#FEF08A',
+      eventCardTitle: 'Sensasi Rasa Otentik Masakan Nusantara',
+      eventCardTitleFontSize: 13,
+      eventCardSubtitle: 'BUY 1 GET 1 FREE',
+      eventCardSubtitleFontSize: 18,
+      eventCardBorderColor: '#F59E0B',
+      dateText: 'Promo Berlaku: 1 - 15 November 2026',
+      dateFontSize: 11,
+      dateBgColor: '#FDE68A',
+      dateColor: '#7C2D12',
+      headlineText: 'KELEZATAN KULINER TRADISIONAL BERKUALITAS BINTANG LIMA',
+      headlineColor: '#FFFFFF',
+      subtitleText: 'Kunjungi outlet kami dan nikmati sajian istimewa bersama keluarga',
+      subtitleColor: '#FDE68A',
+      socialFooterBgColor: '#431407',
+      socialFooterTextColor: '#FFFFFF',
+      socialFooterBorderColor: '#F59E0B',
       showTopPill: true,
       showEventCard: true,
     },
@@ -219,6 +358,36 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
   // Multimodal Vision Critic State
   const [isAnalyzingVision, setIsAnalyzingVision] = useState<boolean>(false);
   const [visionReport, setVisionReport] = useState<any>(null);
+  const [dbNotification, setDbNotification] = useState<string>('');
+
+  const handleSaveRecToDatabase = async (rec: AIDesignPreset) => {
+    const merged = { ...assets, ...rec.updates };
+    await dbSaveProject(`AI: ${rec.title}`, 'poster_1_1', merged);
+    setDbNotification(`Preset "${rec.title}" berhasil disimpan ke Database!`);
+    setTimeout(() => setDbNotification(''), 3000);
+  };
+
+  const handleSaveGeneratedToDatabase = async () => {
+    if (!generationResult) return;
+    const merged = {
+      ...assets,
+      topPillText: generationResult.topPillText || assets.topPillText,
+      topPillBgColor: generationResult.topPillBgColor || assets.topPillBgColor,
+      topPillTextColor: generationResult.topPillTextColor || assets.topPillTextColor,
+      eventCardTitle: generationResult.eventCardTitle || assets.eventCardTitle,
+      eventCardSubtitle: generationResult.eventCardSubtitle || assets.eventCardSubtitle,
+      eventCardBorderColor: generationResult.eventCardBorderColor || assets.eventCardBorderColor,
+      dateText: generationResult.dateText || assets.dateText,
+      dateBgColor: generationResult.dateBgColor || assets.dateBgColor,
+      headlineText: generationResult.headlineText || assets.headlineText,
+      subtitleText: generationResult.subtitleText || assets.subtitleText,
+      showTopPill: true,
+      showEventCard: true,
+    };
+    await dbSaveProject(`AI: ${generationResult.topPillText || promptTopic}`, 'poster_1_1', merged);
+    setDbNotification('Hasil rancangan AI berhasil disimpan ke Database!');
+    setTimeout(() => setDbNotification(''), 3000);
+  };
 
   // Load API key & cached models from localStorage on mount
   useEffect(() => {
@@ -574,6 +743,26 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
 
         {/* Modal Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Notification toast */}
+          {dbNotification && (
+            <div
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                background: 'rgba(16, 185, 129, 0.15)',
+                border: '1px solid #10B981',
+                color: '#6EE7B7',
+                fontSize: '11.5px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <CheckCircle2 size={14} color="#10B981" />
+              <span>{dbNotification}</span>
+            </div>
+          )}
+
           {/* TAB 0: REKOMENDASI CERDAS AI */}
           {activeTab === 'recommendations' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -590,7 +779,7 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
               >
                 <Sparkles size={20} color="#38BDF8" style={{ marginTop: '2px', flexShrink: 0 }} />
                 <div style={{ fontSize: '12px', color: '#E2E8F0', lineHeight: 1.5 }}>
-                  <strong style={{ color: '#38BDF8' }}>Rekomendasi Desain AI Profesional:</strong> Pilih salah satu preset teruji di bawah untuk langsung memperbarui teks SPMI, headline, palet warna harmonis, dan setingan warna sosial media dalam 1 kali klik.
+                  <strong style={{ color: '#38BDF8' }}>Rekomendasi Desain AI Profesional:</strong> Pilih salah satu preset teruji di bawah untuk langsung memperbarui teks SPMI, headline, palet warna harmonis, dan setingan warna sosial media. Anda juga dapat menyimpannya ke database lokal.
                 </div>
               </div>
 
@@ -665,25 +854,48 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => handleApplyRecommendation(rec)}
-                      className="btn btn-primary"
-                      style={{
-                        width: '100%',
-                        padding: '8px 12px',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        background: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        boxShadow: '0 4px 14px rgba(6, 182, 212, 0.25)',
-                      }}
-                    >
-                      <Zap size={14} />
-                      <span>⚡ Terapkan Rekomendasi Ini</span>
-                    </button>
+                    {/* Dual Action: Apply AI directly or Save to Database */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '8px' }}>
+                      <button
+                        onClick={() => handleApplyRecommendation(rec)}
+                        className="btn btn-primary"
+                        style={{
+                          padding: '8px 12px',
+                          fontSize: '11.5px',
+                          fontWeight: 700,
+                          background: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          boxShadow: '0 4px 14px rgba(6, 182, 212, 0.25)',
+                        }}
+                      >
+                        <Zap size={13} />
+                        <span>⚡ Terapkan AI</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleSaveRecToDatabase(rec)}
+                        className="btn"
+                        style={{
+                          padding: '8px 10px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          background: 'rgba(252, 211, 77, 0.1)',
+                          border: '1px solid rgba(252, 211, 77, 0.3)',
+                          color: '#FCD34D',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '5px',
+                        }}
+                        title="Simpan preset rekomendasi AI ini ke database lokal"
+                      >
+                        <Save size={13} />
+                        <span>Simpan ke DB</span>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -816,15 +1028,35 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
                     gap: '12px',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10B981', fontWeight: 700, fontSize: '13px' }}>
                       <CheckCircle2 size={16} />
                       <span>Rekomendasi AI Selesai Dibuat</span>
                     </div>
-                    <button onClick={handleApplyToCanvas} className="btn btn-autofix" style={{ padding: '6px 14px', fontSize: '12px' }}>
-                      <Wand2 size={13} />
-                      <span>Terapkan ke Kanvas</span>
-                    </button>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button onClick={handleApplyToCanvas} className="btn btn-autofix" style={{ padding: '6px 12px', fontSize: '11.5px' }}>
+                        <Wand2 size={13} />
+                        <span>Terapkan ke Kanvas</span>
+                      </button>
+                      <button
+                        onClick={handleSaveGeneratedToDatabase}
+                        className="btn"
+                        style={{
+                          padding: '6px 10px',
+                          fontSize: '11px',
+                          background: 'rgba(252, 211, 77, 0.12)',
+                          border: '1px solid #FCD34D',
+                          color: '#FCD34D',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                        title="Simpan rancangan ini ke database lokal"
+                      >
+                        <Save size={12} />
+                        <span>Simpan DB</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '12px' }}>

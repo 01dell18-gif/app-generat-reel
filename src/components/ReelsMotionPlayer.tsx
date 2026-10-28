@@ -50,7 +50,17 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
 
   // Cached Image elements for smooth 60fps canvas rendering
   const bgImgRef = useRef<HTMLImageElement | null>(null);
-  const bgLayersImgsRef = useRef<{ img: HTMLImageElement; opacity: number; blendMode?: string }[]>([]);
+  const bgLayersImgsRef = useRef<
+    {
+      img: HTMLImageElement;
+      opacity: number;
+      blendMode?: string;
+      scale?: number;
+      rotation?: number;
+      flipH?: boolean;
+      flipV?: boolean;
+    }[]
+  >([]);
   const logoImgRef = useRef<HTMLImageElement | null>(null);
   const photoImgRef = useRef<HTMLImageElement | null>(null);
   const wmImgRef = useRef<HTMLImageElement | null>(null);
@@ -64,7 +74,15 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       bgLayersImgsRef.current = visibleLayers.map((layer) => {
         const img = new Image();
         img.src = layer.url;
-        return { img, opacity: layer.opacity ?? 1.0, blendMode: layer.blendMode };
+        return {
+          img,
+          opacity: layer.opacity ?? 1.0,
+          blendMode: layer.blendMode,
+          scale: layer.scale || 1.0,
+          rotation: layer.rotation || 0,
+          flipH: !!layer.flipH,
+          flipV: !!layer.flipV,
+        };
       });
     } else {
       bgLayersImgsRef.current = [];
@@ -144,14 +162,21 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       ctx.fillStyle = assets.bgColor || '#0F172A';
       ctx.fillRect(0, 0, w, h);
 
-      bgLayersImgsRef.current.forEach(({ img, opacity, blendMode }) => {
+      bgLayersImgsRef.current.forEach(({ img, opacity, blendMode, scale, rotation, flipH, flipV }) => {
         if (img && img.complete) {
           ctx.save();
           ctx.globalAlpha = opacity;
           if (blendMode && blendMode !== 'normal') {
             ctx.globalCompositeOperation = blendMode as GlobalCompositeOperation;
           }
-          ctx.drawImage(img, 0, 0, w, h);
+          ctx.translate(w / 2, h / 2);
+          if (rotation) {
+            ctx.rotate((rotation * Math.PI) / 180);
+          }
+          const sx = (flipH ? -1 : 1) * (scale || 1.0);
+          const sy = (flipV ? -1 : 1) * (scale || 1.0);
+          ctx.scale(sx, sy);
+          ctx.drawImage(img, -w / 2, -h / 2, w, h);
           ctx.restore();
         }
       });
@@ -180,7 +205,14 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       const flipH = assets.mainMediaFlipH ? -1 : 1;
       const flipV = assets.mainMediaFlipV ? -1 : 1;
 
-      ctx.translate(w / 2, h * 0.50 + floatY);
+      // Coordinate normalization from 580 baseline
+      const scaleFactor = w / 580;
+      const defaultX = w / 2;
+      const defaultY = h * 0.50 + floatY;
+      const posX = typeof assets.mainMediaX === 'number' ? assets.mainMediaX * scaleFactor : defaultX;
+      const posY = typeof assets.mainMediaY === 'number' ? (assets.mainMediaY * (h / 580) + floatY) : defaultY;
+
+      ctx.translate(posX, posY);
       if (rotAngle !== 0) {
         ctx.rotate(rotAngle);
       }
@@ -216,8 +248,10 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       ctx.save();
       ctx.globalAlpha = cardProgress;
 
-      const cW = w * 0.68;
-      const cH = 80;
+      const titleSize = Math.round((assets.eventCardTitleFontSize || 13) * 1.35);
+      const subSize = Math.round((assets.eventCardSubtitleFontSize || 18) * 1.45);
+      const cH = Math.max(76, titleSize + subSize + 34);
+      const cW = Math.max(w * 0.68, 300);
       const cX = w / 2 - cW / 2;
 
       // Card Background
@@ -232,12 +266,12 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       // Card Title
       ctx.fillStyle = '#0F172A';
       ctx.textAlign = 'center';
-      ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText(assets.eventCardTitle || 'Sistem Penjaminan Mutu Internal', w / 2, cardY + 34);
+      ctx.font = `bold ${titleSize}px "Plus Jakarta Sans", sans-serif`;
+      ctx.fillText(assets.eventCardTitle || 'Sistem Penjaminan Mutu Internal', w / 2, cardY + titleSize + 16);
 
       // Card Subtitle (SPMI)
-      ctx.font = '900 26px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText(assets.eventCardSubtitle || 'SPMI', w / 2, cardY + 65);
+      ctx.font = `900 ${subSize}px "Plus Jakarta Sans", sans-serif`;
+      ctx.fillText(assets.eventCardSubtitle || 'SPMI', w / 2, cardY + titleSize + subSize + 24);
 
       ctx.restore();
     }
@@ -250,10 +284,11 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       ctx.save();
       ctx.globalAlpha = dProgress;
 
-      ctx.font = 'bold 17px "Plus Jakarta Sans", sans-serif';
+      const dateSize = Math.round((assets.dateFontSize || 11) * 1.35);
+      ctx.font = `bold ${dateSize}px "Plus Jakarta Sans", sans-serif`;
       const dMetrics = ctx.measureText(assets.dateText);
       const dbW = dMetrics.width + 40;
-      const dbH = 36;
+      const dbH = dateSize + 20;
       const dbX = w / 2 - dbW / 2;
 
       ctx.fillStyle = assets.dateBgColor || '#2563EB';

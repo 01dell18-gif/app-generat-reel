@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { AssetInputs, BackgroundLayer } from '@/types/design';
-import { PRESET_BACKGROUND_LIBRARY, TEMPLATE_BG_SMK } from '@/lib/preset-templates';
+import { PRESET_BACKGROUND_LIBRARY, TEMPLATE_BG_SMK, PRESET_TEMPLATES } from '@/lib/preset-templates';
 import {
   dbSaveAsset,
   dbGetAssets,
@@ -171,10 +171,21 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
   // Load database items
   const refreshDatabase = async () => {
     try {
-      const [allAssets, allProjects] = await Promise.all([
+      let [allAssets, allProjects] = await Promise.all([
         dbGetAssets(),
         dbGetProjects(),
       ]);
+
+      // Seed database with default master project if fresh/empty
+      if (allProjects.length === 0 && PRESET_TEMPLATES.length > 0) {
+        await dbSaveProject(
+          'SMK N 1 Klungkung (Default Master)',
+          'poster_1_1',
+          PRESET_TEMPLATES[0].data
+        );
+        allProjects = await dbGetProjects();
+      }
+
       setDbAssets(allAssets);
       setDbProjects(allProjects);
     } catch (e) {
@@ -336,6 +347,21 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
       });
     }
     setDbStatusMsg(`Rekomendasi "${rec.title}" diterapkan!`);
+    setTimeout(() => setDbStatusMsg(''), 3000);
+  };
+
+  const handleSaveRecToDatabase = async (rec: AIDesignPreset) => {
+    const mergedAssets: AssetInputs = {
+      ...assets,
+      ...rec.updates,
+    };
+    await dbSaveProject(
+      `AI: ${rec.title} (${new Date().toLocaleDateString()})`,
+      'poster_1_1',
+      mergedAssets
+    );
+    refreshDatabase();
+    setDbStatusMsg(`Rekomendasi "${rec.title}" berhasil disimpan ke Database!`);
     setTimeout(() => setDbStatusMsg(''), 3000);
   };
 
@@ -520,15 +546,48 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
 
               {assets.mainMediaUrl && (
                 <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {/* Scale Slider */}
+                  {/* Scale & Zoom Slider */}
                   <div>
-                    <label className="label-title">
-                      <span>Ukuran Foto ({assets.mainMediaScale || 1.0}x)</span>
-                    </label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <label className="label-title" style={{ margin: 0 }}>
+                        <span>Ukuran Foto (Perbesar / Perkecil)</span>
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <button
+                          type="button"
+                          onClick={() => onUpdateProperty('mainMediaScale', Math.max(0.2, Number(((assets.mainMediaScale || 1.0) - 0.1).toFixed(2))))}
+                          className="btn btn-secondary"
+                          style={{ padding: '2px 7px', fontSize: '11px', fontWeight: 800 }}
+                          title="Perkecil (-10%)"
+                        >
+                          -
+                        </button>
+                        <span style={{ fontSize: '11px', fontWeight: 800, color: '#38BDF8', minWidth: '42px', textAlign: 'center' }}>
+                          {Number(assets.mainMediaScale || 1.0).toFixed(2)}x
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => onUpdateProperty('mainMediaScale', Math.min(3.0, Number(((assets.mainMediaScale || 1.0) + 0.1).toFixed(2))))}
+                          className="btn btn-secondary"
+                          style={{ padding: '2px 7px', fontSize: '11px', fontWeight: 800 }}
+                          title="Perbesar (+10%)"
+                        >
+                          +
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onUpdateProperty('mainMediaScale', 1.0)}
+                          style={{ background: 'none', border: 'none', color: '#94A3B8', fontSize: '9px', cursor: 'pointer', padding: '0 4px' }}
+                          title="Reset ke Ukuran Asli 1.0x"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    </div>
                     <input
                       type="range"
-                      min="0.5"
-                      max="2.0"
+                      min="0.2"
+                      max="3.0"
                       step="0.05"
                       value={assets.mainMediaScale || 1.0}
                       onChange={(e) => onUpdateProperty('mainMediaScale', parseFloat(e.target.value))}
@@ -885,6 +944,22 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                             <option value="lighten">Lighten</option>
                           </select>
                         </div>
+                      </div>
+
+                      {/* Scale / Zoom Control for Layer */}
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#94A3B8', marginBottom: '2px' }}>
+                          <span>Ukuran / Skala Background</span>
+                          <span style={{ color: '#C084FC', fontWeight: 700 }}>{Number(layer.scale || 1.0).toFixed(2)}x</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0.5"
+                          max="3.0"
+                          step="0.05"
+                          value={layer.scale || 1.0}
+                          onChange={(e) => handleUpdateBackgroundLayer(idx, { scale: parseFloat(e.target.value) })}
+                        />
                       </div>
 
                       {/* Transform Controls for Layer: Rotate & Flip */}
@@ -1465,7 +1540,7 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
         {activeTab === 'badge' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ fontSize: '11px', color: '#94A3B8', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '6px' }}>
-              Kontrol teks 2 untuk informasi di bagian bawah kanvas: Kartu Kegiatan SPMI & Lencana Tanggal Pelaksanaan.
+              Kontrol teks 2 untuk informasi di bagian bawah kanvas: Kartu Kegiatan SPMI & Lencana Tanggal Pelaksanaan beserta pengaturan ukuran font.
             </div>
 
             {/* 1. Kartu Kegiatan Bawah (SPMI) */}
@@ -1482,6 +1557,7 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                 />
               </div>
 
+              {/* Event Card Title & Font Size */}
               <div style={{ marginBottom: '10px' }}>
                 <label className="label-title">Nama Kegiatan</label>
                 <input
@@ -1490,9 +1566,23 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                   onChange={(e) => onUpdateProperty('eventCardTitle', e.target.value)}
                   className="input-control"
                   placeholder="Sistem Penjaminan Mutu Internal"
+                  style={{ marginBottom: '6px' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
+                  <span>Ukuran Tulisan Nama Kegiatan</span>
+                  <span style={{ fontWeight: 700, color: '#FCD34D' }}>{assets.eventCardTitleFontSize || 13}px</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="24"
+                  value={assets.eventCardTitleFontSize || 13}
+                  onChange={(e) => onUpdateProperty('eventCardTitleFontSize', parseInt(e.target.value))}
+                  style={{ width: '100%' }}
                 />
               </div>
 
+              {/* Event Card Subtitle & Font Size */}
               <div style={{ marginBottom: '10px' }}>
                 <label className="label-title">Singkatan / Kode Kegiatan</label>
                 <input
@@ -1501,6 +1591,19 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                   onChange={(e) => onUpdateProperty('eventCardSubtitle', e.target.value)}
                   className="input-control"
                   placeholder="SPMI"
+                  style={{ marginBottom: '6px' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
+                  <span>Ukuran Tulisan Singkatan / Kode</span>
+                  <span style={{ fontWeight: 700, color: '#FCD34D' }}>{assets.eventCardSubtitleFontSize || 18}px</span>
+                </div>
+                <input
+                  type="range"
+                  min="12"
+                  max="36"
+                  value={assets.eventCardSubtitleFontSize || 18}
+                  onChange={(e) => onUpdateProperty('eventCardSubtitleFontSize', parseInt(e.target.value))}
+                  style={{ width: '100%' }}
                 />
               </div>
 
@@ -1526,6 +1629,19 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                   onChange={(e) => onUpdateProperty('dateText', e.target.value)}
                   className="input-control"
                   placeholder="18 September 2026"
+                  style={{ marginBottom: '6px' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
+                  <span>Ukuran Tulisan Tanggal</span>
+                  <span style={{ fontWeight: 700, color: '#38BDF8' }}>{assets.dateFontSize || 11}px</span>
+                </div>
+                <input
+                  type="range"
+                  min="9"
+                  max="22"
+                  value={assets.dateFontSize || 11}
+                  onChange={(e) => onUpdateProperty('dateFontSize', parseInt(e.target.value))}
+                  style={{ width: '100%' }}
                 />
               </div>
 
@@ -1752,7 +1868,25 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                   <Zap size={14} />
                   <span>Rekomendasi Cerdas AI</span>
                 </span>
-                <span style={{ fontSize: '10px', color: '#94A3B8', fontWeight: 600 }}>1-Klik Terapkan</span>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('database')}
+                  className="btn"
+                  style={{
+                    fontSize: '9.5px',
+                    color: '#FCD34D',
+                    padding: '3px 8px',
+                    background: 'rgba(252, 211, 77, 0.1)',
+                    border: '1px solid rgba(252, 211, 77, 0.25)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                  title="Lihat atau gunakan isian yang tersimpan di Database"
+                >
+                  <Database size={11} />
+                  <span>Isian Database</span>
+                </button>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -1815,25 +1949,50 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                       ))}
                     </div>
 
-                    <button
-                      onClick={() => handleApplyRecInPanel(rec)}
-                      className="btn btn-secondary"
-                      style={{
-                        padding: '6px 10px',
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        background: 'rgba(56, 189, 248, 0.1)',
-                        borderColor: 'rgba(56, 189, 248, 0.3)',
-                        color: '#38BDF8',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                      }}
-                    >
-                      <Check size={12} />
-                      <span>Terapkan Rekomendasi Ini</span>
-                    </button>
+                    {/* Dual Action: Apply AI directly or Save to Database */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: '6px' }}>
+                      <button
+                        onClick={() => handleApplyRecInPanel(rec)}
+                        className="btn btn-secondary"
+                        style={{
+                          padding: '6px 8px',
+                          fontSize: '10.5px',
+                          fontWeight: 700,
+                          background: 'rgba(56, 189, 248, 0.1)',
+                          borderColor: 'rgba(56, 189, 248, 0.3)',
+                          color: '#38BDF8',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '5px',
+                        }}
+                        title="Terapkan konfigurasi AI langsung ke kanvas"
+                      >
+                        <Check size={12} />
+                        <span>Terapkan AI</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleSaveRecToDatabase(rec)}
+                        className="btn"
+                        style={{
+                          padding: '6px 8px',
+                          fontSize: '10px',
+                          fontWeight: 600,
+                          background: 'rgba(252, 211, 77, 0.1)',
+                          borderColor: 'rgba(252, 211, 77, 0.25)',
+                          color: '#FCD34D',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px',
+                        }}
+                        title="Simpan preset rekomendasi AI ini ke database lokal"
+                      >
+                        <Save size={11} />
+                        <span>Ke Database</span>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
