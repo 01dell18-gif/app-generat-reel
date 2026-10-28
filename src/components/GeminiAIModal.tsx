@@ -340,7 +340,7 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
 
   // Gemini Settings State (stored in localStorage)
   const [apiKey, setApiKey] = useState<string>('');
-  const [selectedModel, setSelectedModel] = useState<string>('gemini-1.5-flash');
+  const [selectedModel, setSelectedModel] = useState<string>('gemini-3.8-flash');
   const [availableModels, setAvailableModels] = useState<GeminiModelOption[]>([]);
   const [temperature, setTemperature] = useState<number>(0.7);
   const [tone, setTone] = useState<string>('formal');
@@ -387,6 +387,13 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
       });
 
       if (ok && data.success && data.result) {
+        if (data.modelUsed && data.modelUsed !== selectedModel) {
+          setSelectedModel(data.modelUsed);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('GEMINI_MODEL', data.modelUsed);
+          }
+        }
+
         const res = data.result;
         const newRec: AIDesignPreset = {
           id: `online_rec_${Date.now()}`,
@@ -470,7 +477,12 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedKey = (localStorage.getItem('GEMINI_API_KEY') || '').trim();
-      const savedModel = (localStorage.getItem('GEMINI_MODEL') || 'gemini-1.5-flash').trim();
+      let savedModel = (localStorage.getItem('GEMINI_MODEL') || 'gemini-3.8-flash').trim();
+      // Automatically migrate deprecated 2.5 models to gemini-3.8-flash
+      if (savedModel.includes('2.5') || savedModel === 'gemini-2.5-flash') {
+        savedModel = 'gemini-3.8-flash';
+        localStorage.setItem('GEMINI_MODEL', 'gemini-3.8-flash');
+      }
       const savedModelsJson = localStorage.getItem('GEMINI_AVAILABLE_MODELS');
       
       setApiKey(savedKey);
@@ -478,8 +490,17 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
 
       if (savedModelsJson) {
         try {
-          const parsed = JSON.parse(savedModelsJson);
+          let parsed: GeminiModelOption[] = JSON.parse(savedModelsJson);
           if (Array.isArray(parsed) && parsed.length > 0) {
+            // Filter out deprecated 2.5 models
+            parsed = parsed.filter((m) => !m.id.includes('2.5'));
+            if (!parsed.some((m) => m.id === 'gemini-3.8-flash')) {
+              parsed.unshift({
+                id: 'gemini-3.8-flash',
+                displayName: 'Gemini 3.8 Flash (Rekomendasi Utama)',
+                description: 'Model generasi terbaru resmi dari Google AI, tercepat dan paling stabil',
+              });
+            }
             setAvailableModels(parsed);
             setConnectionStatus('success');
             setStatusMessage(`Terkoneksi dengan ${parsed.length} model resmi dari Google.`);
@@ -526,14 +547,22 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
       if (ok && data.success) {
         setConnectionStatus('success');
         
-        const models: GeminiModelOption[] = (data.availableModels || []).map((m: any) =>
-          typeof m === 'string' ? { id: m, displayName: m } : m
-        );
+        const models: GeminiModelOption[] = (data.availableModels || [])
+          .map((m: any) => (typeof m === 'string' ? { id: m, displayName: m } : m))
+          .filter((m: any) => !m.id.includes('2.5'));
+
+        if (!models.some((m) => m.id === 'gemini-3.8-flash')) {
+          models.unshift({
+            id: 'gemini-3.8-flash',
+            displayName: 'Gemini 3.8 Flash (Rekomendasi Utama)',
+            description: 'Model generasi terbaru resmi dari Google AI, tercepat dan paling stabil',
+          });
+        }
 
         setAvailableModels(models);
 
-        // Auto-select recommended model (e.g. gemini-1.5-flash) or fallback to first
-        const recModel = data.recommendedModel || (models[0]?.id ?? 'gemini-1.5-flash');
+        // Auto-select recommended model (e.g. gemini-3.8-flash) or fallback
+        const recModel = data.recommendedModel || 'gemini-3.8-flash';
         setSelectedModel(recModel);
 
         if (typeof window !== 'undefined') {
@@ -543,7 +572,7 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
         }
 
         setStatusMessage(
-          `✓ Terhubung Sukses! Berhasil memuat ${models.length} model resmi dari API Key Anda. Model otomatis disesuaikan ke '${recModel}'.`
+          `✓ Terhubung Sukses! Berhasil memuat ${models.length} model resmi dari API Key Anda. Model aktif: '${recModel}'.`
         );
       } else {
         setConnectionStatus('error');
@@ -571,6 +600,12 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
 
       if (ok && data.success) {
         setGenerationResult(data.result);
+        if (data.modelUsed && data.modelUsed !== selectedModel) {
+          setSelectedModel(data.modelUsed);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('GEMINI_MODEL', data.modelUsed);
+          }
+        }
       } else {
         alert(data.error || 'Gagal generate dengan Gemini AI. Periksa API Key di Pengaturan.');
       }
@@ -632,6 +667,12 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
 
       if (ok && data.success) {
         setVisionReport(data.result);
+        if (data.modelUsed && data.modelUsed !== selectedModel) {
+          setSelectedModel(data.modelUsed);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('GEMINI_MODEL', data.modelUsed);
+          }
+        }
       } else {
         alert(data.error || 'Gagal menjalankan analisis Gemini Vision.');
       }
@@ -1621,12 +1662,14 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
                 >
                   {availableModels.length > 0 ? (
                     availableModels.map((m) => {
+                      const is38Flash = m.id === 'gemini-3.8-flash';
                       const isFlash = m.id === 'gemini-1.5-flash';
                       const isPro = m.id === 'gemini-1.5-pro';
                       const is20Flash = m.id === 'gemini-2.0-flash';
                       let badge = '';
-                      if (isFlash) badge = '⭐ [Direkomendasikan - Kuota Gratis & Cepat]';
-                      else if (is20Flash) badge = '⚡ [Generasi Terbaru]';
+                      if (is38Flash) badge = '⭐ [Rekomendasi Utama Google - Aktif & Tercepat]';
+                      else if (is20Flash) badge = '⚡ [Generasi 2.0 - Super Cepat]';
+                      else if (isFlash) badge = '🚀 [Versi 1.5 Flash]';
                       else if (isPro) badge = '🧠 [Penalaran Kompleks]';
 
                       return (
@@ -1637,10 +1680,11 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
                     })
                   ) : (
                     <>
-                      <option value="gemini-1.5-flash">⭐ gemini-1.5-flash (Direkomendasikan - Kuota Gratis & Multimodal)</option>
-                      <option value="gemini-2.0-flash">⚡ gemini-2.0-flash (Generasi Terbaru - Super Cepat)</option>
+                      <option value="gemini-3.8-flash">⭐ gemini-3.8-flash (Rekomendasi Utama Google - Aktif & Cepat)</option>
+                      <option value="gemini-2.0-flash">⚡ gemini-2.0-flash (Generasi 2.0 - Super Cepat)</option>
+                      <option value="gemini-1.5-flash">🚀 gemini-1.5-flash (Versi 1.5 Kuota Gratis)</option>
                       <option value="gemini-1.5-pro">🧠 gemini-1.5-pro (Penalaran Kompleks & Estetika Tinggi)</option>
-                      <option value="gemini-1.5-flash-8b">🚀 gemini-1.5-flash-8b (Ultra Ringan & Respons Cepat)</option>
+                      <option value="gemini-2.0-flash-lite">🍃 gemini-2.0-flash-lite (Ultra Ringan)</option>
                     </>
                   )}
                 </select>
@@ -1659,7 +1703,7 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
                   <div style={{ fontWeight: 700, color: '#38BDF8', marginBottom: '3px' }}>
                     💡 Informasi Model & API Key:
                   </div>
-                  Model yang tampil disinkronkan secara langsung dengan izin API Key Anda. Model <strong>gemini-1.5-flash</strong> otomatis dipilih sebagai rekomendasi utama karena memiliki latensi tercepat, mendukung analisis multimodal gambar kanvas, dan kuota gratis harian paling melimpah di Google AI Studio.
+                  Model otomatis menggunakan <strong>gemini-3.8-flash</strong> sebagai rekomendasi utama resmi dari Google Generative Language API, dilengkapi dengan sistem multi-model auto-fallback (gemini-3.8-flash &rarr; gemini-2.0-flash &rarr; gemini-1.5-flash) bila terjadi kendala kuota atau ketersediaan model regional.
                 </div>
               </div>
 

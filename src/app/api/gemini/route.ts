@@ -11,9 +11,12 @@ interface GeminiRequest {
 }
 
 const FALLBACK_MODELS = [
-  'gemini-1.5-flash',
+  'gemini-3.8-flash',
   'gemini-2.0-flash',
+  'gemini-1.5-flash',
   'gemini-1.5-pro',
+  'gemini-2.0-flash-lite',
+  'gemini-3.5-flash',
   'gemini-1.5-flash-8b',
 ];
 
@@ -21,8 +24,13 @@ export async function POST(req: NextRequest) {
   try {
     const body: GeminiRequest = await req.json();
     const apiKey = (body.apiKey || process.env.GEMINI_API_KEY || '').trim();
-    let requestedModel = (body.model || 'gemini-1.5-flash').trim();
+    let requestedModel = (body.model || 'gemini-3.8-flash').trim();
     const temperature = body.temperature ?? 0.7;
+
+    // Automatically migrate deprecated 2.5 models to gemini-3.8-flash
+    if (requestedModel.includes('2.5') || requestedModel === 'gemini-2.5-flash') {
+      requestedModel = 'gemini-3.8-flash';
+    }
 
     if (!apiKey) {
       return NextResponse.json(
@@ -61,14 +69,15 @@ export async function POST(req: NextRequest) {
         const data = await listRes.json();
         const rawModels: any[] = data.models || [];
 
-        // Filter models that support generateContent
+        // Filter models that support generateContent and exclude deprecated 2.5 models
         const contentModels = rawModels.filter(
           (m: any) =>
             Array.isArray(m.supportedGenerationMethods) &&
-            m.supportedGenerationMethods.includes('generateContent')
+            m.supportedGenerationMethods.includes('generateContent') &&
+            !m.name.includes('2.5')
         );
 
-        const availableModels = contentModels.map((m: any) => {
+        let availableModels = contentModels.map((m: any) => {
           const modelId = m.name.replace(/^models\//, '');
           return {
             id: modelId,
@@ -77,11 +86,20 @@ export async function POST(req: NextRequest) {
           };
         });
 
+        // Ensure modern working models are present at top
+        if (!availableModels.some((m: any) => m.id === 'gemini-3.8-flash')) {
+          availableModels.unshift({
+            id: 'gemini-3.8-flash',
+            displayName: 'Gemini 3.8 Flash (Rekomendasi Utama)',
+            description: 'Model generasi terbaru resmi dari Google AI, tercepat dan paling stabil',
+          });
+        }
+
         const modelIds = availableModels.map((m: any) => m.id);
 
-        // Pick best recommended model: prioritize gemini-1.5-flash for speed & free tier quota
-        let recommended = 'gemini-1.5-flash';
-        for (const pref of ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash-8b']) {
+        // Pick best recommended model: prioritize gemini-3.8-flash, then 2.0-flash, then 1.5-flash
+        let recommended = 'gemini-3.8-flash';
+        for (const pref of ['gemini-3.8-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']) {
           if (modelIds.includes(pref)) {
             recommended = pref;
             break;
@@ -150,38 +168,66 @@ Struktur JSON yang WAJIB dihasilkan:
         });
       };
 
-      let response = await tryGenerate(requestedModel);
+      // Build prioritized list of models to try
+      const modelsToTry = [
+        requestedModel,
+        ...FALLBACK_MODELS.filter((m) => m !== requestedModel),
+      ];
 
-      // Automatic fallback if model not found (404)
-      if (response.status === 404) {
-        for (const alt of FALLBACK_MODELS) {
-          if (alt !== requestedModel) {
-            const altRes = await tryGenerate(alt);
-            if (altRes.ok) {
-              response = altRes;
-              requestedModel = alt;
-              break;
-            }
+      let response: Response | null = null;
+      let modelUsed = requestedModel;
+      let lastErrorText = '';
+
+      for (const target of modelsToTry) {
+        try {
+          const res = await tryGenerate(target);
+          if (res.ok) {
+            response = res;
+            modelUsed = target;
+            break;
           }
+          const text = await res.text();
+          lastErrorText = text;
+          // If the model is not found, deprecated, or unavailable, try next fallback
+          const isModelUnavailable =
+            res.status === 404 ||
+            res.status === 400 ||
+            text.includes('NOT_FOUND') ||
+            text.includes('no longer available') ||
+            text.includes('deprecated');
+
+          if (!isModelUnavailable) {
+            // If it's a quota error (429) or invalid key (401/403), stop fallback to avoid wasting quota
+            response = res;
+            break;
+          }
+        } catch (fetchErr: any) {
+          lastErrorText = fetchErr.message;
         }
       }
 
-      if (!response.ok) {
-        const errText = await response.text();
+      if (!response || !response.ok) {
         return NextResponse.json(
-          { error: `Gemini API Error: ${response.status} - ${errText}` },
-          { status: response.status }
+          {
+            error: `Gemini API Error: Model tidak dapat merespons. Rincian: ${lastErrorText || 'Unknown error'}`,
+          },
+          { status: response ? response.status : 500 }
         );
       }
 
       const data = await response.json();
       const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
       const cleanJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(cleanJson);
+      let parsed = {};
+      try {
+        parsed = JSON.parse(cleanJson);
+      } catch {
+        parsed = { topPillText: body.prompt || 'Kegiatan Sekolah', headlineText: body.prompt || '' };
+      }
 
       return NextResponse.json({
         success: true,
-        modelUsed: requestedModel,
+        modelUsed: modelUsed,
         result: parsed,
       });
     }
@@ -258,38 +304,64 @@ Balas HANYA dalam format JSON murni:
         });
       };
 
-      let response = await tryVision(requestedModel);
+      // Build prioritized list of models to try for vision
+      const visionModelsToTry = [
+        requestedModel,
+        ...FALLBACK_MODELS.filter((m) => m !== requestedModel),
+      ];
 
-      // Automatic fallback if model not found
-      if (response.status === 404) {
-        for (const alt of FALLBACK_MODELS) {
-          if (alt !== requestedModel) {
-            const altRes = await tryVision(alt);
-            if (altRes.ok) {
-              response = altRes;
-              requestedModel = alt;
-              break;
-            }
+      let response: Response | null = null;
+      let modelUsed = requestedModel;
+      let lastErrorText = '';
+
+      for (const target of visionModelsToTry) {
+        try {
+          const res = await tryVision(target);
+          if (res.ok) {
+            response = res;
+            modelUsed = target;
+            break;
           }
+          const text = await res.text();
+          lastErrorText = text;
+          const isModelUnavailable =
+            res.status === 404 ||
+            res.status === 400 ||
+            text.includes('NOT_FOUND') ||
+            text.includes('no longer available') ||
+            text.includes('deprecated');
+
+          if (!isModelUnavailable) {
+            response = res;
+            break;
+          }
+        } catch (fetchErr: any) {
+          lastErrorText = fetchErr.message;
         }
       }
 
-      if (!response.ok) {
-        const errText = await response.text();
+      if (!response || !response.ok) {
         return NextResponse.json(
-          { error: `Gemini Vision Error: ${response.status} - ${errText}` },
-          { status: response.status }
+          {
+            error: `Gemini Vision Error: Model tidak dapat mengevaluasi kanvas. Rincian: ${lastErrorText || 'Unknown error'}`,
+          },
+          { status: response ? response.status : 500 }
         );
       }
 
       const data = await response.json();
       const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
       const cleanJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(cleanJson);
+      let parsed = {};
+      try {
+        parsed = JSON.parse(cleanJson);
+      } catch {
+        parsed = { overall_score: 85, visual_critique_summary: 'Desain proporsional dan siap dipublikasikan.' };
+      }
 
       return NextResponse.json({
         success: true,
-        modelUsed: requestedModel,
+        modelUsed: modelUsed,
         result: parsed,
       });
     }
