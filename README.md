@@ -100,7 +100,9 @@ npm install
 npm run dev
 ```
 
-Akses platform melalui peramban: **`http://localhost:3000`**
+Akses platform melalui peramban:
+- **Komputer Lokal**: **`http://localhost:3030`**
+- **Perangkat Lain (HP, Tablet, Laptop di jaringan Wi-Fi/LAN yang sama)**: **`http://<IP-KOMPUTER>:3030`** (misal: `http://10.10.10.159:3030`)
 
 ### 2. Menjalankan Python AI Microservice Bridge (Opsional)
 
