@@ -55,6 +55,23 @@ Platform generasi desain multi-format terprogram untuk media sosial dengan mesin
   - *Post Overlay*: Header akun, tombol like, comment, share, bookmark, dan caption.
   - *Reels Overlay*: Status bar atas, kolom aksi kanan (heart count, comment, share, audio disc spinning), dan deskripsi bawah.
 
+### 6. Rotasi & Mirror (Flip) Media Terunggah
+
+- **Rotasi Presisi**: Tombol cepat putar $-90^\circ$ / $+90^\circ$ dan *slider* bebas derajat ($-180^\circ$ s/d $+180^\circ$) untuk foto subjek utama dan layer latar belakang.
+- **Mirroring / Flip**: Balik horizontal (Flip H) dan balik vertikal (Flip V) instan pada kanvas poster maupun animasi gerak Reels 9:16.
+- **Multi-Background Layers**: Manajemen hingga 4 layer gambar latar dengan kontrol rotasi, flip, opacity, dan urutan layer (*z-index*).
+
+### 7. Rekomendasi Cerdas Desain AI & Studio Google Gemini
+
+- **Rekomendasi Cerdas 1-Klik**: Preset teruji untuk Resmi SPMI, Semangat Vokasi & Hari Pahlawan, Dies Natalis & Prestasi Unggulan, serta Hari Guru & Karakter Bangsa.
+- **Koneksi Resmi Model Gemini**: Sinkronisasi dinamis daftar model (`gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-2.0-flash`, dll.) langsung dengan kuota API Key pengguna Google AI Studio.
+- **Gemini Vision Critic**: Pemindaian tangkapan kanvas multimodal untuk evaluasi komposisi visual.
+
+### 8. Kustomisasi Lengkap Warna Footer Media Sosial
+
+- **Palet Terintegrasi**: Pengaturan warna latar footer bar (*pill*), warna teks dan ikon SVG vektor (Instagram, Website, Facebook, TikTok), serta warna garis tepi (*border*).
+- **Penyesuaian Adaptif**: Sinkronisasi otomatis di kanvas statis 1:1, 4:5, maupun video bergerak Reels 9:16.
+
 ---
 
 ## 🏗️ Tumpukan Teknologi

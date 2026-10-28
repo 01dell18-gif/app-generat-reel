@@ -11,36 +11,38 @@ export function generateSocialFooterSvg(
   handles: SocialHandles,
   width: number = 1000,
   height: number = 56,
-  bgColor: string = '#1D4ED8'
+  bgColor: string = '#1D4ED8',
+  textColor: string = '#FFFFFF',
+  borderColor: string = 'rgba(255, 255, 255, 0.22)'
 ): string {
   const ig = (handles?.instagram || 'smkn1klk').trim();
   const web = (handles?.website || 'smkn1klk.sch.id').trim();
   const fb = (handles?.facebook || 'SMK Negeri 1 Klungkung').trim();
   const tt = (handles?.tiktok || 'smkn1klungkung').trim();
 
-  // SVG Icons
+  // SVG Icons with dynamic colors
   const igIcon = `
-    <rect x="0" y="0" width="20" height="20" rx="5.5" fill="white"/>
+    <rect x="0" y="0" width="20" height="20" rx="5.5" fill="${textColor}"/>
     <rect x="2" y="2" width="16" height="16" rx="4.5" fill="${bgColor}"/>
-    <circle cx="10" cy="10" r="4" stroke="white" stroke-width="1.8" fill="none"/>
-    <circle cx="14" cy="6" r="1" fill="white"/>
+    <circle cx="10" cy="10" r="4" stroke="${textColor}" stroke-width="1.8" fill="none"/>
+    <circle cx="14" cy="6" r="1" fill="${textColor}"/>
   `;
 
   const webIcon = `
-    <circle cx="10" cy="10" r="9" stroke="white" stroke-width="1.8" fill="none"/>
-    <ellipse cx="10" cy="10" rx="4" ry="9" stroke="white" stroke-width="1.6" fill="none"/>
-    <line x1="1" y1="10" x2="19" y2="10" stroke="white" stroke-width="1.6"/>
-    <line x1="2.5" y1="5.5" x2="17.5" y2="5.5" stroke="white" stroke-width="1.3"/>
-    <line x1="2.5" y1="14.5" x2="17.5" y2="14.5" stroke="white" stroke-width="1.3"/>
+    <circle cx="10" cy="10" r="9" stroke="${textColor}" stroke-width="1.8" fill="none"/>
+    <ellipse cx="10" cy="10" rx="4" ry="9" stroke="${textColor}" stroke-width="1.6" fill="none"/>
+    <line x1="1" y1="10" x2="19" y2="10" stroke="${textColor}" stroke-width="1.6"/>
+    <line x1="2.5" y1="5.5" x2="17.5" y2="5.5" stroke="${textColor}" stroke-width="1.3"/>
+    <line x1="2.5" y1="14.5" x2="17.5" y2="14.5" stroke="${textColor}" stroke-width="1.3"/>
   `;
 
   const fbIcon = `
-    <circle cx="10" cy="10" r="9" fill="white"/>
+    <circle cx="10" cy="10" r="9" fill="${textColor}"/>
     <path d="M11.3 6.5 H13 V4.3 C12.7 4.2 11.9 4.1 10.8 4.1 C8.6 4.1 7.2 5.5 7.2 8.1 V10.2 H5 V12.9 H7.2 V19.2 H9.9 V12.9 H12.1 L12.5 10.2 H9.9 V8.3 C9.9 7.5 10.2 6.5 11.3 6.5 Z" fill="${bgColor}"/>
   `;
 
   const ttIcon = `
-    <circle cx="10" cy="10" r="9" fill="white"/>
+    <circle cx="10" cy="10" r="9" fill="${textColor}"/>
     <path d="M10 5.5 V12.2 C10 13.5 9 14.5 7.7 14.5 C6.4 14.5 5.4 13.5 5.4 12.2 C5.4 10.9 6.4 9.9 7.7 9.9 C8 9.9 8.2 10 8.4 10.1 V7.9 C8.2 7.8 7.9 7.8 7.7 7.8 C5.2 7.8 3.3 9.7 3.3 12.2 C3.3 14.6 5.2 16.5 7.7 16.5 C10.1 16.5 12 14.6 12 12.2 V8.5 C12.9 9.1 13.9 9.5 15 9.5 V7.4 C13.6 7.4 12.5 6.6 12 5.5 H10 Z" fill="${bgColor}"/>
   `;
 
@@ -121,7 +123,7 @@ export function generateSocialFooterSvg(
           font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
           font-weight="700"
           font-size="${fontSize}"
-          fill="#FFFFFF"
+          fill="${textColor}"
           letter-spacing="0.2px"
         >${it.text}</text>
       </g>
@@ -149,7 +151,7 @@ export function generateSocialFooterSvg(
         rx="${pillRadius}"
         fill="url(#pillGrad)"
         filter="url(#footShadow)"
-        stroke="rgba(255,255,255,0.22)"
+        stroke="${borderColor}"
         stroke-width="1.2"
       />
 

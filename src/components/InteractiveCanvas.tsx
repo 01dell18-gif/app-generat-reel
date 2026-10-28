@@ -113,11 +113,16 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           fabric.Image.fromURL(layer.url, (bgImg: any) => {
             if (!isMounted || !canvas) return;
             bgImg.set({
-              left: 0,
-              top: 0,
+              left: canvasWidth / 2,
+              top: canvasHeight / 2,
+              originX: 'center',
+              originY: 'center',
               scaleX: canvasWidth / (bgImg.width || 1080),
               scaleY: canvasHeight / (bgImg.height || 1080),
               opacity: layer.opacity ?? 1.0,
+              angle: layer.rotation || 0,
+              flipX: !!layer.flipH,
+              flipY: !!layer.flipV,
               selectable: false,
               evented: false,
               dataId: `bg_${idx}`,
@@ -159,6 +164,9 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
             originY: 'center',
             scaleX: finalScale,
             scaleY: finalScale,
+            angle: assets.mainMediaRotation || 0,
+            flipX: !!assets.mainMediaFlipH,
+            flipY: !!assets.mainMediaFlipV,
             selectable: true,
             hasBorders: true,
             cornerColor: '#38BDF8',
@@ -364,7 +372,9 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           },
           1000,
           56,
-          '#1D4ED8'
+          assets.socialFooterBgColor || '#1D4ED8',
+          assets.socialFooterTextColor || '#FFFFFF',
+          assets.socialFooterBorderColor || 'rgba(255,255,255,0.22)'
         );
 
         fabric.Image.fromURL(footerSvgUrl, (footerImg: any) => {

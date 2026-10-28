@@ -259,12 +259,18 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
       isolateSubject: true,
       smartCropFocal: 'center',
       mainMediaScale: 1.0,
+      mainMediaRotation: 0,
+      mainMediaFlipH: false,
+      mainMediaFlipV: false,
 
       // Footer
       footerImageUrl: '',
       footerLocked: true,
       footerHeightPercent: 7,
       useDefaultSocialFooter: true,
+      socialFooterBgColor: '#1D4ED8',
+      socialFooterTextColor: '#FFFFFF',
+      socialFooterBorderColor: 'rgba(255, 255, 255, 0.22)',
       socialHandles: {
         instagram: 'smkn1klk',
         website: 'smkn1klk.sch.id',

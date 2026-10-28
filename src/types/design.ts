@@ -24,6 +24,9 @@ export interface BackgroundLayer {
   opacity: number; // 0.0 - 1.0
   blendMode?: 'normal' | 'multiply' | 'screen' | 'overlay' | 'lighten';
   visible: boolean;
+  rotation?: number; // Rotation in degrees (0, 90, 180, 270)
+  flipH?: boolean; // Flip horizontal (mirror)
+  flipV?: boolean; // Flip vertical
 }
 
 export interface AssetInputs {
@@ -73,6 +76,9 @@ export interface AssetInputs {
   mainMediaScale?: number;
   mainMediaX?: number;
   mainMediaY?: number;
+  mainMediaRotation?: number; // Rotation in degrees (0 - 360 or -180 to 180)
+  mainMediaFlipH?: boolean; // Mirror / Flip Horizontal
+  mainMediaFlipV?: boolean; // Mirror / Flip Vertical
 
   // Footer Social Media Bar
   footerImageUrl: string;
@@ -80,6 +86,9 @@ export interface AssetInputs {
   footerHeightPercent: number;
   socialHandles: SocialHandles;
   useDefaultSocialFooter: boolean;
+  socialFooterBgColor?: string; // Background color of footer pill
+  socialFooterTextColor?: string; // Text & Icon color of footer pill
+  socialFooterBorderColor?: string; // Border color of footer pill
 
   // Colors & Accents
   accentColor: string;

@@ -32,6 +32,164 @@ interface GeminiModelOption {
   description?: string;
 }
 
+export interface AIDesignPreset {
+  id: string;
+  badge: string;
+  title: string;
+  description: string;
+  category: string;
+  previewColors: string[];
+  updates: Partial<AssetInputs>;
+}
+
+export const AI_DESIGN_RECOMMENDATIONS: AIDesignPreset[] = [
+  {
+    id: 'rec_spmi_official',
+    badge: '⭐ REKOMENDASI UTAMA',
+    title: 'Resmi SPMI & Penjaminan Mutu Internal',
+    description: 'Kombinasi hijau zamrud dan emas amber yang memancarkan wibawa institusi, integritas akreditasi, dan keterbacaan tinggi.',
+    category: 'Akreditasi & SPMI',
+    previewColors: ['#05472A', '#86EFAC', '#F59E0B', '#1D4ED8', '#1E3A8A'],
+    updates: {
+      topPillText: 'SISTEM PENJAMINAN MUTU INTERNAL 2026',
+      topPillBgColor: '#05472A',
+      topPillTextColor: '#86EFAC',
+      eventCardTitle: 'Sistem Penjaminan Mutu Internal',
+      eventCardSubtitle: 'SPMI',
+      eventCardBorderColor: '#B45309',
+      dateText: '18 September 2026',
+      dateBgColor: '#1D4ED8',
+      dateColor: '#FFFFFF',
+      headlineText: 'PENINGKATAN MUTU DAN KUALITAS PENDIDIKAN VOKASI',
+      headlineColor: '#064E3B',
+      subtitleText: 'Mewujudkan Generasi Unggul Berkarakter Pancasila & Siap Kerja',
+      subtitleColor: '#1E293B',
+      socialFooterBgColor: '#1D4ED8',
+      socialFooterTextColor: '#FFFFFF',
+      socialFooterBorderColor: 'rgba(255, 255, 255, 0.22)',
+      showTopPill: true,
+      showEventCard: true,
+    },
+  },
+  {
+    id: 'rec_pahlawan_vokasi',
+    badge: '🔥 ENERGETIK & PATRIOTIK',
+    title: 'Semangat Vokasi SMK & Hari Pahlawan',
+    description: 'Palet merah marun berani dan emas kejayaan untuk peringatan hari nasional, lomba kompetensi siswa, dan prestasi vokasi.',
+    category: 'Peringatan Nasional & Prestasi',
+    previewColors: ['#831843', '#FECACA', '#D97706', '#DC2626', '#7F1D1D'],
+    updates: {
+      topPillText: 'MEMPERINGATI HARI PAHLAWAN NASIONAL 2026',
+      topPillBgColor: '#831843',
+      topPillTextColor: '#FECACA',
+      eventCardTitle: 'Semangat Patriotisme & Inovasi Vokasi',
+      eventCardSubtitle: 'SMK BISA - SMK HEBAT',
+      eventCardBorderColor: '#D97706',
+      dateText: '10 November 2026',
+      dateBgColor: '#DC2626',
+      dateColor: '#FFFFFF',
+      headlineText: 'PAHLAWANKU TELADANKU, VOKASI UNGGUL INDONESIA MAJU',
+      headlineColor: '#0F172A',
+      subtitleText: 'Terus Berkarya Nyata Menjawab Tantangan Dunia Kerja & Industri',
+      subtitleColor: '#334155',
+      socialFooterBgColor: '#7F1D1D',
+      socialFooterTextColor: '#FFFFFF',
+      socialFooterBorderColor: '#F59E0B',
+      showTopPill: true,
+      showEventCard: true,
+    },
+  },
+  {
+    id: 'rec_diesnatalis_modern',
+    badge: '✨ MODERN & PRESTASI',
+    title: 'Dies Natalis, Gelar Karya & Wisuda',
+    description: 'Nuansa violet elegan dengan aksen cyan futuristik, sangat cocok untuk poster expo karya siswa dan perayaan ulang tahun sekolah.',
+    category: 'Dies Natalis & Wisuda',
+    previewColors: ['#4C1D95', '#DDD6FE', '#0D9488', '#6366F1', '#312E81'],
+    updates: {
+      topPillText: 'DIES NATALIS & GELAR KARYA SISWA 2026',
+      topPillBgColor: '#4C1D95',
+      topPillTextColor: '#DDD6FE',
+      eventCardTitle: 'Pameran Produk Inovasi & Kewirausahaan',
+      eventCardSubtitle: 'KREASI VOKASI',
+      eventCardBorderColor: '#0D9488',
+      dateText: '22 Desember 2026',
+      dateBgColor: '#6366F1',
+      dateColor: '#FFFFFF',
+      headlineText: 'KARYA NYATA GENERASI EMAS MENUJU INDUSTRI 4.0',
+      headlineColor: '#1E1B4B',
+      subtitleText: 'Menampilkan Karya Unggulan Siswa dari Berbagai Bidang Keahlian',
+      subtitleColor: '#475569',
+      socialFooterBgColor: '#312E81',
+      socialFooterTextColor: '#FFFFFF',
+      socialFooterBorderColor: '#38BDF8',
+      showTopPill: true,
+      showEventCard: true,
+    },
+  },
+  {
+    id: 'rec_guru_karakter',
+    badge: '📘 EDUKATIF & HUMANIS',
+    title: 'Hari Guru Nasional & Karakter Pelajar',
+    description: 'Biru samudra yang menenangkan dengan aksen hijau dedikasi, menghadirkan rasa hormat dan inspirasi yang mendalam.',
+    category: 'Pendidikan & Karakter',
+    previewColors: ['#0369A1', '#E0F2FE', '#15803D', '#0284C7', '#075985'],
+    updates: {
+      topPillText: 'MEMPERINGATI HARI GURU NASIONAL 2026',
+      topPillBgColor: '#0369A1',
+      topPillTextColor: '#E0F2FE',
+      eventCardTitle: 'Dedikasi Tanpa Batas Membangun Karakter',
+      eventCardSubtitle: 'GURU PENGGERAK',
+      eventCardBorderColor: '#15803D',
+      dateText: '25 November 2026',
+      dateBgColor: '#0284C7',
+      dateColor: '#FFFFFF',
+      headlineText: 'GURU HEBAT, INDONESIA KUAT & BERMARTABAT',
+      headlineColor: '#0F172A',
+      subtitleText: 'Terima Kasih Atas Bimbingan dan Ketulusan Mendidik Generasi Bangsa',
+      subtitleColor: '#334155',
+      socialFooterBgColor: '#075985',
+      socialFooterTextColor: '#FFFFFF',
+      socialFooterBorderColor: '#86EFAC',
+      showTopPill: true,
+      showEventCard: true,
+    },
+  },
+];
+
+// Robust JSON Fetcher to completely eliminate "Unexpected token '<'" JSON parsing errors
+async function safeFetchJson(url: string, bodyObj: any): Promise<{ ok: boolean; status: number; data: any }> {
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bodyObj),
+    });
+
+    const rawText = await res.text();
+    let data: any = {};
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      return {
+        ok: false,
+        status: res.status,
+        data: {
+          error: `Respon server bukan JSON valid (${res.status}). Server dev sedang memuat ulang modul. Silakan coba klik sekali lagi.`,
+        },
+      };
+    }
+
+    return { ok: res.ok, status: res.status, data };
+  } catch (err: any) {
+    return {
+      ok: false,
+      status: 0,
+      data: { error: `Gagal menghubungi server: ${err.message}` },
+    };
+  }
+}
+
 export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
   isOpen,
   onClose,
@@ -39,7 +197,7 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
   onApplyGeneratedAssets,
   onApplyVisionCriticResult,
 }) => {
-  const [activeTab, setActiveTab] = useState<'generate' | 'vision' | 'settings'>('generate');
+  const [activeTab, setActiveTab] = useState<'generate' | 'recommendations' | 'vision' | 'settings'>('generate');
 
   // Gemini Settings State (stored in localStorage)
   const [apiKey, setApiKey] = useState<string>('');
@@ -114,17 +272,12 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
     setStatusMessage('Menghubungi Google Gemini API & mengambil model yang kompatibel...');
 
     try {
-      const res = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          apiKey: key,
-          action: 'test_connection',
-        }),
+      const { ok, data } = await safeFetchJson('/api/gemini', {
+        apiKey: key,
+        action: 'test_connection',
       });
 
-      const data = await res.json();
-      if (res.ok && data.success) {
+      if (ok && data.success) {
         setConnectionStatus('success');
         
         const models: GeminiModelOption[] = (data.availableModels || []).map((m: any) =>
@@ -162,20 +315,15 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
     setGenerationResult(null);
 
     try {
-      const res = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          apiKey,
-          model: selectedModel,
-          temperature,
-          action: 'generate_design',
-          prompt: `${promptTopic} (Gaya Tone: ${tone})`,
-        }),
+      const { ok, data } = await safeFetchJson('/api/gemini', {
+        apiKey,
+        model: selectedModel,
+        temperature,
+        action: 'generate_design',
+        prompt: `${promptTopic} (Gaya Tone: ${tone})`,
       });
 
-      const data = await res.json();
-      if (res.ok && data.success) {
+      if (ok && data.success) {
         setGenerationResult(data.result);
       } else {
         alert(data.error || 'Gagal generate dengan Gemini AI. Periksa API Key di Pengaturan.');
@@ -209,6 +357,12 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
     onClose();
   };
 
+  // Apply AI Recommendation Preset Directly
+  const handleApplyRecommendation = (rec: AIDesignPreset) => {
+    onApplyGeneratedAssets(rec.updates);
+    onClose();
+  };
+
   // Trigger Multimodal Vision Critique
   const handleRunVisionCritique = async () => {
     setIsAnalyzingVision(true);
@@ -223,19 +377,14 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
 
       const canvasImageBase64 = canvas.toDataURL('image/png');
 
-      const res = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          apiKey,
-          model: selectedModel,
-          action: 'vision_critique',
-          canvasImageBase64,
-        }),
+      const { ok, data } = await safeFetchJson('/api/gemini', {
+        apiKey,
+        model: selectedModel,
+        action: 'vision_critique',
+        canvasImageBase64,
       });
 
-      const data = await res.json();
-      if (res.ok && data.success) {
+      if (ok && data.success) {
         setVisionReport(data.result);
       } else {
         alert(data.error || 'Gagal menjalankan analisis Gemini Vision.');
@@ -335,10 +484,32 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
           }}
         >
           <button
+            onClick={() => setActiveTab('recommendations')}
+            style={{
+              flex: 1,
+              padding: '12px 6px',
+              fontSize: '12px',
+              fontWeight: 700,
+              background: 'none',
+              border: 'none',
+              color: activeTab === 'recommendations' ? '#38BDF8' : '#94A3B8',
+              borderBottom: activeTab === 'recommendations' ? '2px solid #38BDF8' : '2px solid transparent',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+            }}
+          >
+            <Sparkles size={14} color={activeTab === 'recommendations' ? '#38BDF8' : '#94A3B8'} />
+            <span>Rekomendasi AI</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('generate')}
             style={{
               flex: 1,
-              padding: '12px',
+              padding: '12px 6px',
               fontSize: '12px',
               fontWeight: 700,
               background: 'none',
@@ -353,14 +524,14 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
             }}
           >
             <Wand2 size={14} />
-            <span>Generate Desain AI</span>
+            <span>Prompt Generator</span>
           </button>
 
           <button
             onClick={() => setActiveTab('vision')}
             style={{
               flex: 1,
-              padding: '12px',
+              padding: '12px 6px',
               fontSize: '12px',
               fontWeight: 700,
               background: 'none',
@@ -375,14 +546,14 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
             }}
           >
             <Eye size={14} />
-            <span>Gemini Vision Critic</span>
+            <span>Vision Critic</span>
           </button>
 
           <button
             onClick={() => setActiveTab('settings')}
             style={{
               flex: 1,
-              padding: '12px',
+              padding: '12px 6px',
               fontSize: '12px',
               fontWeight: 700,
               background: 'none',
@@ -397,12 +568,127 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
             }}
           >
             <Settings size={14} />
-            <span>Pengaturan API & Parameter</span>
+            <span>Pengaturan API</span>
           </button>
         </div>
 
         {/* Modal Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* TAB 0: REKOMENDASI CERDAS AI */}
+          {activeTab === 'recommendations' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%)',
+                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                  borderRadius: '10px',
+                  padding: '12px 14px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                }}
+              >
+                <Sparkles size={20} color="#38BDF8" style={{ marginTop: '2px', flexShrink: 0 }} />
+                <div style={{ fontSize: '12px', color: '#E2E8F0', lineHeight: 1.5 }}>
+                  <strong style={{ color: '#38BDF8' }}>Rekomendasi Desain AI Profesional:</strong> Pilih salah satu preset teruji di bawah untuk langsung memperbarui teks SPMI, headline, palet warna harmonis, dan setingan warna sosial media dalam 1 kali klik.
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {AI_DESIGN_RECOMMENDATIONS.map((rec) => (
+                  <div
+                    key={rec.id}
+                    className="glass-panel"
+                    style={{
+                      padding: '14px',
+                      borderRadius: '10px',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      background: 'rgba(15, 23, 42, 0.65)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          fontWeight: 800,
+                          padding: '3px 8px',
+                          borderRadius: '999px',
+                          background: 'rgba(6, 182, 212, 0.2)',
+                          color: '#38BDF8',
+                          border: '1px solid rgba(6, 182, 212, 0.4)',
+                        }}
+                      >
+                        {rec.badge}
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600 }}>
+                        {rec.category}
+                      </span>
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: '#F8FAFC' }}>
+                        {rec.title}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#94A3B8', marginTop: '2px', lineHeight: 1.4 }}>
+                        {rec.description}
+                      </div>
+                    </div>
+
+                    {/* Palette swatches & details */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.3)', padding: '8px 12px', borderRadius: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '10px', color: '#94A3B8', fontWeight: 600 }}>Palet Warna:</span>
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                          {rec.previewColors.map((color, i) => (
+                            <span
+                              key={i}
+                              style={{
+                                width: '16px',
+                                height: '16px',
+                                borderRadius: '50%',
+                                backgroundColor: color,
+                                border: '1px solid rgba(255,255,255,0.3)',
+                                display: 'inline-block',
+                              }}
+                              title={color}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div style={{ fontSize: '10px', color: '#CBD5E1', display: 'flex', gap: '10px' }}>
+                        <span>Pill: <strong style={{ color: rec.updates.topPillTextColor }}>{rec.updates.topPillText?.slice(0, 16)}...</strong></span>
+                        <span>Sosmed: <strong style={{ color: rec.updates.socialFooterTextColor }}>{rec.updates.socialFooterBgColor}</strong></span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleApplyRecommendation(rec)}
+                      className="btn btn-primary"
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        background: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        boxShadow: '0 4px 14px rgba(6, 182, 212, 0.25)',
+                      }}
+                    >
+                      <Zap size={14} />
+                      <span>⚡ Terapkan Rekomendasi Ini</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {/* TAB 1: GENERATE DESAIN DENGAN GEMINI */}
           {activeTab === 'generate' && (
             <>

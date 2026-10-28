@@ -35,7 +35,13 @@ import {
   Sliders,
   FolderDown,
   CheckCircle2,
+  RotateCw,
+  RotateCcw,
+  FlipHorizontal,
+  FlipVertical,
+  Zap,
 } from 'lucide-react';
+import { AI_DESIGN_RECOMMENDATIONS, AIDesignPreset } from './GeminiAIModal';
 
 // Helper: Modern Color Picker Field with Swatch Preview, Native Color Dialog & Hex Input
 interface ColorPickerFieldProps {
@@ -321,6 +327,18 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
     refreshDatabase();
   };
 
+  const handleApplyRecInPanel = (rec: AIDesignPreset) => {
+    if (onApplyFullAssets) {
+      onApplyFullAssets({ ...assets, ...rec.updates });
+    } else {
+      Object.entries(rec.updates).forEach(([k, v]) => {
+        onUpdateProperty(k as keyof AssetInputs, v);
+      });
+    }
+    setDbStatusMsg(`Rekomendasi "${rec.title}" diterapkan!`);
+    setTimeout(() => setDbStatusMsg(''), 3000);
+  };
+
   return (
     <aside
       className="glass-panel"
@@ -501,7 +519,8 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
               </div>
 
               {assets.mainMediaUrl && (
-                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {/* Scale Slider */}
                   <div>
                     <label className="label-title">
                       <span>Ukuran Foto ({assets.mainMediaScale || 1.0}x)</span>
@@ -516,6 +535,122 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                     />
                   </div>
 
+                  {/* Rotation & Mirror Controls */}
+                  <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#38BDF8' }}>
+                        Rotasi & Mirror (Balik Foto)
+                      </span>
+                      <span style={{ fontSize: '10px', color: '#94A3B8', fontFamily: 'monospace' }}>
+                        {assets.mainMediaRotation || 0}°
+                      </span>
+                    </div>
+
+                    {/* Quick Rotate & Mirror Buttons */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', marginBottom: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const current = assets.mainMediaRotation || 0;
+                          const next = (current - 90) % 360;
+                          onUpdateProperty('mainMediaRotation', next < -180 ? next + 360 : next);
+                        }}
+                        className="btn btn-secondary"
+                        style={{ padding: '6px 4px', fontSize: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}
+                        title="Putar Kiri -90°"
+                      >
+                        <RotateCcw size={13} />
+                        <span>-90°</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const current = assets.mainMediaRotation || 0;
+                          const next = (current + 90) % 360;
+                          onUpdateProperty('mainMediaRotation', next > 180 ? next - 360 : next);
+                        }}
+                        className="btn btn-secondary"
+                        style={{ padding: '6px 4px', fontSize: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}
+                        title="Putar Kanan +90°"
+                      >
+                        <RotateCw size={13} />
+                        <span>+90°</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onUpdateProperty('mainMediaFlipH', !assets.mainMediaFlipH)}
+                        className="btn"
+                        style={{
+                          padding: '6px 4px',
+                          fontSize: '10px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '3px',
+                          background: assets.mainMediaFlipH ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                          border: assets.mainMediaFlipH ? '1px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.12)',
+                          color: assets.mainMediaFlipH ? '#38BDF8' : '#CBD5E1',
+                        }}
+                        title="Mirror Horizontal (Balik Kiri-Kanan)"
+                      >
+                        <FlipHorizontal size={13} />
+                        <span>Mirror H</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onUpdateProperty('mainMediaFlipV', !assets.mainMediaFlipV)}
+                        className="btn"
+                        style={{
+                          padding: '6px 4px',
+                          fontSize: '10px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '3px',
+                          background: assets.mainMediaFlipV ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                          border: assets.mainMediaFlipV ? '1px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.12)',
+                          color: assets.mainMediaFlipV ? '#38BDF8' : '#CBD5E1',
+                        }}
+                        title="Mirror Vertikal (Balik Atas-Bawah)"
+                      >
+                        <FlipVertical size={13} />
+                        <span>Mirror V</span>
+                      </button>
+                    </div>
+
+                    {/* Rotation Range Slider */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#94A3B8', marginBottom: '2px' }}>
+                        <span>Derajat Rotasi Bebas</span>
+                        {(assets.mainMediaRotation !== 0 || assets.mainMediaFlipH || assets.mainMediaFlipV) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onUpdateProperty('mainMediaRotation', 0);
+                              onUpdateProperty('mainMediaFlipH', false);
+                              onUpdateProperty('mainMediaFlipV', false);
+                            }}
+                            style={{ background: 'none', border: 'none', color: '#F43F5E', fontSize: '9px', cursor: 'pointer', padding: 0 }}
+                          >
+                            Reset Transformasi
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="range"
+                        min="-180"
+                        max="180"
+                        step="1"
+                        value={assets.mainMediaRotation || 0}
+                        onChange={(e) => onUpdateProperty('mainMediaRotation', parseInt(e.target.value))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Aura Effect Toggle */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: '11px', color: '#CBD5E1' }}>Isolasi / Efek Aura Subjek</span>
                     <input
@@ -750,6 +885,62 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                             <option value="lighten">Lighten</option>
                           </select>
                         </div>
+                      </div>
+
+                      {/* Transform Controls for Layer: Rotate & Flip */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateBackgroundLayer(idx, { rotation: ((layer.rotation || 0) + 90) % 360 })}
+                          className="btn btn-secondary"
+                          style={{ padding: '4px 6px', fontSize: '9.5px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                          title="Putar Layer 90 Derajat"
+                        >
+                          <RotateCw size={11} />
+                          <span>Rotasi ({layer.rotation || 0}°)</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateBackgroundLayer(idx, { flipH: !layer.flipH })}
+                          className="btn"
+                          style={{
+                            padding: '4px 6px',
+                            fontSize: '9.5px',
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px',
+                            background: layer.flipH ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                            border: layer.flipH ? '1px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: layer.flipH ? '#38BDF8' : '#CBD5E1',
+                          }}
+                          title="Mirror Horizontal"
+                        >
+                          <FlipHorizontal size={11} />
+                          <span>Mirror H</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateBackgroundLayer(idx, { flipV: !layer.flipV })}
+                          className="btn"
+                          style={{
+                            padding: '4px 6px',
+                            fontSize: '9.5px',
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px',
+                            background: layer.flipV ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                            border: layer.flipV ? '1px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: layer.flipV ? '#38BDF8' : '#CBD5E1',
+                          }}
+                          title="Mirror Vertikal"
+                        >
+                          <FlipVertical size={11} />
+                          <span>Mirror V</span>
+                        </button>
                       </div>
 
                       {/* Upload Replacement for this Layer */}
@@ -1356,77 +1547,298 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
           </div>
         )}
 
-        {/* TAB 6: SOCIAL MEDIA HANDLES (FOOTER) */}
+        {/* TAB 4: SOCIAL MEDIA HANDLES (FOOTER) */}
         {activeTab === 'social' && (
-          <>
-            <div style={{ fontSize: '11px', color: '#94A3B8', marginBottom: '4px' }}>
-              Daftar akun media sosial yang tampil pada pita biru dengan ikon resmi di bagian bawah kanvas:
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ fontSize: '11px', color: '#94A3B8', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '6px' }}>
+              Atur tampilan dan akun media sosial yang tampil pada pita kapsul di bagian bawah kanvas desain:
             </div>
 
-            <div>
-              <label className="label-title">Instagram (@)</label>
-              <input
-                type="text"
-                value={assets.socialHandles?.instagram || ''}
-                onChange={(e) =>
-                  onUpdateProperty('socialHandles', {
-                    ...assets.socialHandles,
-                    instagram: e.target.value,
-                  })
-                }
-                className="input-control"
-                placeholder="smkn1klk"
-              />
+            {/* Social Media Footer Bar Colors */}
+            <div className="glass-panel" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#38BDF8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Share2 size={14} />
+                <span>Pengaturan Warna Pita Media Sosial</span>
+              </span>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <ColorPickerField
+                  label="Warna Latar Pita"
+                  value={assets.socialFooterBgColor || '#1D4ED8'}
+                  onChange={(val) => onUpdateProperty('socialFooterBgColor', val)}
+                  presetColors={['#1D4ED8', '#0F172A', '#065F46', '#991B1B', '#5B21B6', '#1E3A8A', '#0284C7']}
+                />
+                <ColorPickerField
+                  label="Warna Teks & Ikon"
+                  value={assets.socialFooterTextColor || '#FFFFFF'}
+                  onChange={(val) => onUpdateProperty('socialFooterTextColor', val)}
+                  presetColors={['#FFFFFF', '#FEF08A', '#E2E8F0', '#0F172A', '#FCD34D']}
+                />
+              </div>
+
+              <div>
+                <ColorPickerField
+                  label="Warna Garis Tepi / Border Pita"
+                  value={assets.socialFooterBorderColor || 'rgba(255, 255, 255, 0.22)'}
+                  onChange={(val) => onUpdateProperty('socialFooterBorderColor', val)}
+                  presetColors={['rgba(255, 255, 255, 0.25)', '#38BDF8', '#F59E0B', '#10B981', 'transparent']}
+                />
+              </div>
+
+              {/* Mini Visual Preview of the Social Bar */}
+              <div
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '20px',
+                  background: assets.socialFooterBgColor || '#1D4ED8',
+                  border: `1.5px solid ${assets.socialFooterBorderColor || 'rgba(255, 255, 255, 0.22)'}`,
+                  color: assets.socialFooterTextColor || '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-around',
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  marginTop: '4px',
+                }}
+              >
+                <span>📷 {assets.socialHandles?.instagram || 'smkn1klk'}</span>
+                <span>🌐 {assets.socialHandles?.website || 'smkn1klk.sch.id'}</span>
+                <span>🎵 {assets.socialHandles?.tiktok || 'smkn1klungkung'}</span>
+              </div>
             </div>
 
-            <div>
-              <label className="label-title">Website (URL)</label>
-              <input
-                type="text"
-                value={assets.socialHandles?.website || ''}
-                onChange={(e) =>
-                  onUpdateProperty('socialHandles', {
-                    ...assets.socialHandles,
-                    website: e.target.value,
-                  })
-                }
-                className="input-control"
-                placeholder="smkn1klk.sch.id"
-              />
+            {/* Handle Inputs */}
+            <div className="glass-panel" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#CBD5E1' }}>
+                Akun & URL Media Sosial:
+              </span>
+
+              <div>
+                <label className="label-title">Instagram (@)</label>
+                <input
+                  type="text"
+                  value={assets.socialHandles?.instagram || ''}
+                  onChange={(e) =>
+                    onUpdateProperty('socialHandles', {
+                      ...assets.socialHandles,
+                      instagram: e.target.value,
+                    })
+                  }
+                  className="input-control"
+                  placeholder="smkn1klk"
+                />
+              </div>
+
+              <div>
+                <label className="label-title">Website (URL)</label>
+                <input
+                  type="text"
+                  value={assets.socialHandles?.website || ''}
+                  onChange={(e) =>
+                    onUpdateProperty('socialHandles', {
+                      ...assets.socialHandles,
+                      website: e.target.value,
+                    })
+                  }
+                  className="input-control"
+                  placeholder="smkn1klk.sch.id"
+                />
+              </div>
+
+              <div>
+                <label className="label-title">Facebook (Halaman)</label>
+                <input
+                  type="text"
+                  value={assets.socialHandles?.facebook || ''}
+                  onChange={(e) =>
+                    onUpdateProperty('socialHandles', {
+                      ...assets.socialHandles,
+                      facebook: e.target.value,
+                    })
+                  }
+                  className="input-control"
+                  placeholder="SMK Negeri 1 Klungkung"
+                />
+              </div>
+
+              <div>
+                <label className="label-title">TikTok (@)</label>
+                <input
+                  type="text"
+                  value={assets.socialHandles?.tiktok || ''}
+                  onChange={(e) =>
+                    onUpdateProperty('socialHandles', {
+                      ...assets.socialHandles,
+                      tiktok: e.target.value,
+                    })
+                  }
+                  className="input-control"
+                  placeholder="smkn1klungkung"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: GEMINI AI & REKOMENDASI DESAIN */}
+        {activeTab === 'gemini' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {/* Header Gemini Assistant Hero */}
+            <div
+              className="glass-panel"
+              style={{
+                padding: '14px',
+                border: '1px solid rgba(56, 189, 248, 0.35)',
+                background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(139, 92, 246, 0.15) 100%)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div
+                  style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '7px',
+                    background: 'linear-gradient(135deg, #06B6D4, #8B5CF6)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Sparkles size={16} color="#FFFFFF" />
+                </div>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#F8FAFC' }}>
+                    Google Gemini AI Studio
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#94A3B8' }}>
+                    Model resmi, Prompt Generator & Vision Critic
+                  </div>
+                </div>
+              </div>
+
+              <p style={{ fontSize: '11px', color: '#CBD5E1', lineHeight: '1.4', margin: 0 }}>
+                Gunakan kecerdasan buatan Google Gemini untuk merumuskan judul acara, kartu SPMI, dan kritik visual desain secara otomatis.
+              </p>
+
+              <button
+                onClick={onOpenGeminiAI}
+                className="btn btn-primary"
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  fontSize: '11.5px',
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 12px rgba(6, 182, 212, 0.25)',
+                }}
+              >
+                <Sparkles size={14} />
+                <span>Buka Google Gemini Studio</span>
+              </button>
             </div>
 
+            {/* AI Design Recommendations Section */}
             <div>
-              <label className="label-title">Facebook (Halaman)</label>
-              <input
-                type="text"
-                value={assets.socialHandles?.facebook || ''}
-                onChange={(e) =>
-                  onUpdateProperty('socialHandles', {
-                    ...assets.socialHandles,
-                    facebook: e.target.value,
-                  })
-                }
-                className="input-control"
-                placeholder="SMK Negeri 1 Klungkung"
-              />
-            </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#38BDF8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Zap size={14} />
+                  <span>Rekomendasi Cerdas AI</span>
+                </span>
+                <span style={{ fontSize: '10px', color: '#94A3B8', fontWeight: 600 }}>1-Klik Terapkan</span>
+              </div>
 
-            <div>
-              <label className="label-title">TikTok (@)</label>
-              <input
-                type="text"
-                value={assets.socialHandles?.tiktok || ''}
-                onChange={(e) =>
-                  onUpdateProperty('socialHandles', {
-                    ...assets.socialHandles,
-                    tiktok: e.target.value,
-                  })
-                }
-                className="input-control"
-                placeholder="smkn1klungkung"
-              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {AI_DESIGN_RECOMMENDATIONS.map((rec) => (
+                  <div
+                    key={rec.id}
+                    className="glass-panel"
+                    style={{
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      background: 'rgba(15, 23, 42, 0.55)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span
+                        style={{
+                          fontSize: '9px',
+                          fontWeight: 800,
+                          padding: '2px 6px',
+                          borderRadius: '999px',
+                          background: 'rgba(56, 189, 248, 0.18)',
+                          color: '#38BDF8',
+                          border: '1px solid rgba(56, 189, 248, 0.35)',
+                        }}
+                      >
+                        {rec.badge}
+                      </span>
+                      <span style={{ fontSize: '10px', color: '#64748B' }}>{rec.category}</span>
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#F1F5F9' }}>
+                        {rec.title}
+                      </div>
+                      <div style={{ fontSize: '10.5px', color: '#94A3B8', marginTop: '2px', lineHeight: '1.3' }}>
+                        {rec.description}
+                      </div>
+                    </div>
+
+                    {/* Palette Swatches */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <span style={{ fontSize: '10px', color: '#64748B' }}>Palet:</span>
+                      {rec.previewColors.map((color, i) => (
+                        <span
+                          key={i}
+                          style={{
+                            width: '14px',
+                            height: '14px',
+                            borderRadius: '50%',
+                            backgroundColor: color,
+                            border: '1px solid rgba(255,255,255,0.25)',
+                            display: 'inline-block',
+                          }}
+                          title={color}
+                        />
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => handleApplyRecInPanel(rec)}
+                      className="btn btn-secondary"
+                      style={{
+                        padding: '6px 10px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        background: 'rgba(56, 189, 248, 0.1)',
+                        borderColor: 'rgba(56, 189, 248, 0.3)',
+                        color: '#38BDF8',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <Check size={12} />
+                      <span>Terapkan Rekomendasi Ini</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </aside>

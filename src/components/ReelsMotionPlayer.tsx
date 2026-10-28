@@ -106,7 +106,9 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
         },
         1000,
         56,
-        '#1D4ED8'
+        assets.socialFooterBgColor || '#1D4ED8',
+        assets.socialFooterTextColor || '#FFFFFF',
+        assets.socialFooterBorderColor || 'rgba(255, 255, 255, 0.22)'
       );
       const fImg = new Image();
       fImg.src = fSvg;
@@ -115,12 +117,16 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
   }, [
     assets.customBgImageUrl,
     assets.useCustomBgImage,
+    assets.backgroundLayers,
     assets.logoUrl,
     assets.mainMediaUrl,
     assets.showWatermark,
     assets.watermarkUrl,
     assets.useDefaultSocialFooter,
     assets.socialHandles,
+    assets.socialFooterBgColor,
+    assets.socialFooterTextColor,
+    assets.socialFooterBorderColor,
   ]);
 
   // Frame Rendering Function with Strict Layer Stacking Order
@@ -170,9 +176,15 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       const zoom = 1.0 + Math.sin((t / duration) * Math.PI) * 0.08;
       const floatY = Math.sin(t * 1.2) * 8;
       const userScale = assets.mainMediaScale || 1.0;
+      const rotAngle = ((assets.mainMediaRotation || 0) * Math.PI) / 180;
+      const flipH = assets.mainMediaFlipH ? -1 : 1;
+      const flipV = assets.mainMediaFlipV ? -1 : 1;
 
       ctx.translate(w / 2, h * 0.50 + floatY);
-      ctx.scale(zoom * userScale, zoom * userScale);
+      if (rotAngle !== 0) {
+        ctx.rotate(rotAngle);
+      }
+      ctx.scale(zoom * userScale * flipH, zoom * userScale * flipV);
 
       // Subject aura halo
       if (assets.isolateSubject) {
