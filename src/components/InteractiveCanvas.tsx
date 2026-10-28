@@ -248,23 +248,24 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
         });
 
         const textMaxW = Math.max(cardTitle.width || 120, cardSub.width || 80);
-        const cardW = Math.max(canvasWidth * 0.44, textMaxW + 36);
+        const cardW = Math.max(canvasWidth * 0.44, textMaxW + 40);
         const cardH = Math.max(54, titleSize + subSize + 24);
+        const cardRadius = Math.min(24, Math.round(cardH / 2.2));
 
         const cardBg = new fabric.Rect({
           width: cardW,
           height: cardH,
-          rx: 10,
-          ry: 10,
+          rx: cardRadius,
+          ry: cardRadius,
           fill: '#FFFFFF',
           stroke: assets.eventCardBorderColor || '#F59E0B',
           strokeWidth: 3,
           originX: 'center',
           originY: 'center',
           shadow: new fabric.Shadow({
-            color: 'rgba(0, 0, 0, 0.2)',
-            blur: 10,
-            offsetY: 3,
+            color: 'rgba(15, 23, 42, 0.16)',
+            blur: 16,
+            offsetY: 6,
           }),
         });
 
@@ -279,7 +280,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
         canvas.add(eventCardGroup);
       }
 
-      // 5. LAYER 5: DATE BADGE ("18 September 2026")
+      // 5. LAYER 5: DATE BADGE ("18 September 2026") - Modern Curved Pill
       if (assets.dateText) {
         const dateSize = assets.dateFontSize || 11;
         const dateTextObj = new fabric.Text(assets.dateText, {
@@ -291,17 +292,25 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           originY: 'center',
         });
 
-        const dBw = (dateTextObj.width || 80) + 30;
-        const dBh = dateSize + 14;
+        const dBw = (dateTextObj.width || 80) + 34;
+        const dBh = dateSize + 16;
+        const dateRadius = dBh / 2;
 
         const dateBgObj = new fabric.Rect({
           width: dBw,
           height: dBh,
-          rx: dBh / 2,
-          ry: dBh / 2,
+          rx: dateRadius,
+          ry: dateRadius,
           fill: assets.dateBgColor || '#2563EB',
+          stroke: 'rgba(255, 255, 255, 0.35)',
+          strokeWidth: 1.5,
           originX: 'center',
           originY: 'center',
+          shadow: new fabric.Shadow({
+            color: 'rgba(0, 0, 0, 0.22)',
+            blur: 10,
+            offsetY: 3,
+          }),
         });
 
         const dateGroup = new fabric.Group([dateBgObj, dateTextObj], {
@@ -326,21 +335,24 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           originY: 'center',
         });
 
-        const pillW = Math.max(canvasWidth * 0.72, topText.width + 48);
-        const pillH = 38;
+        const pillW = Math.max(canvasWidth * 0.74, topText.width + 52);
+        const pillH = 40;
+        const pillRadius = pillH / 2;
 
         const pillBg = new fabric.Rect({
           width: pillW,
           height: pillH,
-          rx: 19,
-          ry: 19,
+          rx: pillRadius,
+          ry: pillRadius,
           fill: assets.topPillBgColor || '#05472A',
+          stroke: 'rgba(255, 255, 255, 0.24)',
+          strokeWidth: 1.5,
           originX: 'center',
           originY: 'center',
           shadow: new fabric.Shadow({
             color: 'rgba(0, 0, 0, 0.35)',
-            blur: 10,
-            offsetY: 2,
+            blur: 14,
+            offsetY: 4,
           }),
         });
 
@@ -359,8 +371,8 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
       if (assets.logoUrl) {
         fabric.Image.fromURL(assets.logoUrl, (logoImg: any) => {
           if (!isMounted || !canvas) return;
-          const targetW = canvasWidth * 0.42;
-          const scale = targetW / (logoImg.width || 320);
+          const targetW = canvasWidth * 0.46;
+          const scale = targetW / (logoImg.width || 380);
 
           logoImg.set({
             left: canvasWidth * 0.04,
@@ -370,6 +382,11 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
             selectable: !assets.logoLocked,
             lockMovementX: assets.logoLocked,
             lockMovementY: assets.logoLocked,
+            shadow: new fabric.Shadow({
+              color: 'rgba(15, 23, 42, 0.2)',
+              blur: 14,
+              offsetY: 4,
+            }),
             dataId: 'logo',
           });
           canvas.add(logoImg);
@@ -453,8 +470,8 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           position: 'relative',
           width: `${canvasWidth}px`,
           height: `${canvasHeight}px`,
-          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.12)',
-          borderRadius: '16px',
+          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.15), 0 0 30px rgba(56, 189, 248, 0.08)',
+          borderRadius: '24px',
           overflow: 'hidden',
           backgroundColor: '#FFFFFF',
         }}

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { AssetInputs, BackgroundLayer } from '@/types/design';
-import { PRESET_BACKGROUND_LIBRARY, TEMPLATE_BG_SMK, PRESET_TEMPLATES } from '@/lib/preset-templates';
+import { PRESET_BACKGROUND_LIBRARY, TEMPLATE_BG_SMK, PRESET_TEMPLATES, LOGO_SMK_KLUNGKUNG } from '@/lib/preset-templates';
 import {
   dbSaveAsset,
   dbGetAssets,
@@ -776,6 +776,35 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                 </div>
                 <Upload size={14} color="#94A3B8" />
               </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onUpdateProperty('logoUrl', LOGO_SMK_KLUNGKUNG);
+                  setDbStatusMsg('Logo kapsul melengkung modern diterapkan!');
+                  setTimeout(() => setDbStatusMsg(''), 3000);
+                }}
+                style={{
+                  marginTop: '8px',
+                  width: '100%',
+                  padding: '7px 12px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  borderRadius: '9999px',
+                  backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  color: '#38BDF8',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <Sparkles size={12} />
+                <span>Pakai Logo Kapsul Lengkung Modern SMK</span>
+              </button>
             </div>
 
             {/* 3. MULTI-BACKGROUND IMAGE MANAGEMENT (MAX 4 LAYERS) */}

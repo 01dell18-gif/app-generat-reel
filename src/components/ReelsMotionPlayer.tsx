@@ -253,14 +253,25 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       const cH = Math.max(76, titleSize + subSize + 34);
       const cW = Math.max(w * 0.68, 300);
       const cX = w / 2 - cW / 2;
+      const cardRadius = Math.min(26, Math.round(cH / 2.3));
 
-      // Card Background
+      // Card Background with smooth rounded curves & soft shadow (BUKAN KOTAK)
+      ctx.shadowColor = 'rgba(15, 23, 42, 0.22)';
+      ctx.shadowBlur = 24;
+      ctx.shadowOffsetY = 8;
       ctx.fillStyle = '#FFFFFF';
-      ctx.strokeStyle = assets.eventCardBorderColor || '#F59E0B';
-      ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.roundRect(cX, cardY, cW, cH, 14);
+      ctx.roundRect(cX, cardY, cW, cH, cardRadius);
       ctx.fill();
+
+      // Card Border with matching smooth curves
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.strokeStyle = assets.eventCardBorderColor || '#F59E0B';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.roundRect(cX, cardY, cW, cH, cardRadius);
       ctx.stroke();
 
       // Card Title
@@ -276,7 +287,7 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       ctx.restore();
     }
 
-    // LAYER 5: DATE BADGE ("18 September 2026") - entrance at t >= 1.2s (ON TOP OF PHOTO)
+    // LAYER 5: DATE BADGE ("18 September 2026") - entrance at t >= 1.2s (Modern Curved Pill)
     if (assets.dateText && t >= 1.2) {
       const dProgress = Math.min(1, (t - 1.2) / 0.5);
       const dY = h * 0.86;
@@ -287,14 +298,27 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       const dateSize = Math.round((assets.dateFontSize || 11) * 1.35);
       ctx.font = `bold ${dateSize}px "Plus Jakarta Sans", sans-serif`;
       const dMetrics = ctx.measureText(assets.dateText);
-      const dbW = dMetrics.width + 40;
-      const dbH = dateSize + 20;
+      const dbW = dMetrics.width + 44;
+      const dbH = dateSize + 22;
       const dbX = w / 2 - dbW / 2;
+      const dateRadius = dbH / 2;
 
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetY = 4;
       ctx.fillStyle = assets.dateBgColor || '#2563EB';
       ctx.beginPath();
-      ctx.roundRect(dbX, dY, dbW, dbH, 18);
+      ctx.roundRect(dbX, dY, dbW, dbH, dateRadius);
       ctx.fill();
+
+      // Subtle stroke
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(dbX, dY, dbW, dbH, dateRadius);
+      ctx.stroke();
 
       ctx.fillStyle = assets.dateColor || '#FFFFFF';
       ctx.textAlign = 'center';
@@ -302,7 +326,7 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       ctx.restore();
     }
 
-    // LAYER 6: TOP BANNER PILL ("MEMPERINGATI HARI KESAKTIAN PANCASILA") - MUST BE ON TOP OF PHOTO!
+    // LAYER 6: TOP BANNER PILL ("MEMPERINGATI HARI KESAKTIAN PANCASILA") - Modern Curved Pill Capsule
     if (assets.showTopPill && assets.topPillText) {
       const enterProgress = Math.min(1, t / 0.8);
       const ease = 1 - Math.pow(1 - enterProgress, 3);
@@ -313,27 +337,42 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
 
       ctx.font = '900 20px "Plus Jakarta Sans", Arial, sans-serif';
       const textMetrics = ctx.measureText(assets.topPillText.toUpperCase());
-      const bW = Math.max(w * 0.88, textMetrics.width + 48);
-      const bH = 50;
+      const bW = Math.max(w * 0.88, textMetrics.width + 52);
+      const bH = 52;
       const bX = w / 2 - bW / 2;
+      const pillRadius = bH / 2;
 
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+      ctx.shadowBlur = 16;
+      ctx.shadowOffsetY = 5;
       ctx.fillStyle = assets.topPillBgColor || '#05472A';
       ctx.beginPath();
-      ctx.roundRect(bX, pillY, bW, bH, 25);
+      ctx.roundRect(bX, pillY, bW, bH, pillRadius);
       ctx.fill();
+
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(bX, pillY, bW, bH, pillRadius);
+      ctx.stroke();
 
       ctx.fillStyle = assets.topPillTextColor || '#86EFAC';
       ctx.textAlign = 'center';
-      ctx.fillText(assets.topPillText.toUpperCase(), w / 2, pillY + 32);
+      ctx.fillText(assets.topPillText.toUpperCase(), w / 2, pillY + 33);
       ctx.restore();
     }
 
-    // LAYER 7: TOP LOGO (SMK Negeri 1 Klungkung) - ON TOP OF PHOTO!
+    // LAYER 7: TOP LOGO (SMK Negeri 1 Klungkung) - Modern Curved Capsule Logo ON TOP OF PHOTO!
     if (logoImgRef.current && logoImgRef.current.complete) {
       ctx.save();
       const lW = w * 0.52;
       const lH = lW * (logoImgRef.current.naturalHeight / (logoImgRef.current.naturalWidth || 1));
-      ctx.drawImage(logoImgRef.current, w * 0.05, h * 0.07, lW, lH);
+      ctx.shadowColor = 'rgba(15, 23, 42, 0.22)';
+      ctx.shadowBlur = 16;
+      ctx.shadowOffsetY = 4;
+      ctx.drawImage(logoImgRef.current, w * 0.04, h * 0.05, lW, lH);
       ctx.restore();
     }
 

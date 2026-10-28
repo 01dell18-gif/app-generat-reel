@@ -1,17 +1,79 @@
 import { PresetTemplate, SocialHandles } from '@/types/design';
 
-// SVG Logo SMK Negeri 1 Klungkung matching user's reference image
-export const LOGO_SMK_KLUNGKUNG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 60" fill="none">
-  <rect width="320" height="60" rx="14" fill="white" fill-opacity="0.95"/>
-  <!-- Shield 1 (Blue) -->
-  <polygon points="26,12 38,18 38,36 26,48 14,36 14,18" fill="%232563EB" stroke="%231D4ED8" stroke-width="2"/>
-  <circle cx="26" cy="28" r="6" fill="%23FCD34D"/>
-  <!-- Shield 2 (Green) -->
-  <polygon points="56,12 68,18 68,36 56,48 44,36 44,18" fill="%2365A30D" stroke="%234D7C0F" stroke-width="2"/>
-  <polygon points="56,20 62,34 50,34" fill="%23FEF08A"/>
-  <!-- Text -->
-  <text x="82" y="37" fill="%230F172A" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="16" letter-spacing="0.5">SMK NEGERI 1 KLUNGKUNG</text>
-</svg>`;
+// SVG Logo SMK Negeri 1 Klungkung - Modern Curved Capsule Pill Shape (LENGKUNG SEMPURNA, BUKAN KOTAK)
+const RAW_LOGO_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 64" fill="none">
+  <defs>
+    <!-- Soft Ambient Glow & Drop Shadow -->
+    <filter id="pillGlow" x="-10%" y="-20%" width="125%" height="150%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#0F172A" flood-opacity="0.2"/>
+    </filter>
+    <!-- Frosted Glass Gradient -->
+    <linearGradient id="pillBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.98"/>
+      <stop offset="100%" stop-color="#F8FAFC" stop-opacity="0.94"/>
+    </linearGradient>
+    <linearGradient id="pillStroke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="50%" stop-color="#93C5FD" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#86EFAC" stop-opacity="0.6"/>
+    </linearGradient>
+    <linearGradient id="blueCrest" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1E3A8A"/>
+    </linearGradient>
+    <linearGradient id="greenCrest" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#84CC16"/>
+      <stop offset="100%" stop-color="#3F6212"/>
+    </linearGradient>
+    <linearGradient id="goldFlame" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#EA580C"/>
+      <stop offset="50%" stop-color="#EF4444"/>
+      <stop offset="100%" stop-color="#FBBF24"/>
+    </linearGradient>
+    <linearGradient id="goldWing" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Perfectly Curved Pill Container (LENGKUNG SEMPURNA, BUKAN KOTAK) -->
+  <rect x="3" y="3" width="374" height="58" rx="29" fill="url(#pillBg)" stroke="url(#pillStroke)" stroke-width="1.8" filter="url(#pillGlow)"/>
+
+  <!-- Left Emblem: Dinas Pendidikan Bali Shield -->
+  <g transform="translate(14, 12)">
+    <polygon points="20,0 40,9 40,29 20,40 0,29 0,9" fill="url(#blueCrest)" stroke="#1D4ED8" stroke-width="1.2"/>
+    <polygon points="20,3 37,11 37,27 20,37 3,27 3,11" stroke="#FDE047" stroke-width="1" fill="none" opacity="0.9"/>
+    <!-- Candi / Spire -->
+    <polygon points="20,7 24,15 16,15" fill="#FCD34D"/>
+    <polygon points="20,13 26,22 14,22" fill="#F59E0B"/>
+    <polygon points="20,20 28,30 12,30" fill="#D97706"/>
+    <rect x="14" y="30" width="12" height="3" rx="1.5" fill="#FEF08A"/>
+    <!-- Green Garland wreath -->
+    <path d="M7 26 C 7 16, 13 9, 20 9 C 27 9, 33 16, 33 26" stroke="#4ADE80" stroke-width="1.6" fill="none"/>
+  </g>
+
+  <!-- Right Emblem: SMK Negeri 1 Klungkung Wings & Torch -->
+  <g transform="translate(58, 12)">
+    <polygon points="20,0 40,9 40,29 20,40 0,29 0,9" fill="url(#greenCrest)" stroke="#365314" stroke-width="1.2"/>
+    <polygon points="20,3 37,11 37,27 20,37 3,27 3,11" stroke="#FEF08A" stroke-width="1" fill="none" opacity="0.9"/>
+    <!-- Wings -->
+    <path d="M20 20 C 14 13, 5 14, 3 20 C 7 25, 15 25, 20 23 Z" fill="url(#goldWing)"/>
+    <path d="M20 20 C 26 13, 35 14, 37 20 C 33 25, 25 25, 20 23 Z" fill="url(#goldWing)"/>
+    <!-- Torch -->
+    <line x1="20" y1="18" x2="20" y2="31" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="20" y1="19" x2="20" y2="30" stroke="#71717A" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M20 7 C 23 11, 25 14, 23 18 C 21 19, 19 19, 17 18 C 15 14, 17 11, 20 7 Z" fill="url(#goldFlame)"/>
+    <rect x="8" y="31" width="24" height="4.5" rx="2" fill="#FEF08A" stroke="#CA8A04" stroke-width="0.8"/>
+  </g>
+
+  <!-- Modern Clean Typography -->
+  <text x="108" y="36" fill="#0F172A" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="15" letter-spacing="0.3px">SMK NEGERI 1 KLUNGKUNG</text>
+  <text x="109" y="49" fill="#2563EB" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="8.5" letter-spacing="1.4px">PUSAT KEUNGGULAN • ISO 9001</text>
+</svg>
+`.trim();
+
+export const LOGO_SMK_KLUNGKUNG = `data:image/svg+xml;utf8,${encodeURIComponent(RAW_LOGO_SVG)}`;
 
 // Subtle Garuda / Balinese Cultural Watermark
 export const WATERMARK_GARUDA = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" fill="none" opacity="0.18">
@@ -29,51 +91,68 @@ export const WATERMARK_GARUDA = `data:image/svg+xml;utf8,<svg xmlns="http://www.
   <polygon points="300,290 315,330 285,330" fill="%23F59E0B"/>
 </svg>`;
 
-// Complete Template Background (Sky, Clouds, Rolling Green Hills) matching user's image
+// Complete Template Background (Sky, Clouds, Rolling Green Hills) - Modern Aesthetic Waves
 export const TEMPLATE_BG_SMK = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
   <defs>
-    <!-- Sky Gradient -->
+    <!-- Modern Vibrant Sky Gradient -->
     <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="%23C7E9FE"/>
-      <stop offset="40%" stop-color="%23E0F2FE"/>
-      <stop offset="70%" stop-color="%23F0F9FF"/>
-      <stop offset="100%" stop-color="%23F7FEE7"/>
+      <stop offset="0%" stop-color="%23BAE6FD"/>
+      <stop offset="35%" stop-color="%23E0F2FE"/>
+      <stop offset="65%" stop-color="%23F0F9FF"/>
+      <stop offset="100%" stop-color="%23FEF9C3"/>
     </linearGradient>
-    <!-- Hill 1 (Light Olive Green) -->
+    <!-- Sun Ambient Glow Halo -->
+    <radialGradient id="sunAura" cx="75%" cy="20%" r="55%">
+      <stop offset="0%" stop-color="%23FEF08A" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="%23FDE047" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="%23FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Rolling Hill 1 (Bright Lime Green) -->
     <linearGradient id="hill1" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="%23A3E635"/>
-      <stop offset="100%" stop-color="%2384CC16"/>
+      <stop offset="100%" stop-color="%2365A30D"/>
     </linearGradient>
-    <!-- Hill 2 (Dark Olive Green) -->
+    <!-- Rolling Hill 2 (Deep Emerald Olive) -->
     <linearGradient id="hill2" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="%2365A30D"/>
-      <stop offset="100%" stop-color="%234D7C0F"/>
+      <stop offset="0%" stop-color="%234D7C0F"/>
+      <stop offset="100%" stop-color="%2314532D"/>
+    </linearGradient>
+    <!-- Ambient Horizon Glow -->
+    <linearGradient id="horizonGlow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="%23FFFFFF" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="%2384CC16" stop-opacity="0"/>
     </linearGradient>
   </defs>
 
   <!-- Sky Canvas -->
   <rect width="1080" height="1080" fill="url(%23skyGrad)"/>
+  <rect width="1080" height="1080" fill="url(%23sunAura)"/>
 
-  <!-- Clouds -->
-  <!-- Top Clouds -->
-  <ellipse cx="200" cy="80" rx="140" ry="60" fill="white" opacity="0.8"/>
-  <ellipse cx="320" cy="70" rx="120" ry="50" fill="white" opacity="0.85"/>
-  <ellipse cx="880" cy="90" rx="160" ry="70" fill="white" opacity="0.8"/>
-  <ellipse cx="760" cy="80" rx="110" ry="50" fill="white" opacity="0.85"/>
+  <!-- Aesthetic Floating Soft Cloud Puffs -->
+  <g opacity="0.85">
+    <ellipse cx="200" cy="90" rx="150" ry="60" fill="white"/>
+    <ellipse cx="310" cy="75" rx="130" ry="55" fill="white"/>
+    <ellipse cx="880" cy="110" rx="170" ry="70" fill="white"/>
+    <ellipse cx="750" cy="95" rx="120" ry="50" fill="white"/>
+  </g>
 
   <!-- Center Floating Clouds -->
-  <ellipse cx="220" cy="280" rx="110" ry="45" fill="white" opacity="0.6"/>
-  <ellipse cx="280" cy="270" rx="90" ry="40" fill="white" opacity="0.7"/>
-  <ellipse cx="840" cy="300" rx="130" ry="50" fill="white" opacity="0.65"/>
+  <g opacity="0.65">
+    <ellipse cx="180" cy="300" rx="130" ry="50" fill="white"/>
+    <ellipse cx="270" cy="285" rx="100" ry="45" fill="white"/>
+    <ellipse cx="860" cy="320" rx="150" ry="55" fill="white"/>
+  </g>
 
-  <!-- Rolling Hills Layer 1 (Upper Light Green Wave) -->
-  <path d="M-50 820 C180 720, 360 840, 600 780 C820 720, 980 770, 1150 720 L1150 1150 L-50 1150 Z" fill="url(%23hill1)"/>
+  <!-- Rolling Hills Layer 1 (Upper Smooth Bezier Curve) -->
+  <path d="M-60 760 C160 660, 380 810, 620 740 C840 670, 990 730, 1160 670 L1160 1160 L-60 1160 Z" fill="url(%23hill1)"/>
+  <path d="M-60 760 C160 660, 380 810, 620 740 C840 670, 990 730, 1160 670" stroke="%23BEF264" stroke-width="3" fill="none" opacity="0.6"/>
 
-  <!-- Rolling Hills Layer 2 (Lower Deep Olive Wave) -->
-  <path d="M-50 880 C120 800, 320 920, 540 850 C760 780, 920 850, 1150 780 L1150 1150 L-50 1150 Z" fill="url(%23hill2)"/>
+  <!-- Rolling Hills Layer 2 (Lower Deep Organic Wave) -->
+  <path d="M-60 840 C140 750, 340 890, 580 810 C800 740, 950 820, 1160 740 L1160 1160 L-60 1160 Z" fill="url(%23hill2)"/>
+  <path d="M-60 840 C140 750, 340 890, 580 810 C800 740, 950 820, 1160 740" stroke="%23A3E635" stroke-width="2.5" fill="none" opacity="0.5"/>
 
-  <!-- Soft Mist in Hills -->
-  <ellipse cx="540" cy="980" rx="480" ry="60" fill="white" opacity="0.25"/>
+  <!-- Soft Morning Mist Layer in Hills -->
+  <ellipse cx="540" cy="970" rx="520" ry="70" fill="white" opacity="0.22"/>
 </svg>`;
 
 // Preset Background 2: Modern Cyber & Tech Geometric Grid
@@ -595,7 +674,7 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
       dateFontSize: 11,
       dateColor: '#0F172A',
       dateBgColor: '#38BDF8',
-      dateBadgeStyle: 'rect',
+      dateBadgeStyle: 'pill',
       mainMediaUrl: SAMPLE_SPEAKER_PHOTO,
       isolateSubject: true,
       smartCropFocal: 'center',
@@ -658,7 +737,7 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
       dateFontSize: 11,
       dateColor: '#0F172A',
       dateBgColor: '#84CC16',
-      dateBadgeStyle: 'rect',
+      dateBadgeStyle: 'pill',
       mainMediaUrl: SAMPLE_SPEAKER_PHOTO,
       isolateSubject: true,
       smartCropFocal: 'center',
@@ -913,7 +992,7 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
       dateFontSize: 11,
       dateColor: '#0F172A',
       dateBgColor: '#38BDF8',
-      dateBadgeStyle: 'rect',
+      dateBadgeStyle: 'pill',
       mainMediaUrl: SAMPLE_SPEAKER_PHOTO,
       isolateSubject: true,
       smartCropFocal: 'subject',
