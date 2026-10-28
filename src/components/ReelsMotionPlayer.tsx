@@ -130,7 +130,8 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
         56,
         assets.socialFooterBgColor || '#1D4ED8',
         assets.socialFooterTextColor || '#FFFFFF',
-        assets.socialFooterBorderColor || 'rgba(255, 255, 255, 0.22)'
+        assets.socialFooterBorderColor || 'rgba(255, 255, 255, 0.22)',
+        assets.socialFooterFontSize || 13
       );
       const fImg = new Image();
       fImg.src = fSvg;
@@ -149,6 +150,7 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
     assets.socialFooterBgColor,
     assets.socialFooterTextColor,
     assets.socialFooterBorderColor,
+    assets.socialFooterFontSize,
   ]);
 
   // Frame Rendering Function with Strict Layer Stacking Order

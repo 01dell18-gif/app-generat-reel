@@ -62,6 +62,14 @@ export default function StudioPage() {
     }));
   }, []);
 
+  // Update multiple asset properties atomically (prevents resets and stale closures)
+  const handleUpdateAssetsBatch = useCallback((updates: Partial<AssetInputs>) => {
+    setAssets((prev) => ({
+      ...prev,
+      ...updates,
+    }));
+  }, []);
+
   // Apply Generated Content from Gemini AI
   const handleApplyGeneratedAssets = (updates: Partial<AssetInputs>) => {
     setAssets((prev) => ({
@@ -251,6 +259,7 @@ export default function StudioPage() {
               onSelectIssue={setSelectedIssueId}
               onApplySingleFix={handleApplySingleFix}
               onUpdateAssetProperty={handleUpdateAssetProperty}
+              onUpdateAssetsBatch={handleUpdateAssetsBatch}
             />
           )}
         </section>

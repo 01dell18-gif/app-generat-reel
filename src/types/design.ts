@@ -38,6 +38,10 @@ export interface AssetInputs {
   logoLocked: boolean;
   institutionName?: string;
   logoFrameShape?: 'capsule' | 'rounded' | 'none'; // Frame lengkung logo: kapsul, rounded card, atau none
+  logoX?: number; // Custom X position on canvas
+  logoY?: number; // Custom Y position on canvas
+  logoScale?: number; // Custom scale factor for logo
+  logoRotation?: number; // Custom rotation in degrees
 
   // Background / Template Frame
   customBgImageUrl: string; // User uploaded template background
@@ -51,6 +55,8 @@ export interface AssetInputs {
   topPillBgColor: string;
   topPillTextColor: string;
   showTopPill: boolean;
+  topPillX?: number; // Custom X position
+  topPillY?: number; // Custom Y position
 
   // Event Card / Sub-Information (Middle-Bottom)
   eventCardTitle: string; // e.g. "Sistem Penjaminan Mutu Internal"
@@ -59,6 +65,8 @@ export interface AssetInputs {
   eventCardSubtitleFontSize?: number; // Custom font size for event card subtitle/code
   eventCardBorderColor: string; // e.g. "#F59E0B"
   showEventCard: boolean;
+  eventCardX?: number; // Custom X position
+  eventCardY?: number; // Custom Y position
 
   // Informational Text (Headline & Subtitle)
   headlineText: string;
@@ -75,6 +83,8 @@ export interface AssetInputs {
   dateColor: string;
   dateBgColor: string;
   dateBadgeStyle: 'pill' | 'rect' | 'glass';
+  dateBadgeX?: number; // Custom X position
+  dateBadgeY?: number; // Custom Y position
 
   // Main Media (Uploaded Photo / Subject)
   mainMediaUrl: string;
@@ -96,6 +106,7 @@ export interface AssetInputs {
   socialFooterBgColor?: string; // Background color of footer pill
   socialFooterTextColor?: string; // Text & Icon color of footer pill
   socialFooterBorderColor?: string; // Border color of footer pill
+  socialFooterFontSize?: number; // Custom font size for social handles text (default ~13)
 
   // Colors & Accents
   accentColor: string;

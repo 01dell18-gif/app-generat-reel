@@ -13,7 +13,8 @@ export function generateSocialFooterSvg(
   height: number = 56,
   bgColor: string = '#1D4ED8',
   textColor: string = '#FFFFFF',
-  borderColor: string = 'rgba(255, 255, 255, 0.22)'
+  borderColor: string = 'rgba(255, 255, 255, 0.22)',
+  customFontSize?: number
 ): string {
   const ig = (handles?.instagram || 'smkn1klk').trim();
   const web = (handles?.website || 'smkn1klk.sch.id').trim();
@@ -61,16 +62,18 @@ export function generateSocialFooterSvg(
   const safeMargin = Math.max(38, pillRadius + 14);
   const usableWidth = width - safeMargin * 2;
 
-  // Adaptive font sizing based on handle text lengths
-  let fontSize = 14;
-  const totalChars = items.reduce((acc, it) => acc + it.text.length, 0);
+  // Custom or Adaptive font sizing based on handle text lengths
+  let fontSize = customFontSize && customFontSize > 6 ? customFontSize : 14;
+  if (!customFontSize) {
+    const totalChars = items.reduce((acc, it) => acc + it.text.length, 0);
 
-  if (totalChars > 65) {
-    fontSize = 11.5;
-  } else if (totalChars > 50) {
-    fontSize = 12.5;
-  } else if (totalChars > 40) {
-    fontSize = 13.5;
+    if (totalChars > 65) {
+      fontSize = 11.5;
+    } else if (totalChars > 50) {
+      fontSize = 12.5;
+    } else if (totalChars > 40) {
+      fontSize = 13.5;
+    }
   }
 
   const iconWidth = 20;

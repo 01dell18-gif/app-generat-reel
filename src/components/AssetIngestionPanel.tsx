@@ -713,6 +713,79 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                         onChange={(e) => onUpdateProperty('mainMediaRotation', parseInt(e.target.value))}
                       />
                     </div>
+
+                    {/* Scale / Ukuran Foto Subjek Slider */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#94A3B8', marginBottom: '2px' }}>
+                        <span>Ukuran Foto Subjek ({(assets.mainMediaScale || 1.0).toFixed(2)}x)</span>
+                        {assets.mainMediaScale && assets.mainMediaScale !== 1.0 && (
+                          <button
+                            type="button"
+                            onClick={() => onUpdateProperty('mainMediaScale', 1.0)}
+                            style={{ background: 'none', border: 'none', color: '#38BDF8', fontSize: '9px', cursor: 'pointer', padding: 0 }}
+                          >
+                            Reset (1.0x)
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="range"
+                        min="0.2"
+                        max="3.0"
+                        step="0.05"
+                        value={assets.mainMediaScale || 1.0}
+                        onChange={(e) => onUpdateProperty('mainMediaScale', parseFloat(e.target.value))}
+                      />
+                    </div>
+
+                    {/* Posisi Geser X & Y Foto Subjek */}
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#94A3B8', marginBottom: '2px' }}>
+                          <span>Geser X ({assets.mainMediaX ?? 290}px)</span>
+                          {assets.mainMediaX !== undefined && (
+                            <button
+                              type="button"
+                              onClick={() => onUpdateProperty('mainMediaX', 290)}
+                              style={{ background: 'none', border: 'none', color: '#38BDF8', fontSize: '8.5px', cursor: 'pointer', padding: 0 }}
+                            >
+                              Tengah
+                            </button>
+                          )}
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="580"
+                          step="2"
+                          value={assets.mainMediaX ?? 290}
+                          onChange={(e) => onUpdateProperty('mainMediaX', parseInt(e.target.value))}
+                        />
+                      </div>
+
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#94A3B8', marginBottom: '2px' }}>
+                          <span>Geser Y ({assets.mainMediaY ?? 300}px)</span>
+                          {assets.mainMediaY !== undefined && (
+                            <button
+                              type="button"
+                              onClick={() => onUpdateProperty('mainMediaY', 300)}
+                              style={{ background: 'none', border: 'none', color: '#38BDF8', fontSize: '8.5px', cursor: 'pointer', padding: 0 }}
+                            >
+                              Tengah
+                            </button>
+                          )}
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="675"
+                          step="2"
+                          value={assets.mainMediaY ?? 300}
+                          onChange={(e) => onUpdateProperty('mainMediaY', parseInt(e.target.value))}
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Aura Effect Toggle */}
@@ -828,6 +901,86 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
               >
                 <CheckCircle2 size={13} style={{ flexShrink: 0 }} />
                 <span>Auto-Frame Lengkung: Gambar logo apapun yang di-upload (meski kotak) otomatis dibingkai kapsul melengkung estetik.</span>
+              </div>
+
+              {/* Logo Position, Scale & Rotation Settings */}
+              <div
+                style={{
+                  marginTop: '10px',
+                  padding: '10px',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 700, color: '#38BDF8' }}>
+                    Ukuran & Posisi Logo
+                  </span>
+                  {(assets.logoX !== undefined || assets.logoY !== undefined || (assets.logoScale && assets.logoScale !== 1.0) || assets.logoRotation) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onUpdateProperty('logoX', undefined);
+                        onUpdateProperty('logoY', undefined);
+                        onUpdateProperty('logoScale', 1.0);
+                        onUpdateProperty('logoRotation', 0);
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#F43F5E', fontSize: '9px', cursor: 'pointer', padding: 0 }}
+                    >
+                      Reset Posisi
+                    </button>
+                  )}
+                </div>
+
+                {/* Scale Slider */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#94A3B8', marginBottom: '2px' }}>
+                    <span>Ukuran / Skala Logo ({(assets.logoScale || 1.0).toFixed(2)}x)</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.3"
+                    max="2.5"
+                    step="0.05"
+                    value={assets.logoScale || 1.0}
+                    onChange={(e) => onUpdateProperty('logoScale', parseFloat(e.target.value))}
+                  />
+                </div>
+
+                {/* Posisi Geser X & Y Logo */}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#94A3B8', marginBottom: '2px' }}>
+                      <span>Posisi X ({assets.logoX ?? 24}px)</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="450"
+                      step="2"
+                      value={assets.logoX ?? 24}
+                      onChange={(e) => onUpdateProperty('logoX', parseInt(e.target.value))}
+                    />
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#94A3B8', marginBottom: '2px' }}>
+                      <span>Posisi Y ({assets.logoY ?? 24}px)</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="450"
+                      step="2"
+                      value={assets.logoY ?? 24}
+                      onChange={(e) => onUpdateProperty('logoY', parseInt(e.target.value))}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1928,9 +2081,66 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
 
             {/* Handle Inputs */}
             <div className="glass-panel" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: '#CBD5E1' }}>
-                Akun & URL Media Sosial:
-              </span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#CBD5E1' }}>
+                  Akun & URL Media Sosial:
+                </span>
+                <span style={{ fontSize: '10px', color: '#38BDF8', fontWeight: 600 }}>
+                  Ukuran: {assets.socialFooterFontSize || 13}px
+                </span>
+              </div>
+
+              {/* Ukuran Teks Media Sosial Slider & Presets */}
+              <div
+                style={{
+                  padding: '8px 10px',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="label-title" style={{ marginBottom: 0, fontSize: '10.5px' }}>
+                    <span>Ukuran Teks Media Sosial</span>
+                  </label>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {[
+                      { label: 'Kecil (11)', val: 11 },
+                      { label: 'Sedang (13)', val: 13 },
+                      { label: 'Besar (16)', val: 16 },
+                      { label: 'Ekstra (18)', val: 18 },
+                    ].map((sz) => (
+                      <button
+                        key={sz.val}
+                        type="button"
+                        onClick={() => onUpdateProperty('socialFooterFontSize', sz.val)}
+                        style={{
+                          padding: '2px 6px',
+                          fontSize: '9.5px',
+                          borderRadius: '4px',
+                          background: (assets.socialFooterFontSize || 13) === sz.val ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                          border: (assets.socialFooterFontSize || 13) === sz.val ? '1px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.1)',
+                          color: (assets.socialFooterFontSize || 13) === sz.val ? '#38BDF8' : '#CBD5E1',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {sz.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  min="9"
+                  max="24"
+                  step="1"
+                  value={assets.socialFooterFontSize || 13}
+                  onChange={(e) => onUpdateProperty('socialFooterFontSize', parseInt(e.target.value))}
+                />
+              </div>
 
               <div>
                 <label className="label-title">Instagram (@)</label>

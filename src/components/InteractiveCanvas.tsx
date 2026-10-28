@@ -19,6 +19,7 @@ interface InteractiveCanvasProps {
   onSelectIssue: (issueId: string | null) => void;
   onApplySingleFix: (action: AutoFixAction) => void;
   onUpdateAssetProperty: (key: keyof AssetInputs, value: any) => void;
+  onUpdateAssetsBatch?: (updates: Partial<AssetInputs>) => void;
 }
 
 // Strict Z-Index Layer Stacking Order requested by user
@@ -46,11 +47,16 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
   onSelectIssue,
   onApplySingleFix,
   onUpdateAssetProperty,
+  onUpdateAssetsBatch,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<any>(null);
   const [activeIssue, setActiveIssue] = useState<CriticIssue | null>(null);
+
+  // Keep a mutable ref of fresh assets to prevent stale closure in Fabric event callbacks
+  const assetsRef = useRef(assets);
+  assetsRef.current = assets;
 
   // Canvas Display Dimensions
   const isSquare = format === 'poster_1_1';
@@ -89,34 +95,90 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           preserveObjectStacking: true,
         });
 
-        // Listen for modifications
+        // Listen for user drag/scale/rotate modifications on any canvas element
         fabricCanvasRef.current.on('object:modified', (e: any) => {
           const obj = e.target;
           if (!obj) return;
+          const currentAssets = assetsRef.current;
+
           if (obj.dataId === 'headline') {
             onUpdateAssetProperty('headlineFontSize', Math.round(obj.fontSize * (obj.scaleY || 1)));
           } else if (obj.dataId === 'mainMedia') {
             const base = obj._baseScale || 1;
             const currentScale = obj.scaleX || 1;
             const normalized = Number((currentScale / base).toFixed(2));
-            onUpdateAssetProperty('mainMediaScale', Math.max(0.2, Math.min(3.5, normalized)));
-            onUpdateAssetProperty('mainMediaRotation', Math.round(obj.angle || 0));
-            onUpdateAssetProperty('mainMediaX', Math.round(obj.left));
-            onUpdateAssetProperty('mainMediaY', Math.round(obj.top));
+            const updates: Partial<AssetInputs> = {
+              mainMediaScale: Math.max(0.1, Math.min(4.0, normalized)),
+              mainMediaRotation: Math.round(obj.angle || 0),
+              mainMediaX: Math.round(obj.left),
+              mainMediaY: Math.round(obj.top),
+            };
+            if (onUpdateAssetsBatch) {
+              onUpdateAssetsBatch(updates);
+            } else {
+              Object.entries(updates).forEach(([k, v]) => onUpdateAssetProperty(k as any, v));
+            }
+          } else if (obj.dataId === 'logo') {
+            const baseScale = obj._baseScale || 1;
+            const finalScale = Number(((obj.scaleX || 1) / baseScale).toFixed(2));
+            const updates: Partial<AssetInputs> = {
+              logoX: Math.round(obj.left),
+              logoY: Math.round(obj.top),
+              logoScale: Math.max(0.2, Math.min(3.0, finalScale)),
+              logoRotation: Math.round(obj.angle || 0),
+            };
+            if (onUpdateAssetsBatch) {
+              onUpdateAssetsBatch(updates);
+            } else {
+              Object.entries(updates).forEach(([k, v]) => onUpdateAssetProperty(k as any, v));
+            }
+          } else if (obj.dataId === 'topPill') {
+            const updates: Partial<AssetInputs> = {
+              topPillX: Math.round(obj.left),
+              topPillY: Math.round(obj.top),
+            };
+            if (onUpdateAssetsBatch) onUpdateAssetsBatch(updates);
+            else {
+              onUpdateAssetProperty('topPillX', updates.topPillX);
+              onUpdateAssetProperty('topPillY', updates.topPillY);
+            }
+          } else if (obj.dataId === 'eventCard') {
+            const updates: Partial<AssetInputs> = {
+              eventCardX: Math.round(obj.left),
+              eventCardY: Math.round(obj.top),
+            };
+            if (onUpdateAssetsBatch) onUpdateAssetsBatch(updates);
+            else {
+              onUpdateAssetProperty('eventCardX', updates.eventCardX);
+              onUpdateAssetProperty('eventCardY', updates.eventCardY);
+            }
+          } else if (obj.dataId === 'dateBadge') {
+            const updates: Partial<AssetInputs> = {
+              dateBadgeX: Math.round(obj.left),
+              dateBadgeY: Math.round(obj.top),
+            };
+            if (onUpdateAssetsBatch) onUpdateAssetsBatch(updates);
+            else {
+              onUpdateAssetProperty('dateBadgeX', updates.dateBadgeX);
+              onUpdateAssetProperty('dateBadgeY', updates.dateBadgeY);
+            }
           } else if (typeof obj.dataId === 'string' && obj.dataId.startsWith('bg_')) {
-            const layerIdx = parseInt(obj.dataId.replace('bg_', ''), 10);
-            if (!isNaN(layerIdx) && assets.backgroundLayers && assets.backgroundLayers[layerIdx]) {
-              const newX = Math.round(obj.left - canvasWidth / 2);
-              const newY = Math.round(obj.top - canvasHeight / 2);
-              const newRot = Math.round(obj.angle || 0);
-              const updatedLayers = [...assets.backgroundLayers];
-              updatedLayers[layerIdx] = {
-                ...updatedLayers[layerIdx],
-                x: newX,
-                y: newY,
-                rotation: newRot,
+            const layerId = obj.layerId;
+            const layers = currentAssets.backgroundLayers || [];
+            const targetIdx = layers.findIndex((l) => l.id === layerId);
+            if (targetIdx !== -1) {
+              const updatedLayers = [...layers];
+              updatedLayers[targetIdx] = {
+                ...updatedLayers[targetIdx],
+                x: Math.round(obj.left - canvasWidth / 2),
+                y: Math.round(obj.top - canvasHeight / 2),
+                rotation: Math.round(obj.angle || 0),
               };
-              onUpdateAssetProperty('backgroundLayers', updatedLayers);
+              if (onUpdateAssetsBatch) {
+                onUpdateAssetsBatch({ backgroundLayers: updatedLayers });
+              } else {
+                onUpdateAssetProperty('backgroundLayers', updatedLayers);
+              }
             }
           }
         });
@@ -152,6 +214,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
               cornerColor: '#C084FC',
               dataId: `bg_${idx}`,
             });
+            bgImg.layerId = layer.id;
             canvas.add(bgImg);
             enforceLayerOrdering(canvas);
           });
@@ -288,8 +351,8 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
         });
 
         const eventCardGroup = new fabric.Group([cardBg, cardTitle, cardSub], {
-          left: canvasWidth / 2,
-          top: canvasHeight * 0.81,
+          left: typeof assets.eventCardX === 'number' ? assets.eventCardX : canvasWidth / 2,
+          top: typeof assets.eventCardY === 'number' ? assets.eventCardY : canvasHeight * 0.81,
           originX: 'center',
           originY: 'center',
           selectable: true,
@@ -332,8 +395,8 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
         });
 
         const dateGroup = new fabric.Group([dateBgObj, dateTextObj], {
-          left: canvasWidth / 2,
-          top: canvasHeight * 0.89,
+          left: typeof assets.dateBadgeX === 'number' ? assets.dateBadgeX : canvasWidth / 2,
+          top: typeof assets.dateBadgeY === 'number' ? assets.dateBadgeY : canvasHeight * 0.89,
           originX: 'center',
           originY: 'center',
           selectable: true,
@@ -375,8 +438,8 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
         });
 
         const topPillGroup = new fabric.Group([pillBg, topText], {
-          left: canvasWidth / 2,
-          top: canvasHeight * 0.16,
+          left: typeof assets.topPillX === 'number' ? assets.topPillX : canvasWidth / 2,
+          top: typeof assets.topPillY === 'number' ? assets.topPillY : canvasHeight * 0.16,
           originX: 'center',
           originY: 'center',
           selectable: true,
@@ -390,6 +453,11 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
         fabric.Image.fromURL(assets.logoUrl, (logoImg: any) => {
           if (!isMounted || !canvas) return;
 
+          const userScale = typeof assets.logoScale === 'number' ? assets.logoScale : 1.0;
+          const userRot = typeof assets.logoRotation === 'number' ? assets.logoRotation : 0;
+          const posX = typeof assets.logoX === 'number' ? assets.logoX : canvasWidth * 0.04;
+          const posY = typeof assets.logoY === 'number' ? assets.logoY : canvasHeight * 0.04;
+
           // Check if this is the official SVG capsule logo with pre-built curved background
           const isOfficialSvgPill =
             typeof assets.logoUrl === 'string' &&
@@ -398,13 +466,15 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
 
           if (isOfficialSvgPill) {
             const targetW = canvasWidth * 0.46;
-            const scale = targetW / (logoImg.width || 380);
+            const baseScale = targetW / (logoImg.width || 380);
+            logoImg._baseScale = baseScale;
 
             logoImg.set({
-              left: canvasWidth * 0.04,
-              top: canvasHeight * 0.04,
-              scaleX: scale,
-              scaleY: scale,
+              left: posX,
+              top: posY,
+              scaleX: baseScale * userScale,
+              scaleY: baseScale * userScale,
+              angle: userRot,
               selectable: !assets.logoLocked,
               lockMovementX: assets.logoLocked,
               lockMovementY: assets.logoLocked,
@@ -468,13 +538,17 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
             });
 
             const logoGroup = new fabric.Group([frameBg, logoImg], {
-              left: canvasWidth * 0.04,
-              top: canvasHeight * 0.04,
+              left: posX,
+              top: posY,
+              scaleX: userScale,
+              scaleY: userScale,
+              angle: userRot,
               selectable: !assets.logoLocked,
               lockMovementX: assets.logoLocked,
               lockMovementY: assets.logoLocked,
               dataId: 'logo',
             });
+            logoGroup._baseScale = 1.0;
             canvas.add(logoGroup);
           }
           enforceLayerOrdering(canvas);
@@ -494,7 +568,8 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           56,
           assets.socialFooterBgColor || '#1D4ED8',
           assets.socialFooterTextColor || '#FFFFFF',
-          assets.socialFooterBorderColor || 'rgba(255,255,255,0.22)'
+          assets.socialFooterBorderColor || 'rgba(255,255,255,0.22)',
+          assets.socialFooterFontSize || 13
         );
 
         fabric.Image.fromURL(footerSvgUrl, (footerImg: any) => {

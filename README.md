@@ -96,21 +96,46 @@ Platform generasi desain multi-format terprogram untuk media sosial dengan mesin
 
 ## 🚀 Panduan Menjalankan Aplikasi
 
-### 1. Menjalankan Frontend Studio (Next.js)
+### Cara 1: Menggunakan File BAT (1-Klik Otomatis) ⭐ Paling Mudah
+
+Cukup **klik dua kali (double click)** file:
+📁 **`JALANKAN_APLIKASI.bat`**
+
+File batch ini akan otomatis:
+1. Memeriksa ketersediaan Node.js dan menginstal dependensi jika belum ada.
+2. Mendeteksi IP Wi-Fi / LAN komputer Anda secara otomatis.
+3. Membuka peramban di komputer Anda ke **`http://localhost:3030`**.
+4. Menampilkan alamat IP untuk HP / perangkat lain di jendela Command Prompt.
+
+---
+
+### Cara 2: Melalui Terminal / Command Prompt
 
 ```bash
-# Instal dependensi (jika belum)
+# 1. Instal dependensi (hanya perlu saat pertama kali)
 npm install
 
-# Jalankan server pengembangan
+# 2. Jalankan server studio (berjalan di port 3030 untuk semua jaringan)
 npm run dev
 ```
 
-Akses platform melalui peramban:
-- **Komputer Lokal**: **`http://localhost:3030`**
-- **Perangkat Lain (HP, Tablet, Laptop di jaringan Wi-Fi/LAN yang sama)**: **`http://<IP-KOMPUTER>:3030`** (misal: `http://10.10.10.159:3030`)
+---
 
-### 2. Menjalankan Python AI Microservice Bridge (Opsional)
+### 📱 Petunjuk Penggunaan di Perangkat Lain (HP, Tablet, Laptop Lain)
+
+1. **Pastikan Terhubung ke Jaringan yang Sama**:
+   Hubungkan HP/Tablet dan Komputer ke jaringan **Wi-Fi yang sama**.
+2. **Ketik Alamat URL di Browser HP**:
+   Buka Google Chrome atau Safari di HP, lalu masukkan alamat:
+   **`http://<IP-KOMPUTER>:3030`** (Contoh: **`http://10.10.10.159:3030`**).
+   *(Atau di komputer, klik tombol **"Buka di HP"** di bilah atas untuk menampilkan QR Code, lalu scan dengan kamera HP).*
+3. **Jika HP Mengalami Kendala (Loading terus / Tidak bisa terbuka)**:
+   Windows Firewall di komputer Anda mungkin membatasi koneksi masuk. Cukup klik kanan file:
+   📁 **`IZINKAN_FIREWALL_PORT_3030.bat`** &rarr; pilih **"Run as administrator"**.
+
+---
+
+### 3. Menjalankan Python AI Microservice Bridge (Opsional)
 
 ```bash
 python backend/ai_critic_service.py 8000
