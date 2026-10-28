@@ -1270,11 +1270,11 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
               )}
 
               {/* Preset Gallery Quick Picks */}
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px' }}>
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
                 <span style={{ fontSize: '11px', fontWeight: 700, color: '#94A3B8', display: 'block', marginBottom: '8px' }}>
                   ✨ Galeri Preset Background Cepat (1-Klik Tambah):
                 </span>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '6px', width: '100%', boxSizing: 'border-box' }}>
                   {PRESET_BACKGROUND_LIBRARY.map((bg) => (
                     <button
                       key={bg.id}
@@ -1282,29 +1282,43 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                       disabled={currentBgLayers.length >= 4}
                       className="btn"
                       style={{
-                        padding: '6px 8px',
-                        fontSize: '10px',
+                        padding: '5px 7px',
+                        fontSize: '9.5px',
                         background: 'rgba(255, 255, 255, 0.04)',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '6px',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
                         textAlign: 'left',
                         cursor: currentBgLayers.length >= 4 ? 'not-allowed' : 'pointer',
                         opacity: currentBgLayers.length >= 4 ? 0.5 : 1,
+                        minWidth: 0,
+                        width: '100%',
+                        overflow: 'hidden',
+                        boxSizing: 'border-box',
                       }}
                       title={`Tambahkan ${bg.name} sebagai background`}
                     >
                       <div
                         style={{
-                          width: '18px',
-                          height: '18px',
+                          width: '16px',
+                          height: '16px',
                           borderRadius: '4px',
                           background: bg.previewGradient,
                           flexShrink: 0,
                         }}
                       />
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#F8FAFC' }}>
+                      <span
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          color: '#F8FAFC',
+                          minWidth: 0,
+                          flex: 1,
+                        }}
+                      >
                         {bg.name}
                       </span>
                     </button>
@@ -2077,6 +2091,33 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                   <span>Isian Database</span>
                 </button>
               </div>
+
+              {/* Online AI Recommendation Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (onOpenGeminiAI) onOpenGeminiAI();
+                }}
+                className="btn btn-primary"
+                style={{
+                  width: '100%',
+                  padding: '7px 12px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  marginBottom: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  background: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 50%, #8B5CF6 100%)',
+                  boxShadow: '0 4px 14px rgba(6, 182, 212, 0.3)',
+                  borderRadius: '8px',
+                }}
+                title="Generate rekomendasi desain baru secara online menggunakan Google Gemini API Key"
+              >
+                <Sparkles size={13} />
+                <span>Minta Rekomendasi AI Online (Google Gemini)</span>
+              </button>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {AI_DESIGN_RECOMMENDATIONS.map((rec) => (

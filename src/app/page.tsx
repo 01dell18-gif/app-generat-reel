@@ -203,7 +203,7 @@ export default function StudioPage() {
       <main
         style={{
           display: 'grid',
-          gridTemplateColumns: isCriticOpen ? '360px 1fr 380px' : '360px 1fr',
+          gridTemplateColumns: isCriticOpen ? '320px 1fr 240px' : '320px 1fr',
           height: 'calc(100vh - 64px)',
           overflow: 'hidden',
           transition: 'grid-template-columns 0.3s ease',

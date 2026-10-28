@@ -355,10 +355,87 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generationResult, setGenerationResult] = useState<any>(null);
 
+  // Online Dynamic Recommendations Generated from Google Gemini
+  const [onlineRecommendations, setOnlineRecommendations] = useState<AIDesignPreset[]>([]);
+  const [isGeneratingRec, setIsGeneratingRec] = useState<boolean>(false);
+  const [recTopic, setRecTopic] = useState<string>('Peringatan Hari Pahlawan & Vokasi Unggul');
+
   // Multimodal Vision Critic State
   const [isAnalyzingVision, setIsAnalyzingVision] = useState<boolean>(false);
   const [visionReport, setVisionReport] = useState<any>(null);
   const [dbNotification, setDbNotification] = useState<string>('');
+
+  // Generate Online Dynamic AI Recommendation with Google Gemini
+  const handleGenerateOnlineRecommendation = async (customTopic?: string) => {
+    const key = apiKey.trim();
+    if (!key) {
+      setActiveTab('settings');
+      setStatusMessage('Silakan masukkan Google Gemini API Key Anda terlebih dahulu.');
+      return;
+    }
+
+    setIsGeneratingRec(true);
+    const topicToUse = (customTopic || recTopic).trim() || 'Peningkatan Mutu Pendidikan & Karakter Vokasi';
+
+    try {
+      const { ok, data } = await safeFetchJson('/api/gemini', {
+        apiKey: key,
+        model: selectedModel,
+        temperature: 0.75,
+        action: 'generate_design',
+        prompt: `Rancang konsep desain visual kreatif dan profesional untuk tema: "${topicToUse}". Berikan palet warna harmonis dengan kontras tinggi WCAG AA, teks banner acara, dan kartu SPMI/kegiatan.`,
+      });
+
+      if (ok && data.success && data.result) {
+        const res = data.result;
+        const newRec: AIDesignPreset = {
+          id: `online_rec_${Date.now()}`,
+          badge: '✨ GEMINI AI ONLINE (LIVE)',
+          title: res.topPillText || topicToUse,
+          description: res.reasoning || `Rekomendasi desain cerdas dari model resmi Google Gemini (${data.modelUsed || selectedModel}) untuk topik "${topicToUse}".`,
+          category: 'Generatif AI Online',
+          previewColors: [
+            res.topPillBgColor || '#05472A',
+            res.topPillTextColor || '#86EFAC',
+            res.eventCardBorderColor || '#F59E0B',
+            res.dateBgColor || '#2563EB',
+            '#0F172A',
+          ],
+          updates: {
+            topPillText: res.topPillText || topicToUse,
+            topPillBgColor: res.topPillBgColor || '#05472A',
+            topPillTextColor: res.topPillTextColor || '#86EFAC',
+            eventCardTitle: res.eventCardTitle || 'Sistem Penjaminan Mutu Internal',
+            eventCardTitleFontSize: 13,
+            eventCardSubtitle: res.eventCardSubtitle || 'SPMI',
+            eventCardSubtitleFontSize: 18,
+            eventCardBorderColor: res.eventCardBorderColor || '#F59E0B',
+            dateText: res.dateText || '2026',
+            dateFontSize: 11,
+            dateBgColor: res.dateBgColor || '#2563EB',
+            dateColor: res.dateColor || '#FFFFFF',
+            headlineText: res.headlineText || topicToUse,
+            subtitleText: res.subtitleText || '',
+            socialFooterBgColor: res.dateBgColor || '#1D4ED8',
+            socialFooterTextColor: '#FFFFFF',
+            socialFooterBorderColor: res.eventCardBorderColor || '#F59E0B',
+            showTopPill: true,
+            showEventCard: true,
+          },
+        };
+
+        setOnlineRecommendations((prev) => [newRec, ...prev]);
+        setDbNotification(`Rekomendasi online "${newRec.title}" berhasil digenerate oleh Gemini!`);
+        setTimeout(() => setDbNotification(''), 4000);
+      } else {
+        alert(data.error || 'Gagal menghasilkan rekomendasi dengan Gemini API. Silakan periksa Google Gemini API Key Anda.');
+      }
+    } catch (e: any) {
+      alert(`Terjadi kesalahan: ${e.message}`);
+    } finally {
+      setIsGeneratingRec(false);
+    }
+  };
 
   const handleSaveRecToDatabase = async (rec: AIDesignPreset) => {
     const merged = { ...assets, ...rec.updates };
@@ -779,8 +856,255 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
               >
                 <Sparkles size={20} color="#38BDF8" style={{ marginTop: '2px', flexShrink: 0 }} />
                 <div style={{ fontSize: '12px', color: '#E2E8F0', lineHeight: 1.5 }}>
-                  <strong style={{ color: '#38BDF8' }}>Rekomendasi Desain AI Profesional:</strong> Pilih salah satu preset teruji di bawah untuk langsung memperbarui teks SPMI, headline, palet warna harmonis, dan setingan warna sosial media. Anda juga dapat menyimpannya ke database lokal.
+                  <strong style={{ color: '#38BDF8' }}>Rekomendasi Desain AI Online & Presets:</strong> Minta rekomendasi langsung dari <strong>Google Gemini API</strong> menggunakan API Key Anda, atau pilih preset teruji di bawah untuk langsung memperbarui teks SPMI, headline, palet warna, dan kartu acara.
                 </div>
+              </div>
+
+              {/* LIVE ONLINE GEMINI AI RECOMMENDATION GENERATOR */}
+              <div
+                className="glass-panel"
+                style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(56, 189, 248, 0.35)',
+                  background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%)',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Wand2 size={15} color="#38BDF8" />
+                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#F8FAFC' }}>
+                      Generate Rekomendasi AI Online (Google Gemini)
+                    </span>
+                  </div>
+                  {connectionStatus === 'success' ? (
+                    <span style={{ fontSize: '10px', color: '#34D399', fontWeight: 700, background: 'rgba(16, 185, 129, 0.15)', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                      ✓ API Key Aktif ({selectedModel})
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('settings')}
+                      style={{ fontSize: '10.5px', color: '#FCD34D', background: 'rgba(252, 211, 77, 0.12)', border: '1px solid rgba(252, 211, 77, 0.3)', padding: '2px 8px', borderRadius: '12px', cursor: 'pointer' }}
+                    >
+                      Masukkan API Key →
+                    </button>
+                  )}
+                </div>
+
+                <p style={{ fontSize: '11px', color: '#94A3B8', marginBottom: '10px', lineHeight: 1.4 }}>
+                  Ketik tema/topik kegiatan Anda, dan Google Gemini akan merancang palet warna harmonis, banner atas, dan kartu informasi acara secara live.
+                </p>
+
+                {/* Quick Topic Chips */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '10px' }}>
+                  {[
+                    'Peringatan Hari Pahlawan & Vokasi',
+                    'SPMI & Akreditasi Mutu',
+                    'PPDB Siswa Baru 2026',
+                    'Workshop AI & Masa Depan',
+                    'Dies Natalis & Gelar Karya',
+                    'Hari Guru Nasional',
+                  ].map((topic) => (
+                    <button
+                      key={topic}
+                      type="button"
+                      onClick={() => {
+                        setRecTopic(topic);
+                        handleGenerateOnlineRecommendation(topic);
+                      }}
+                      disabled={isGeneratingRec}
+                      style={{
+                        padding: '3px 8px',
+                        fontSize: '10px',
+                        borderRadius: '6px',
+                        background: recTopic === topic ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                        border: recTopic === topic ? '1px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.1)',
+                        color: recTopic === topic ? '#38BDF8' : '#CBD5E1',
+                        cursor: isGeneratingRec ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      {topic}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom Topic Input & Submit Button */}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    value={recTopic}
+                    onChange={(e) => setRecTopic(e.target.value)}
+                    placeholder="Ketik tema kegiatan (misal: Lomba Kompetensi Siswa SMK)..."
+                    className="input-control"
+                    style={{ flex: 1, fontSize: '11.5px', padding: '7px 10px' }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleGenerateOnlineRecommendation();
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleGenerateOnlineRecommendation()}
+                    disabled={isGeneratingRec}
+                    className="btn btn-primary"
+                    style={{
+                      padding: '7px 14px',
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      background: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
+                      boxShadow: '0 4px 14px rgba(6, 182, 212, 0.35)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {isGeneratingRec ? (
+                      <>
+                        <RefreshCw size={13} className="spin" />
+                        <span>Menghubungi Gemini...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={13} />
+                        <span>Minta Rekomendasi AI</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* DYNAMIC LIST OF ONLINE AI RECOMMENDATIONS (IF ANY GENERATED) */}
+              {onlineRecommendations.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#34D399', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Sparkles size={13} />
+                    <span>Hasil Rekomendasi Gemini AI Online ({onlineRecommendations.length}):</span>
+                  </div>
+
+                  {onlineRecommendations.map((rec) => (
+                    <div
+                      key={rec.id}
+                      className="glass-panel"
+                      style={{
+                        padding: '14px',
+                        borderRadius: '10px',
+                        border: '1.5px solid rgba(16, 185, 129, 0.45)',
+                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(15, 23, 42, 0.75) 100%)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '10px',
+                        boxShadow: '0 8px 24px rgba(16, 185, 129, 0.15)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+                        <span
+                          style={{
+                            fontSize: '10px',
+                            fontWeight: 800,
+                            padding: '3px 8px',
+                            borderRadius: '999px',
+                            background: 'rgba(16, 185, 129, 0.25)',
+                            color: '#34D399',
+                            border: '1px solid #10B981',
+                          }}
+                        >
+                          {rec.badge}
+                        </span>
+                        <span style={{ fontSize: '10.5px', color: '#94A3B8', fontWeight: 600 }}>
+                          Model: {selectedModel}
+                        </span>
+                      </div>
+
+                      <div>
+                        <div style={{ fontSize: '14px', fontWeight: 800, color: '#F8FAFC' }}>
+                          {rec.title}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#CBD5E1', marginTop: '2px', lineHeight: 1.4 }}>
+                          {rec.description}
+                        </div>
+                      </div>
+
+                      {/* Palette swatches & details */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.35)', padding: '8px 12px', borderRadius: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '10px', color: '#94A3B8', fontWeight: 600 }}>Palet Warna AI:</span>
+                          <div style={{ display: 'flex', gap: '5px' }}>
+                            {rec.previewColors.map((color, i) => (
+                              <span
+                                key={i}
+                                style={{
+                                  width: '16px',
+                                  height: '16px',
+                                  borderRadius: '50%',
+                                  backgroundColor: color,
+                                  border: '1px solid rgba(255,255,255,0.4)',
+                                  display: 'inline-block',
+                                }}
+                                title={color}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: '10px', color: '#CBD5E1', display: 'flex', gap: '10px' }}>
+                          <span>Event Card: <strong>{rec.updates.eventCardTitle?.slice(0, 24)}</strong></span>
+                          <span>Badge: <strong style={{ color: rec.updates.dateBgColor }}>{rec.updates.dateText}</strong></span>
+                        </div>
+                      </div>
+
+                      {/* Dual Action: Apply AI directly or Save to Database */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleApplyRecommendation(rec)}
+                          className="btn btn-primary"
+                          style={{
+                            padding: '8px 12px',
+                            fontSize: '11.5px',
+                            fontWeight: 700,
+                            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)',
+                          }}
+                        >
+                          <Zap size={13} />
+                          <span>⚡ Terapkan AI Ini</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleSaveRecToDatabase(rec)}
+                          className="btn"
+                          style={{
+                            padding: '8px 10px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            background: 'rgba(252, 211, 77, 0.1)',
+                            border: '1px solid rgba(252, 211, 77, 0.3)',
+                            color: '#FCD34D',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '5px',
+                          }}
+                          title="Simpan preset rekomendasi AI ini ke database"
+                        >
+                          <Save size={13} />
+                          <span>Simpan ke DB</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ fontSize: '11px', fontWeight: 800, color: '#94A3B8', marginTop: '6px', marginBottom: '-4px' }}>
+                📋 Preset Desain Rekomendasi Teruji:
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

@@ -18,6 +18,7 @@ import {
   Code2,
   ChevronRight,
   TrendingUp,
+  X,
 } from 'lucide-react';
 
 interface CriticDrawerProps {
@@ -39,6 +40,7 @@ export const CriticDrawer: React.FC<CriticDrawerProps> = ({
   onApplyAllFixes,
   iterationHistory,
   isOpen,
+  onClose,
 }) => {
   const [activeTab, setActiveTab] = useState<'issues' | 'metrics' | 'history' | 'schema'>('issues');
 
@@ -68,54 +70,67 @@ export const CriticDrawer: React.FC<CriticDrawerProps> = ({
         overflow: 'hidden',
       }}
     >
-      {/* Header with Circular Score Gauge */}
+      {/* Compact Header with Score & Close button */}
       <div
         style={{
-          padding: '20px',
+          padding: '10px 12px',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
           background: 'radial-gradient(circle at top right, rgba(56, 189, 248, 0.08), transparent 70%)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
           <div>
-            <div style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '-0.2px' }}>
-              ACGT Visual Critic
+            <div style={{ fontSize: '13px', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.2px' }}>
+              ACGT Critic
             </div>
-            <div style={{ fontSize: '11px', color: '#94A3B8' }}>
-              Dual-Layer MLLM & Deterministic Engine
+            <div style={{ fontSize: '9.5px', color: '#94A3B8' }}>
+              Visual Quality Engine
             </div>
           </div>
 
-          {/* Engine Mode Badge */}
-          <div
-            className="glass-pill"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '4px 10px',
-              fontSize: '11px',
-              color: '#38BDF8',
-              border: '1px solid rgba(56, 189, 248, 0.3)',
-            }}
-          >
-            <Cpu size={13} />
-            <span>Fallback Engine (WCAG 2.1)</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div
+              className="glass-pill"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px',
+                padding: '2px 6px',
+                fontSize: '9.5px',
+                color: '#38BDF8',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+              }}
+            >
+              <Cpu size={10} />
+              <span>WCAG 2.1</span>
+            </div>
+
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="btn"
+                style={{ padding: '3px 5px', background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer' }}
+                title="Tutup Panel Critic"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Score Gauge & Category Breakdown */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          {/* Circular Progress Gauge */}
-          <div style={{ position: 'relative', width: '84px', height: '84px', flexShrink: 0 }}>
-            <svg width="84" height="84" viewBox="0 0 100 100">
+        {/* Compact Score Gauge & Category Breakdown */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* Circular Progress Gauge (Small) */}
+          <div style={{ position: 'relative', width: '56px', height: '56px', flexShrink: 0 }}>
+            <svg width="56" height="56" viewBox="0 0 100 100">
               <circle
                 cx="50"
                 cy="50"
                 r="45"
                 fill="none"
                 stroke="rgba(255, 255, 255, 0.08)"
-                strokeWidth="8"
+                strokeWidth="9"
               />
               <circle
                 className="score-circle"
@@ -124,7 +139,7 @@ export const CriticDrawer: React.FC<CriticDrawerProps> = ({
                 r="45"
                 fill="none"
                 stroke={scoreColor}
-                strokeWidth="8"
+                strokeWidth="9"
                 strokeDasharray="283"
                 strokeDashoffset={strokeDashoffset}
                 strokeLinecap="round"
@@ -141,61 +156,61 @@ export const CriticDrawer: React.FC<CriticDrawerProps> = ({
                 justifyContent: 'center',
               }}
             >
-              <span style={{ fontSize: '24px', fontWeight: 900, color: scoreColor, lineHeight: 1 }}>
+              <span style={{ fontSize: '18px', fontWeight: 900, color: scoreColor, lineHeight: 1 }}>
                 {report.overall_score}
               </span>
-              <span style={{ fontSize: '9px', fontWeight: 700, color: '#94A3B8', marginTop: '2px' }}>
-                SKOR DESAIN
+              <span style={{ fontSize: '7.5px', fontWeight: 700, color: '#94A3B8', marginTop: '1px' }}>
+                SKOR
               </span>
             </div>
           </div>
 
           {/* 4 Pillar Category Mini-Progress Bars */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1, minWidth: 0 }}>
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '2px' }}>
-                <span style={{ color: '#CBD5E1' }}>Kontras Warna</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', marginBottom: '1px' }}>
+                <span style={{ color: '#94A3B8' }}>Kontras</span>
                 <span style={{ fontWeight: 700, color: getScoreColor(report.category_scores.contrast) }}>
                   {report.category_scores.contrast}%
                 </span>
               </div>
-              <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ height: '3px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
                 <div style={{ width: `${report.category_scores.contrast}%`, height: '100%', background: getScoreColor(report.category_scores.contrast) }} />
               </div>
             </div>
 
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '2px' }}>
-                <span style={{ color: '#CBD5E1' }}>Hierarki Tipografi</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', marginBottom: '1px' }}>
+                <span style={{ color: '#94A3B8' }}>Hierarki</span>
                 <span style={{ fontWeight: 700, color: getScoreColor(report.category_scores.hierarchy) }}>
                   {report.category_scores.hierarchy}%
                 </span>
               </div>
-              <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ height: '3px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
                 <div style={{ width: `${report.category_scores.hierarchy}%`, height: '100%', background: getScoreColor(report.category_scores.hierarchy) }} />
               </div>
             </div>
 
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '2px' }}>
-                <span style={{ color: '#CBD5E1' }}>Safe-Zone & Spasial</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', marginBottom: '1px' }}>
+                <span style={{ color: '#94A3B8' }}>Safe-Zone</span>
                 <span style={{ fontWeight: 700, color: getScoreColor(report.category_scores.spatial_balance) }}>
                   {report.category_scores.spatial_balance}%
                 </span>
               </div>
-              <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ height: '3px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
                 <div style={{ width: `${report.category_scores.spatial_balance}%`, height: '100%', background: getScoreColor(report.category_scores.spatial_balance) }} />
               </div>
             </div>
 
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '2px' }}>
-                <span style={{ color: '#CBD5E1' }}>Kerapatan Visual</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', marginBottom: '1px' }}>
+                <span style={{ color: '#94A3B8' }}>Kerapatan</span>
                 <span style={{ fontWeight: 700, color: getScoreColor(report.category_scores.visual_density) }}>
                   {report.category_scores.visual_density}%
                 </span>
               </div>
-              <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ height: '3px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
                 <div style={{ width: `${report.category_scores.visual_density}%`, height: '100%', background: getScoreColor(report.category_scores.visual_density) }} />
               </div>
             </div>
@@ -207,28 +222,28 @@ export const CriticDrawer: React.FC<CriticDrawerProps> = ({
           <button
             onClick={onApplyAllFixes}
             className="btn btn-autofix"
-            style={{ width: '100%', marginTop: '16px', padding: '10px 14px' }}
+            style={{ width: '100%', marginTop: '8px', padding: '6px 10px', fontSize: '11px', borderRadius: '6px' }}
           >
-            <Wand2 size={16} />
-            <span>Perbaiki Semua Otomatis ({report.issues.length} Isu)</span>
+            <Wand2 size={13} />
+            <span>Perbaiki Semua ({report.issues.length})</span>
           </button>
         )}
       </div>
 
-      {/* Tabs */}
+      {/* Compact Tabs */}
       <div
         style={{
           display: 'flex',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          backgroundColor: 'rgba(0, 0, 0, 0.25)',
         }}
       >
         <button
           onClick={() => setActiveTab('issues')}
           style={{
             flex: 1,
-            padding: '10px',
-            fontSize: '12px',
+            padding: '6px 2px',
+            fontSize: '10px',
             fontWeight: 600,
             background: 'none',
             border: 'none',
@@ -237,15 +252,15 @@ export const CriticDrawer: React.FC<CriticDrawerProps> = ({
             cursor: 'pointer',
           }}
         >
-          Daftar Isu ({report.issues.length})
+          Isu ({report.issues.length})
         </button>
 
         <button
           onClick={() => setActiveTab('metrics')}
           style={{
             flex: 1,
-            padding: '10px',
-            fontSize: '12px',
+            padding: '6px 2px',
+            fontSize: '10px',
             fontWeight: 600,
             background: 'none',
             border: 'none',
@@ -254,15 +269,15 @@ export const CriticDrawer: React.FC<CriticDrawerProps> = ({
             cursor: 'pointer',
           }}
         >
-          Metrik ACGT
+          Metrik
         </button>
 
         <button
           onClick={() => setActiveTab('history')}
           style={{
             flex: 1,
-            padding: '10px',
-            fontSize: '12px',
+            padding: '6px 2px',
+            fontSize: '10px',
             fontWeight: 600,
             background: 'none',
             border: 'none',
@@ -271,15 +286,15 @@ export const CriticDrawer: React.FC<CriticDrawerProps> = ({
             cursor: 'pointer',
           }}
         >
-          Log Iterasi
+          Log
         </button>
 
         <button
           onClick={() => setActiveTab('schema')}
           style={{
             flex: 1,
-            padding: '10px',
-            fontSize: '12px',
+            padding: '6px 2px',
+            fontSize: '10px',
             fontWeight: 600,
             background: 'none',
             border: 'none',
@@ -288,12 +303,12 @@ export const CriticDrawer: React.FC<CriticDrawerProps> = ({
             cursor: 'pointer',
           }}
         >
-          JSON Schema
+          JSON
         </button>
       </div>
 
       {/* Tab Contents */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {/* TAB 1: ISSUES LIST */}
         {activeTab === 'issues' && (
           <>
@@ -301,17 +316,17 @@ export const CriticDrawer: React.FC<CriticDrawerProps> = ({
               <div
                 style={{
                   textAlign: 'center',
-                  padding: '40px 16px',
+                  padding: '28px 12px',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: '12px',
+                  gap: '8px',
                 }}
               >
                 <div
                   style={{
-                    width: '56px',
-                    height: '56px',
+                    width: '44px',
+                    height: '44px',
                     borderRadius: '50%',
                     backgroundColor: 'rgba(16, 185, 129, 0.15)',
                     border: '1px solid rgba(16, 185, 129, 0.4)',
@@ -320,13 +335,13 @@ export const CriticDrawer: React.FC<CriticDrawerProps> = ({
                     justifyContent: 'center',
                   }}
                 >
-                  <CheckCircle2 size={32} color="#10B981" />
+                  <CheckCircle2 size={24} color="#10B981" />
                 </div>
-                <div style={{ fontWeight: 800, fontSize: '15px', color: '#F8FAFC' }}>
+                <div style={{ fontWeight: 800, fontSize: '13px', color: '#F8FAFC' }}>
                   Komposisi Sempurna!
                 </div>
-                <div style={{ fontSize: '12px', color: '#94A3B8', maxWidth: '240px', lineHeight: '1.5' }}>
-                  Semua kriteria kontras WCAG 2.1 AA, hierarki tipografi, batas area aman, dan kepadatan visual telah lolos audit standar desain profesional.
+                <div style={{ fontSize: '10.5px', color: '#94A3B8', maxWidth: '200px', lineHeight: '1.4' }}>
+                  Semua kriteria kontras WCAG 2.1 AA dan safe-zone telah lolos audit standar desain.
                 </div>
               </div>
             ) : (
@@ -345,31 +360,31 @@ export const CriticDrawer: React.FC<CriticDrawerProps> = ({
                           ? 'rgba(244, 63, 94, 0.3)'
                           : 'rgba(255, 255, 255, 0.08)'
                       }`,
-                      borderRadius: '12px',
-                      padding: '14px',
+                      borderRadius: '8px',
+                      padding: '9px 10px',
                       cursor: 'pointer',
                       transition: 'all 0.2s',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span className={`badge badge-${iss.severity}`}>{iss.severity}</span>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#F8FAFC' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <span className={`badge badge-${iss.severity}`} style={{ fontSize: '8.5px', padding: '1px 5px' }}>{iss.severity}</span>
+                        <span style={{ fontSize: '10.5px', fontWeight: 700, color: '#F8FAFC' }}>
                           {iss.issue_id}
                         </span>
                       </div>
-                      <span style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'capitalize' }}>
+                      <span style={{ fontSize: '9.5px', color: '#94A3B8', textTransform: 'capitalize' }}>
                         {iss.category.replace('_', ' ')}
                       </span>
                     </div>
 
-                    <div style={{ fontSize: '12px', color: '#CBD5E1', lineHeight: '1.45', marginBottom: '10px' }}>
+                    <div style={{ fontSize: '10.5px', color: '#CBD5E1', lineHeight: '1.35', marginBottom: '8px' }}>
                       {iss.description}
                     </div>
 
                     {/* Auto Fix Button */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                      <div style={{ fontSize: '11px', color: '#94A3B8' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '6px', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                      <div style={{ fontSize: '9.5px', color: '#94A3B8' }}>
                         Target: <span style={{ color: '#38BDF8', fontWeight: 600 }}>{iss.target_layer}</span>
                       </div>
                       <button
