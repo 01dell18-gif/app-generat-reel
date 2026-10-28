@@ -26,6 +26,12 @@ interface GeminiAIModalProps {
   onApplyVisionCriticResult?: (result: any) => void;
 }
 
+interface GeminiModelOption {
+  id: string;
+  displayName: string;
+  description?: string;
+}
+
 export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
   isOpen,
   onClose,
@@ -38,6 +44,7 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
   // Gemini Settings State (stored in localStorage)
   const [apiKey, setApiKey] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<string>('gemini-1.5-flash');
+  const [availableModels, setAvailableModels] = useState<GeminiModelOption[]>([]);
   const [temperature, setTemperature] = useState<number>(0.7);
   const [tone, setTone] = useState<string>('formal');
   const [showKey, setShowKey] = useState<boolean>(false);
@@ -55,43 +62,63 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
   const [isAnalyzingVision, setIsAnalyzingVision] = useState<boolean>(false);
   const [visionReport, setVisionReport] = useState<any>(null);
 
-  // Load API key from localStorage on mount
+  // Load API key & cached models from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedKey = localStorage.getItem('GEMINI_API_KEY') || '';
-      const savedModel = localStorage.getItem('GEMINI_MODEL') || 'gemini-1.5-flash';
+      const savedKey = (localStorage.getItem('GEMINI_API_KEY') || '').trim();
+      const savedModel = (localStorage.getItem('GEMINI_MODEL') || 'gemini-1.5-flash').trim();
+      const savedModelsJson = localStorage.getItem('GEMINI_AVAILABLE_MODELS');
+      
       setApiKey(savedKey);
       setSelectedModel(savedModel);
+
+      if (savedModelsJson) {
+        try {
+          const parsed = JSON.parse(savedModelsJson);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setAvailableModels(parsed);
+            setConnectionStatus('success');
+            setStatusMessage(`Terkoneksi dengan ${parsed.length} model resmi dari Google.`);
+          }
+        } catch {
+          // Ignore JSON parse error
+        }
+      }
+
+      // If key is present but models are not loaded, connect automatically
+      if (savedKey && !savedModelsJson) {
+        testConnection(savedKey);
+      }
     }
   }, []);
 
-  // Save API key
+  // Save API key and trigger test connection
   const handleSaveSettings = () => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('GEMINI_API_KEY', apiKey);
+      localStorage.setItem('GEMINI_API_KEY', apiKey.trim());
       localStorage.setItem('GEMINI_MODEL', selectedModel);
     }
-    testConnection();
+    testConnection(apiKey.trim());
   };
 
-  // Test Connection & Auto-Detect Recommended Model
-  const testConnection = async () => {
-    if (!apiKey) {
+  // Test Connection & Auto-Fetch Supported Models from Google for this Key
+  const testConnection = async (customKey?: string) => {
+    const key = (customKey !== undefined ? customKey : apiKey).trim();
+    if (!key) {
       setConnectionStatus('error');
-      setStatusMessage('Silakan masukkan Google Gemini API Key terlebih dahulu.');
+      setStatusMessage('Silakan masukkan Google Gemini API Key Anda terlebih dahulu.');
       return;
     }
 
     setConnectionStatus('testing');
-    setStatusMessage('Memeriksa izin API Key & mendeteksi model Google Gemini yang tersedia...');
+    setStatusMessage('Menghubungi Google Gemini API & mengambil model yang kompatibel...');
 
     try {
       const res = await fetch('/api/gemini', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          apiKey,
-          model: selectedModel,
+          apiKey: key,
           action: 'test_connection',
         }),
       });
@@ -99,18 +126,29 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
       const data = await res.json();
       if (res.ok && data.success) {
         setConnectionStatus('success');
-        if (data.recommendedModel) {
-          setSelectedModel(data.recommendedModel);
-          localStorage.setItem('vg_gemini_model', data.recommendedModel);
-          setStatusMessage(
-            `Terhubung Sukses! Model otomatis disesuaikan ke '${data.recommendedModel}' (kompatibel penuh dengan API Key Anda).`
-          );
-        } else {
-          setStatusMessage(data.message || 'Terhubung Berhasil! Google Gemini AI siap digunakan.');
+        
+        const models: GeminiModelOption[] = (data.availableModels || []).map((m: any) =>
+          typeof m === 'string' ? { id: m, displayName: m } : m
+        );
+
+        setAvailableModels(models);
+
+        // Auto-select recommended model (e.g. gemini-1.5-flash) or fallback to first
+        const recModel = data.recommendedModel || (models[0]?.id ?? 'gemini-1.5-flash');
+        setSelectedModel(recModel);
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('GEMINI_API_KEY', key);
+          localStorage.setItem('GEMINI_MODEL', recModel);
+          localStorage.setItem('GEMINI_AVAILABLE_MODELS', JSON.stringify(models));
         }
+
+        setStatusMessage(
+          `✓ Terhubung Sukses! Berhasil memuat ${models.length} model resmi dari API Key Anda. Model otomatis disesuaikan ke '${recModel}'.`
+        );
       } else {
         setConnectionStatus('error');
-        setStatusMessage(data.error || 'Gagal terhubung ke Gemini API. Pastikan API Key valid.');
+        setStatusMessage(data.error || 'Gagal terhubung ke Google Gemini API. Pastikan API Key valid.');
       }
     } catch (e: any) {
       setConnectionStatus('error');
@@ -368,6 +406,60 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
           {/* TAB 1: GENERATE DESAIN DENGAN GEMINI */}
           {activeTab === 'generate' && (
             <>
+              {/* Connection Status Indicator Banner */}
+              {connectionStatus === 'success' ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    border: '1px solid rgba(16, 185, 129, 0.25)',
+                    fontSize: '11px',
+                    color: '#6EE7B7',
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <CheckCircle2 size={13} color="#10B981" />
+                    <span>Model Terkoneksi: <strong>{selectedModel}</strong></span>
+                  </span>
+                  <button
+                    onClick={() => setActiveTab('settings')}
+                    style={{ background: 'none', border: 'none', color: '#38BDF8', fontSize: '11px', cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    Ganti Model / API Key
+                  </button>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    background: 'rgba(245, 158, 11, 0.12)',
+                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                    fontSize: '12px',
+                    color: '#FDE68A',
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <AlertCircle size={15} color="#F59E0B" />
+                    <span>Google Gemini API Key belum terhubung.</span>
+                  </span>
+                  <button
+                    onClick={() => setActiveTab('settings')}
+                    className="btn btn-secondary"
+                    style={{ padding: '4px 10px', fontSize: '11px', borderColor: '#F59E0B', color: '#FCD34D' }}
+                  >
+                    Hubungkan Sekarang
+                  </button>
+                </div>
+              )}
+
               <div>
                 <label className="label-title">
                   <span>Tema / Topik Acara yang Ingin Dibuat</span>
@@ -541,29 +633,32 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
           {/* TAB 3: PENGATURAN API & PARAMETER */}
           {activeTab === 'settings' && (
             <>
-              {/* API Key */}
-              <div>
-                <label className="label-title">
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Key size={13} />
-                    <span>Google Gemini API Key</span>
-                  </span>
+              {/* API Key Box */}
+              <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="label-title" style={{ marginBottom: 0 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Key size={14} color="#38BDF8" />
+                      <span style={{ fontWeight: 800 }}>Google Gemini API Key</span>
+                    </span>
+                  </label>
                   <a
                     href="https://aistudio.google.com/app/apikey"
                     target="_blank"
                     rel="noreferrer"
-                    style={{ fontSize: '11px', color: '#38BDF8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}
+                    style={{ fontSize: '11px', color: '#38BDF8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
                     <span>Dapatkan API Key Gratis</span>
-                    <ExternalLink size={11} />
+                    <ExternalLink size={12} />
                   </a>
-                </label>
+                </div>
+
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
                     type={showKey ? 'text' : 'password'}
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="AIzaSy..."
+                    placeholder="Masukkan API Key (contoh: AIzaSy...)"
                     className="input-control"
                     style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}
                   />
@@ -575,53 +670,154 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
                     {showKey ? 'Tutup' : 'Lihat'}
                   </button>
                 </div>
+
+                {/* Primary Action Button: Connect and Fetch Models */}
+                <button
+                  onClick={() => testConnection()}
+                  disabled={connectionStatus === 'testing' || !apiKey.trim()}
+                  className="btn btn-primary"
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    background: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
+                    cursor: connectionStatus === 'testing' || !apiKey.trim() ? 'not-allowed' : 'pointer',
+                    opacity: !apiKey.trim() ? 0.6 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  {connectionStatus === 'testing' ? (
+                    <RefreshCw size={14} className="spin" />
+                  ) : (
+                    <Zap size={14} />
+                  )}
+                  <span>
+                    {connectionStatus === 'testing'
+                      ? 'Sedang Menghubungkan & Memindai Model Gemini...'
+                      : '⚡ Hubungkan API Key & Ambil Model Gemini'}
+                  </span>
+                </button>
+
+                {/* Connection Status Banner */}
+                {connectionStatus !== 'idle' && (
+                  <div
+                    style={{
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '8px',
+                      fontSize: '11.5px',
+                      lineHeight: '1.45',
+                      background:
+                        connectionStatus === 'success'
+                          ? 'rgba(16, 185, 129, 0.12)'
+                          : connectionStatus === 'error'
+                          ? 'rgba(244, 63, 94, 0.12)'
+                          : 'rgba(56, 189, 248, 0.1)',
+                      border:
+                        connectionStatus === 'success'
+                          ? '1px solid rgba(16, 185, 129, 0.35)'
+                          : connectionStatus === 'error'
+                          ? '1px solid rgba(244, 63, 94, 0.35)'
+                          : '1px solid rgba(56, 189, 248, 0.3)',
+                      color:
+                        connectionStatus === 'success'
+                          ? '#6EE7B7'
+                          : connectionStatus === 'error'
+                          ? '#FDA4AF'
+                          : '#BAE6FD',
+                    }}
+                  >
+                    {connectionStatus === 'testing' && <RefreshCw size={15} className="spin" style={{ flexShrink: 0, marginTop: '2px' }} />}
+                    {connectionStatus === 'success' && <CheckCircle2 size={15} color="#10B981" style={{ flexShrink: 0, marginTop: '2px' }} />}
+                    {connectionStatus === 'error' && <AlertCircle size={15} color="#F43F5E" style={{ flexShrink: 0, marginTop: '2px' }} />}
+                    <div>{statusMessage}</div>
+                  </div>
+                )}
               </div>
 
-              {/* Model Selection */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <label className="label-title" style={{ marginBottom: 0 }}>Model Google Gemini</label>
-                  <button
-                    onClick={testConnection}
-                    className="btn btn-secondary"
-                    style={{ padding: '2px 8px', fontSize: '10px', color: '#38BDF8', borderColor: 'rgba(56, 189, 248, 0.4)' }}
-                    title="Deteksi model yang kompatibel dengan API Key ini secara otomatis"
-                  >
-                    <RefreshCw size={11} />
-                    <span>Deteksi Otomatis</span>
-                  </button>
+              {/* Dynamic Model Selection */}
+              <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="label-title" style={{ marginBottom: 0 }}>
+                    <span style={{ fontWeight: 800 }}>Model Google Gemini</span>
+                    {availableModels.length > 0 && (
+                      <span style={{ fontSize: '10px', color: '#10B981', background: 'rgba(16, 185, 129, 0.15)', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px' }}>
+                        {availableModels.length} Model Resmi Ditemukan
+                      </span>
+                    )}
+                  </label>
+                  {apiKey && (
+                    <button
+                      onClick={() => testConnection()}
+                      disabled={connectionStatus === 'testing'}
+                      className="btn btn-secondary"
+                      style={{ padding: '3px 8px', fontSize: '10px', color: '#38BDF8', borderColor: 'rgba(56, 189, 248, 0.4)' }}
+                      title="Perbarui daftar model dari API Key"
+                    >
+                      <RefreshCw size={11} className={connectionStatus === 'testing' ? 'spin' : ''} />
+                      <span>Segarkan Model</span>
+                    </button>
+                  )}
                 </div>
+
                 <select
                   value={selectedModel}
                   onChange={(e) => {
                     setSelectedModel(e.target.value);
-                    localStorage.setItem('vg_gemini_model', e.target.value);
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('GEMINI_MODEL', e.target.value);
+                    }
                   }}
                   className="input-control"
-                  style={{ cursor: 'pointer' }}
+                  style={{ cursor: 'pointer', fontSize: '12px', padding: '8px 10px' }}
                 >
-                  <option value="gemini-1.5-flash">⭐ gemini-1.5-flash (Sangat Direkomendasikan - Cepat, Kuota Gratis & Multimodal)</option>
-                  <option value="gemini-2.0-flash">⚡ gemini-2.0-flash (Generasi Terbaru - Super Cepat)</option>
-                  <option value="gemini-1.5-pro">🧠 gemini-1.5-pro (Penalaran Kompleks & Estetika Tinggi)</option>
-                  <option value="gemini-1.5-flash-8b">🚀 gemini-1.5-flash-8b (Ultra Ringan & Respons Cepat)</option>
+                  {availableModels.length > 0 ? (
+                    availableModels.map((m) => {
+                      const isFlash = m.id === 'gemini-1.5-flash';
+                      const isPro = m.id === 'gemini-1.5-pro';
+                      const is20Flash = m.id === 'gemini-2.0-flash';
+                      let badge = '';
+                      if (isFlash) badge = '⭐ [Direkomendasikan - Kuota Gratis & Cepat]';
+                      else if (is20Flash) badge = '⚡ [Generasi Terbaru]';
+                      else if (isPro) badge = '🧠 [Penalaran Kompleks]';
+
+                      return (
+                        <option key={m.id} value={m.id} style={{ background: '#0F172A', color: '#F8FAFC' }}>
+                          {m.displayName || m.id} ({m.id}) {badge}
+                        </option>
+                      );
+                    })
+                  ) : (
+                    <>
+                      <option value="gemini-1.5-flash">⭐ gemini-1.5-flash (Direkomendasikan - Kuota Gratis & Multimodal)</option>
+                      <option value="gemini-2.0-flash">⚡ gemini-2.0-flash (Generasi Terbaru - Super Cepat)</option>
+                      <option value="gemini-1.5-pro">🧠 gemini-1.5-pro (Penalaran Kompleks & Estetika Tinggi)</option>
+                      <option value="gemini-1.5-flash-8b">🚀 gemini-1.5-flash-8b (Ultra Ringan & Respons Cepat)</option>
+                    </>
+                  )}
                 </select>
 
                 <div
                   style={{
-                    marginTop: '8px',
                     padding: '10px 12px',
                     borderRadius: '8px',
-                    backgroundColor: 'rgba(56, 189, 248, 0.08)',
-                    border: '1px solid rgba(56, 189, 248, 0.25)',
+                    backgroundColor: 'rgba(56, 189, 248, 0.06)',
+                    border: '1px solid rgba(56, 189, 248, 0.2)',
                     fontSize: '11px',
                     lineHeight: '1.5',
                     color: '#BAE6FD',
                   }}
                 >
-                  <div style={{ fontWeight: 700, color: '#38BDF8', marginBottom: '2px' }}>
-                    💡 Rekomendasi Terkoneksi:
+                  <div style={{ fontWeight: 700, color: '#38BDF8', marginBottom: '3px' }}>
+                    💡 Informasi Model & API Key:
                   </div>
-                  Gunakan <strong>gemini-1.5-flash</strong> untuk API Key gratis/standar Google AI Studio. Model ini memiliki batas kuota harian tertinggi, mendukung analisis visual kanvas instan, dan sangat stabil. Klik <em>Uji Koneksi</em> untuk mencocokkan model secara otomatis.
+                  Model yang tampil disinkronkan secara langsung dengan izin API Key Anda. Model <strong>gemini-1.5-flash</strong> otomatis dipilih sebagai rekomendasi utama karena memiliki latensi tercepat, mendukung analisis multimodal gambar kanvas, dan kuota gratis harian paling melimpah di Google AI Studio.
                 </div>
               </div>
 
@@ -672,17 +868,13 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
 
               {/* Connection Status & Save Button */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  {connectionStatus === 'success' && <CheckCircle2 size={14} color="#10B981" />}
-                  {connectionStatus === 'error' && <AlertCircle size={14} color="#F43F5E" />}
-                  <span style={{ color: connectionStatus === 'success' ? '#10B981' : connectionStatus === 'error' ? '#F43F5E' : '#94A3B8' }}>
-                    {statusMessage || 'Kunci API tersimpan di browser.'}
-                  </span>
+                <div style={{ fontSize: '11px', color: '#94A3B8' }}>
+                  *Setelan dan API Key otomatis tersimpan di browser Anda.
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={testConnection} className="btn btn-secondary" style={{ padding: '8px 12px', fontSize: '12px' }}>
-                    Uji Koneksi
+                  <button onClick={() => testConnection()} className="btn btn-secondary" style={{ padding: '8px 12px', fontSize: '12px' }}>
+                    Uji Ulang Koneksi
                   </button>
                   <button onClick={handleSaveSettings} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '12px' }}>
                     Simpan Pengaturan

@@ -42,9 +42,16 @@ export async function POST(req: NextRequest) {
 
         if (!listRes.ok) {
           const errText = await listRes.text();
+          let parsedError = '';
+          try {
+            const errJson = JSON.parse(errText);
+            parsedError = errJson.error?.message || errText;
+          } catch {
+            parsedError = errText;
+          }
           return NextResponse.json(
             {
-              error: `API Key tidak valid atau ditolak oleh Google (${listRes.status}): ${errText}`,
+              error: `API Key tidak valid atau ditolak oleh Google (${listRes.status}): ${parsedError}`,
               status: listRes.status,
             },
             { status: listRes.status }
@@ -52,22 +59,41 @@ export async function POST(req: NextRequest) {
         }
 
         const data = await listRes.json();
-        const availableModels: string[] = (data.models || [])
-          .filter((m: any) => m.supportedGenerationMethods?.includes('generateContent'))
-          .map((m: any) => m.name.replace(/^models\//, ''));
+        const rawModels: any[] = data.models || [];
 
-        // Pick best recommended model
+        // Filter models that support generateContent
+        const contentModels = rawModels.filter(
+          (m: any) =>
+            Array.isArray(m.supportedGenerationMethods) &&
+            m.supportedGenerationMethods.includes('generateContent')
+        );
+
+        const availableModels = contentModels.map((m: any) => {
+          const modelId = m.name.replace(/^models\//, '');
+          return {
+            id: modelId,
+            displayName: m.displayName || modelId,
+            description: m.description || '',
+          };
+        });
+
+        const modelIds = availableModels.map((m: any) => m.id);
+
+        // Pick best recommended model: prioritize gemini-1.5-flash for speed & free tier quota
         let recommended = 'gemini-1.5-flash';
-        for (const pref of ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro']) {
-          if (availableModels.includes(pref)) {
+        for (const pref of ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash-8b']) {
+          if (modelIds.includes(pref)) {
             recommended = pref;
             break;
           }
         }
+        if (!modelIds.includes(recommended) && modelIds.length > 0) {
+          recommended = modelIds[0];
+        }
 
         return NextResponse.json({
           success: true,
-          message: `Koneksi Berhasil! Ditemukan ${availableModels.length} model aktif untuk API Key ini.`,
+          message: `Koneksi Berhasil! Terhubung ke Google Generative Language API (${availableModels.length} model aktif ditemukan).`,
           availableModels,
           recommendedModel: recommended,
         });
