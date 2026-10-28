@@ -50,6 +50,7 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
 
   // Cached Image elements for smooth 60fps canvas rendering
   const bgImgRef = useRef<HTMLImageElement | null>(null);
+  const bgLayersImgsRef = useRef<{ img: HTMLImageElement; opacity: number; blendMode?: string }[]>([]);
   const logoImgRef = useRef<HTMLImageElement | null>(null);
   const photoImgRef = useRef<HTMLImageElement | null>(null);
   const wmImgRef = useRef<HTMLImageElement | null>(null);
@@ -57,6 +58,18 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
 
   // Load images
   useEffect(() => {
+    // Multi-background layers
+    const visibleLayers = (assets.backgroundLayers || []).filter((l) => l.visible && l.url);
+    if (visibleLayers.length > 0) {
+      bgLayersImgsRef.current = visibleLayers.map((layer) => {
+        const img = new Image();
+        img.src = layer.url;
+        return { img, opacity: layer.opacity ?? 1.0, blendMode: layer.blendMode };
+      });
+    } else {
+      bgLayersImgsRef.current = [];
+    }
+
     if (assets.useCustomBgImage && assets.customBgImageUrl) {
       const bg = new Image();
       bg.src = assets.customBgImageUrl;
@@ -120,8 +133,23 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
     const w = canvas.width;
     const h = canvas.height;
 
-    // LAYER 1: BACKGROUND (Template / Sky with green hills)
-    if (bgImgRef.current && bgImgRef.current.complete) {
+    // LAYER 1: BACKGROUND (Multi-Layer Backgrounds, Template Image, or Sky Gradient)
+    if (bgLayersImgsRef.current.length > 0) {
+      ctx.fillStyle = assets.bgColor || '#0F172A';
+      ctx.fillRect(0, 0, w, h);
+
+      bgLayersImgsRef.current.forEach(({ img, opacity, blendMode }) => {
+        if (img && img.complete) {
+          ctx.save();
+          ctx.globalAlpha = opacity;
+          if (blendMode && blendMode !== 'normal') {
+            ctx.globalCompositeOperation = blendMode as GlobalCompositeOperation;
+          }
+          ctx.drawImage(img, 0, 0, w, h);
+          ctx.restore();
+        }
+      });
+    } else if (bgImgRef.current && bgImgRef.current.complete) {
       ctx.drawImage(bgImgRef.current, 0, 0, w, h);
     } else {
       const skyGrad = ctx.createLinearGradient(0, 0, 0, h);

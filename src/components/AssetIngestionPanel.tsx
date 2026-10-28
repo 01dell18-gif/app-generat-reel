@@ -1,7 +1,19 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { AssetInputs } from '@/types/design';
+import React, { useState, useRef, useEffect } from 'react';
+import { AssetInputs, BackgroundLayer } from '@/types/design';
+import { PRESET_BACKGROUND_LIBRARY, TEMPLATE_BG_SMK } from '@/lib/preset-templates';
+import {
+  dbSaveAsset,
+  dbGetAssets,
+  dbDeleteAsset,
+  dbSaveProject,
+  dbGetProjects,
+  dbDeleteProject,
+  SavedAsset,
+  SavedProject,
+  AssetCategory,
+} from '@/lib/asset-database';
 import {
   Upload,
   Type,
@@ -11,30 +23,68 @@ import {
   Sparkles,
   Share2,
   Trash2,
-  Lock,
-  Unlock,
-  Settings,
-  Zap,
+  Database,
+  Plus,
+  ChevronUp,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Save,
+  Check,
+  RefreshCw,
+  Sliders,
+  FolderDown,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface AssetIngestionPanelProps {
   assets: AssetInputs;
   onUpdateProperty: (key: keyof AssetInputs, value: any) => void;
   onOpenGeminiAI: () => void;
+  onApplyFullAssets?: (assets: AssetInputs) => void;
 }
 
 export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
   assets,
   onUpdateProperty,
   onOpenGeminiAI,
+  onApplyFullAssets,
 }) => {
-  const [activeTab, setActiveTab] = useState<'upload' | 'gemini' | 'text' | 'badge' | 'social'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'database' | 'gemini' | 'text' | 'badge' | 'social'>('upload');
 
+  // Input refs
   const photoInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bgInputRef = useRef<HTMLInputElement>(null);
+  const layerInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Helper to read uploaded files as Data URL
+  // Database state
+  const [dbAssets, setDbAssets] = useState<SavedAsset[]>([]);
+  const [dbProjects, setDbProjects] = useState<SavedProject[]>([]);
+  const [dbFilter, setDbFilter] = useState<'all' | AssetCategory | 'project'>('all');
+  const [isSavingDesign, setIsSavingDesign] = useState<boolean>(false);
+  const [designSaveTitle, setDesignSaveTitle] = useState<string>('');
+  const [dbStatusMsg, setDbStatusMsg] = useState<string>('');
+
+  // Load database items
+  const refreshDatabase = async () => {
+    try {
+      const [allAssets, allProjects] = await Promise.all([
+        dbGetAssets(),
+        dbGetProjects(),
+      ]);
+      setDbAssets(allAssets);
+      setDbProjects(allProjects);
+    } catch (e) {
+      console.warn('DB Load error', e);
+    }
+  };
+
+  useEffect(() => {
+    refreshDatabase();
+  }, [activeTab]);
+
+  // Helper to read uploaded files as Data URL and auto-save into Database
   const handleFileUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
     propertyKey: keyof AssetInputs
@@ -42,16 +92,137 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         if (event.target?.result) {
-          onUpdateProperty(propertyKey, event.target.result as string);
+          const dataUrl = event.target.result as string;
+          onUpdateProperty(propertyKey, dataUrl);
+
           if (propertyKey === 'customBgImageUrl') {
             onUpdateProperty('useCustomBgImage', true);
+            await dbSaveAsset(file.name || 'Background Template', 'background', dataUrl);
+          } else if (propertyKey === 'mainMediaUrl') {
+            await dbSaveAsset(file.name || 'Foto Subjek Utama', 'photo', dataUrl);
+          } else if (propertyKey === 'logoUrl') {
+            await dbSaveAsset(file.name || 'Logo Instansi', 'logo', dataUrl);
           }
+          refreshDatabase();
         }
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // ================= MULTI-BACKGROUND MANAGEMENT (MAX 4) =================
+  const currentBgLayers = assets.backgroundLayers || [];
+
+  const handleAddBackgroundLayer = async (url?: string, name?: string) => {
+    if (currentBgLayers.length >= 4) {
+      alert('Maksimal 4 template background gambar telah tercapai.');
+      return;
+    }
+    const targetUrl = url || TEMPLATE_BG_SMK;
+    const layerName = name || `Background ${currentBgLayers.length + 1}`;
+    const newLayer: BackgroundLayer = {
+      id: `bg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      name: layerName,
+      url: targetUrl,
+      opacity: 1.0,
+      blendMode: 'normal',
+      visible: true,
+    };
+    const updated = [...currentBgLayers, newLayer];
+    onUpdateProperty('backgroundLayers', updated);
+    onUpdateProperty('useCustomBgImage', true);
+    await dbSaveAsset(layerName, 'background', targetUrl);
+    refreshDatabase();
+  };
+
+  const handleUpdateBackgroundLayer = (index: number, updates: Partial<BackgroundLayer>) => {
+    const current = [...currentBgLayers];
+    if (current[index]) {
+      current[index] = { ...current[index], ...updates };
+      onUpdateProperty('backgroundLayers', current);
+    }
+  };
+
+  const handleRemoveBackgroundLayer = (index: number) => {
+    const current = currentBgLayers.filter((_, i) => i !== index);
+    onUpdateProperty('backgroundLayers', current);
+  };
+
+  const handleMoveBackgroundLayer = (index: number, direction: 'up' | 'down') => {
+    const current = [...currentBgLayers];
+    const target = direction === 'up' ? index - 1 : index + 1;
+    if (target < 0 || target >= current.length) return;
+    const temp = current[index];
+    current[index] = current[target];
+    current[target] = temp;
+    onUpdateProperty('backgroundLayers', current);
+  };
+
+  const handleLayerImageUpload = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        if (event.target?.result) {
+          const dataUrl = event.target.result as string;
+          handleUpdateBackgroundLayer(index, { url: dataUrl, name: file.name });
+          await dbSaveAsset(file.name || `Background ${index + 1}`, 'background', dataUrl);
+          refreshDatabase();
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // ================= DATABASE VAULT ACTIONS =================
+  const handleApplyAssetFromDB = (item: SavedAsset) => {
+    if (item.type === 'photo') {
+      onUpdateProperty('mainMediaUrl', item.dataUrl);
+    } else if (item.type === 'logo') {
+      onUpdateProperty('logoUrl', item.dataUrl);
+    } else if (item.type === 'background') {
+      if (currentBgLayers.length < 4) {
+        handleAddBackgroundLayer(item.dataUrl, item.name);
+      } else {
+        onUpdateProperty('customBgImageUrl', item.dataUrl);
+        onUpdateProperty('useCustomBgImage', true);
+      }
+    } else if (item.type === 'watermark') {
+      onUpdateProperty('watermarkUrl', item.dataUrl);
+      onUpdateProperty('showWatermark', true);
+    }
+    setDbStatusMsg(`Aset "${item.name}" berhasil diterapkan!`);
+    setTimeout(() => setDbStatusMsg(''), 3000);
+  };
+
+  const handleDeleteAssetFromDB = async (id: string) => {
+    await dbDeleteAsset(id);
+    refreshDatabase();
+  };
+
+  const handleSaveCurrentDesign = async () => {
+    const title = designSaveTitle.trim() || `Desain ${assets.headlineText ? assets.headlineText.slice(0, 24) : 'Sekolah'} (${new Date().toLocaleDateString()})`;
+    await dbSaveProject(title, 'poster_1_1', assets);
+    setDesignSaveTitle('');
+    setIsSavingDesign(false);
+    refreshDatabase();
+    setDbStatusMsg('Desain berhasil disimpan ke database!');
+    setTimeout(() => setDbStatusMsg(''), 3000);
+  };
+
+  const handleLoadProjectFromDB = (p: SavedProject) => {
+    if (onApplyFullAssets) {
+      onApplyFullAssets(p.assets);
+      setDbStatusMsg(`Desain "${p.title}" berhasil dimuat!`);
+      setTimeout(() => setDbStatusMsg(''), 3000);
+    }
+  };
+
+  const handleDeleteProjectFromDB = async (id: string) => {
+    await dbDeleteProject(id);
+    refreshDatabase();
   };
 
   return (
@@ -72,7 +243,7 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
       {/* Panel Header */}
       <div
         style={{
-          padding: '16px 20px',
+          padding: '14px 18px',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
           background: 'linear-gradient(180deg, rgba(56, 189, 248, 0.05) 0%, transparent 100%)',
           display: 'flex',
@@ -82,10 +253,10 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
       >
         <div>
           <div style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '-0.2px' }}>
-            Asset & Media Ingestion
+            Asset & Media Studio
           </div>
           <div style={{ fontSize: '11px', color: '#94A3B8' }}>
-            Upload Foto, Desain, & Gemini AI
+            Multi-Background, Database & AI Ingestion
           </div>
         </div>
 
@@ -106,124 +277,54 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
         </button>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs Bar (6 Tabs) */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
+          gridTemplateColumns: 'repeat(6, 1fr)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          backgroundColor: 'rgba(0, 0, 0, 0.25)',
+          backgroundColor: 'rgba(0, 0, 0, 0.35)',
         }}
       >
-        <button
-          onClick={() => setActiveTab('upload')}
-          style={{
-            padding: '10px 2px',
-            fontSize: '10px',
-            fontWeight: 700,
-            background: 'none',
-            border: 'none',
-            color: activeTab === 'upload' ? '#38BDF8' : '#94A3B8',
-            borderBottom: activeTab === 'upload' ? '2px solid #38BDF8' : '2px solid transparent',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '4px',
-          }}
-        >
-          <Upload size={14} />
-          <span>Upload</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('gemini')}
-          style={{
-            padding: '10px 2px',
-            fontSize: '10px',
-            fontWeight: 700,
-            background: 'none',
-            border: 'none',
-            color: activeTab === 'gemini' ? '#38BDF8' : '#94A3B8',
-            borderBottom: activeTab === 'gemini' ? '2px solid #38BDF8' : '2px solid transparent',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '4px',
-          }}
-        >
-          <Sparkles size={14} />
-          <span>AI Gemini</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('text')}
-          style={{
-            padding: '10px 2px',
-            fontSize: '10px',
-            fontWeight: 700,
-            background: 'none',
-            border: 'none',
-            color: activeTab === 'text' ? '#38BDF8' : '#94A3B8',
-            borderBottom: activeTab === 'text' ? '2px solid #38BDF8' : '2px solid transparent',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '4px',
-          }}
-        >
-          <Type size={14} />
-          <span>Teks</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('badge')}
-          style={{
-            padding: '10px 2px',
-            fontSize: '10px',
-            fontWeight: 700,
-            background: 'none',
-            border: 'none',
-            color: activeTab === 'badge' ? '#38BDF8' : '#94A3B8',
-            borderBottom: activeTab === 'badge' ? '2px solid #38BDF8' : '2px solid transparent',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '4px',
-          }}
-        >
-          <Layers size={14} />
-          <span>SPMI</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('social')}
-          style={{
-            padding: '10px 2px',
-            fontSize: '10px',
-            fontWeight: 700,
-            background: 'none',
-            border: 'none',
-            color: activeTab === 'social' ? '#38BDF8' : '#94A3B8',
-            borderBottom: activeTab === 'social' ? '2px solid #38BDF8' : '2px solid transparent',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '4px',
-          }}
-        >
-          <Share2 size={14} />
-          <span>Sosmed</span>
-        </button>
+        {[
+          { id: 'upload', label: 'Upload', icon: Upload },
+          { id: 'database', label: 'Database', icon: Database },
+          { id: 'gemini', label: 'Gemini', icon: Sparkles },
+          { id: 'text', label: 'Teks', icon: Type },
+          { id: 'badge', label: 'SPMI', icon: Layers },
+          { id: 'social', label: 'Sosmed', icon: Share2 },
+        ].map((t) => {
+          const Icon = t.icon;
+          const isActive = activeTab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id as any)}
+              style={{
+                padding: '9px 1px',
+                fontSize: '10px',
+                fontWeight: 700,
+                background: 'none',
+                border: 'none',
+                color: isActive ? '#38BDF8' : '#94A3B8',
+                borderBottom: isActive ? '2px solid #38BDF8' : '2px solid transparent',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '3px',
+              }}
+            >
+              <Icon size={13} />
+              <span>{t.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Main Tab Content */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {/* TAB 1: UPLOAD MEDIA & ASSETS */}
+        {/* TAB 1: UPLOAD MEDIA & MULTI-BACKGROUND */}
         {activeTab === 'upload' && (
           <>
             {/* 1. UPLOAD FOTO SUBJEK UTAMA */}
@@ -252,10 +353,9 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
               </div>
 
               <div style={{ fontSize: '10px', color: '#94A3B8', marginBottom: '8px' }}>
-                *Foto otomatis berada di urutan layer belakang nomor 2 setelah background, sehingga banner & logo berada di atasnya dan tidak bentrok.
+                *Foto otomatis tersimpan ke Database lokal dan berada di layer belakang nomor 2.
               </div>
 
-              {/* Upload Drop Zone / Button */}
               <input
                 ref={photoInputRef}
                 type="file"
@@ -269,15 +369,14 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                 style={{
                   border: '2px dashed rgba(56, 189, 248, 0.4)',
                   borderRadius: '10px',
-                  padding: '16px',
+                  padding: '14px',
                   textAlign: 'center',
                   cursor: 'pointer',
                   backgroundColor: 'rgba(15, 23, 42, 0.5)',
-                  transition: 'all 0.2s',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: '8px',
+                  gap: '6px',
                 }}
               >
                 {assets.mainMediaUrl ? (
@@ -285,27 +384,26 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                     <img
                       src={assets.mainMediaUrl}
                       alt="Uploaded preview"
-                      style={{ width: '48px', height: '48px', objectFit: 'contain', borderRadius: '6px', background: '#0F172A' }}
+                      style={{ width: '44px', height: '44px', objectFit: 'contain', borderRadius: '6px', background: '#0F172A' }}
                     />
                     <div style={{ textAlign: 'left', flex: 1, overflow: 'hidden' }}>
                       <div style={{ fontSize: '12px', fontWeight: 700, color: '#F8FAFC' }}>Foto Terpasang</div>
-                      <div style={{ fontSize: '10px', color: '#94A3B8' }}>Klik untuk mengganti foto dari komputer</div>
+                      <div style={{ fontSize: '10px', color: '#94A3B8' }}>Klik untuk mengganti foto dari file</div>
                     </div>
                   </div>
                 ) : (
                   <>
-                    <Upload size={22} color="#38BDF8" />
+                    <Upload size={20} color="#38BDF8" />
                     <div style={{ fontSize: '12px', fontWeight: 700, color: '#F8FAFC' }}>
                       Pilih Foto dari Komputer
                     </div>
                     <div style={{ fontSize: '10px', color: '#94A3B8' }}>
-                      Mendukung PNG transparan, JPEG, WebP
+                      PNG transparan, JPEG, WebP
                     </div>
                   </>
                 )}
               </div>
 
-              {/* Controls for Photo Scale & Subject Isolation */}
               {assets.mainMediaUrl && (
                 <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div>
@@ -390,64 +488,281 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
               </div>
             </div>
 
-            {/* 3. UPLOAD BACKGROUND / TEMPLATE FRAME */}
-            <div className="glass-panel" style={{ padding: '14px' }}>
+            {/* 3. MULTI-BACKGROUND IMAGE MANAGEMENT (MAX 4 LAYERS) */}
+            <div className="glass-panel" style={{ padding: '14px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#CBD5E1', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#C084FC', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Layers size={14} />
-                  <span>Template Background Gambar</span>
+                  <span>Template Background Gambar (Max 4)</span>
                 </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '10px', color: '#94A3B8' }}>Gunakan</span>
-                  <input
-                    type="checkbox"
-                    checked={assets.useCustomBgImage}
-                    onChange={(e) => onUpdateProperty('useCustomBgImage', e.target.checked)}
-                    style={{ cursor: 'pointer' }}
-                  />
-                </div>
+                <span
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    color: currentBgLayers.length >= 4 ? '#F59E0B' : '#38BDF8',
+                    background: 'rgba(255,255,255,0.06)',
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                  }}
+                >
+                  {currentBgLayers.length} / 4 Layer
+                </span>
               </div>
 
-              <input
-                ref={bgInputRef}
-                type="file"
-                accept="image/*"
-                style={{ display: 'none' }}
-                onChange={(e) => handleFileUpload(e, 'customBgImageUrl')}
-              />
+              <div style={{ fontSize: '10px', color: '#94A3B8', marginBottom: '10px' }}>
+                Tumpuk hingga 4 background berbeda (tekstur, grid, gradasi, frame) untuk mempercantik estetika desain.
+              </div>
 
-              <div
-                onClick={() => bgInputRef.current?.click()}
-                style={{
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  borderRadius: '8px',
-                  padding: '10px',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-              >
-                {assets.customBgImageUrl && (
-                  <img
-                    src={assets.customBgImageUrl}
-                    alt="Bg preview"
-                    style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '4px' }}
-                  />
-                )}
-                <div style={{ textAlign: 'left', flex: 1 }}>
-                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#F8FAFC' }}>
-                    Upload Frame / Background Sendiri
-                  </div>
-                  <div style={{ fontSize: '9px', color: '#94A3B8' }}>Seperti gambar contoh bukit hijau</div>
+              {/* Add Background Button */}
+              {currentBgLayers.length < 4 ? (
+                <button
+                  onClick={() => handleAddBackgroundLayer()}
+                  className="btn btn-secondary"
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: '11px',
+                    marginBottom: '12px',
+                    borderColor: 'rgba(192, 132, 252, 0.4)',
+                    color: '#C084FC',
+                  }}
+                >
+                  <Plus size={14} />
+                  <span>Tambah Layer Background ({currentBgLayers.length}/4)</span>
+                </button>
+              ) : (
+                <div
+                  style={{
+                    fontSize: '11px',
+                    color: '#F59E0B',
+                    padding: '6px 10px',
+                    borderRadius: '6px',
+                    background: 'rgba(245, 158, 11, 0.1)',
+                    marginBottom: '10px',
+                    textAlign: 'center',
+                  }}
+                >
+                  ✓ Batas maksimal 4 background telah terpasang.
                 </div>
-                <Upload size={14} color="#94A3B8" />
+              )}
+
+              {/* Active Background Layers Cards */}
+              {currentBgLayers.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
+                  {currentBgLayers.map((layer, idx) => (
+                    <div
+                      key={layer.id || idx}
+                      style={{
+                        padding: '10px',
+                        background: 'rgba(0, 0, 0, 0.35)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                      }}
+                    >
+                      {/* Layer Header Row */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <img
+                            src={layer.url}
+                            alt="layer preview"
+                            style={{ width: '28px', height: '28px', borderRadius: '4px', objectFit: 'cover', background: '#0F172A' }}
+                          />
+                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#F8FAFC' }}>
+                            Layer {idx + 1}: {layer.name || 'Background'}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          {/* Visibility Toggle */}
+                          <button
+                            onClick={() => handleUpdateBackgroundLayer(idx, { visible: !layer.visible })}
+                            className="btn"
+                            style={{ padding: '3px 6px', background: 'none', border: 'none', color: layer.visible ? '#38BDF8' : '#64748B' }}
+                            title={layer.visible ? 'Sembunyikan' : 'Tampilkan'}
+                          >
+                            {layer.visible ? <Eye size={13} /> : <EyeOff size={13} />}
+                          </button>
+
+                          {/* Reorder Up */}
+                          {idx > 0 && (
+                            <button
+                              onClick={() => handleMoveBackgroundLayer(idx, 'up')}
+                              className="btn"
+                              style={{ padding: '3px 6px', background: 'none', border: 'none', color: '#94A3B8' }}
+                              title="Pindahkan ke Bawah (Urutan Lapisan)"
+                            >
+                              <ChevronUp size={13} />
+                            </button>
+                          )}
+
+                          {/* Reorder Down */}
+                          {idx < currentBgLayers.length - 1 && (
+                            <button
+                              onClick={() => handleMoveBackgroundLayer(idx, 'down')}
+                              className="btn"
+                              style={{ padding: '3px 6px', background: 'none', border: 'none', color: '#94A3B8' }}
+                              title="Pindahkan ke Atas (Urutan Lapisan)"
+                            >
+                              <ChevronDown size={13} />
+                            </button>
+                          )}
+
+                          {/* Remove Layer */}
+                          <button
+                            onClick={() => handleRemoveBackgroundLayer(idx)}
+                            className="btn"
+                            style={{ padding: '3px 6px', background: 'none', border: 'none', color: '#F43F5E' }}
+                            title="Hapus Layer Background"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Controls: Opacity & Blend Mode */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#94A3B8', marginBottom: '2px' }}>
+                            <span>Opasitas</span>
+                            <span>{Math.round((layer.opacity ?? 1.0) * 100)}%</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0.05"
+                            max="1.0"
+                            step="0.05"
+                            value={layer.opacity ?? 1.0}
+                            onChange={(e) => handleUpdateBackgroundLayer(idx, { opacity: parseFloat(e.target.value) })}
+                          />
+                        </div>
+
+                        <div>
+                          <div style={{ fontSize: '9px', color: '#94A3B8', marginBottom: '2px' }}>Blend Mode</div>
+                          <select
+                            value={layer.blendMode || 'normal'}
+                            onChange={(e) => handleUpdateBackgroundLayer(idx, { blendMode: e.target.value as any })}
+                            className="input-control"
+                            style={{ padding: '3px 6px', fontSize: '10px' }}
+                          >
+                            <option value="normal">Normal</option>
+                            <option value="overlay">Overlay</option>
+                            <option value="screen">Screen</option>
+                            <option value="multiply">Multiply</option>
+                            <option value="lighten">Lighten</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Upload Replacement for this Layer */}
+                      <input
+                        ref={(el) => { layerInputRefs.current[idx] = el; }}
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => handleLayerImageUpload(e, idx)}
+                      />
+                      <button
+                        onClick={() => layerInputRefs.current[idx]?.click()}
+                        className="btn btn-secondary"
+                        style={{ padding: '4px', fontSize: '9px', width: '100%' }}
+                      >
+                        <Upload size={11} />
+                        <span>Ganti Gambar Layer Ini dari Komputer</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Primary Single Background fallback upload */
+                <div>
+                  <input
+                    ref={bgInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => handleFileUpload(e, 'customBgImageUrl')}
+                  />
+                  <div
+                    onClick={() => bgInputRef.current?.click()}
+                    style={{
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '8px',
+                      padding: '10px',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      marginBottom: '10px',
+                    }}
+                  >
+                    {assets.customBgImageUrl && (
+                      <img
+                        src={assets.customBgImageUrl}
+                        alt="Bg preview"
+                        style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '4px' }}
+                      />
+                    )}
+                    <div style={{ textAlign: 'left', flex: 1 }}>
+                      <div style={{ fontSize: '11px', fontWeight: 600, color: '#F8FAFC' }}>
+                        Upload Frame / Background Sendiri
+                      </div>
+                      <div style={{ fontSize: '9px', color: '#94A3B8' }}>Bisa ditambah hingga 4 lapis</div>
+                    </div>
+                    <Upload size={14} color="#94A3B8" />
+                  </div>
+                </div>
+              )}
+
+              {/* Preset Gallery Quick Picks */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#94A3B8', display: 'block', marginBottom: '8px' }}>
+                  ✨ Galeri Preset Background Cepat (1-Klik Tambah):
+                </span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                  {PRESET_BACKGROUND_LIBRARY.map((bg) => (
+                    <button
+                      key={bg.id}
+                      onClick={() => handleAddBackgroundLayer(bg.url, bg.name)}
+                      disabled={currentBgLayers.length >= 4}
+                      className="btn"
+                      style={{
+                        padding: '6px 8px',
+                        fontSize: '10px',
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        textAlign: 'left',
+                        cursor: currentBgLayers.length >= 4 ? 'not-allowed' : 'pointer',
+                        opacity: currentBgLayers.length >= 4 ? 0.5 : 1,
+                      }}
+                      title={`Tambahkan ${bg.name} sebagai background`}
+                    >
+                      <div
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '4px',
+                          background: bg.previewGradient,
+                          flexShrink: 0,
+                        }}
+                      />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#F8FAFC' }}>
+                        {bg.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Watermark Garuda Toggle */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px' }}>
                 <span style={{ fontSize: '11px', color: '#94A3B8' }}>Watermark Garuda / Budaya Tengah</span>
                 <input
                   type="checkbox"
@@ -460,7 +775,252 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
           </>
         )}
 
-        {/* TAB 2: GOOGLE GEMINI AI GENERATE & PARAMETERS */}
+        {/* TAB 2: DATABASE & ASSET VAULT */}
+        {activeTab === 'database' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div
+              className="glass-panel"
+              style={{
+                padding: '14px',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#38BDF8', fontWeight: 800, fontSize: '13px', marginBottom: '4px' }}>
+                <Database size={16} />
+                <span>Asset Database & Library Vault</span>
+              </div>
+              <div style={{ fontSize: '11px', color: '#CBD5E1', lineHeight: '1.45', marginBottom: '10px' }}>
+                Seluruh foto subjek, logo, dan background yang pernah diunggah tersimpan aman di basis data peramban (IndexedDB) dan siap dipakai kembali sewaktu-waktu.
+              </div>
+
+              {/* Save Current Design Button */}
+              {isSavingDesign ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '8px' }}>
+                  <input
+                    type="text"
+                    value={designSaveTitle}
+                    onChange={(e) => setDesignSaveTitle(e.target.value)}
+                    placeholder="Nama Desain (contoh: Poster HUT SMK)..."
+                    className="input-control"
+                    style={{ fontSize: '11px' }}
+                  />
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                      onClick={handleSaveCurrentDesign}
+                      className="btn btn-primary"
+                      style={{ flex: 1, padding: '6px', fontSize: '11px' }}
+                    >
+                      <Save size={12} />
+                      <span>Simpan ke Database</span>
+                    </button>
+                    <button
+                      onClick={() => setIsSavingDesign(false)}
+                      className="btn btn-secondary"
+                      style={{ padding: '6px 10px', fontSize: '11px' }}
+                    >
+                      Batal
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsSavingDesign(true)}
+                  className="btn btn-primary"
+                  style={{ width: '100%', padding: '8px 12px', fontSize: '11px' }}
+                >
+                  <Save size={13} />
+                  <span>Simpan Desain Saat Ini ke Database</span>
+                </button>
+              )}
+            </div>
+
+            {/* Notification message */}
+            {dbStatusMsg && (
+              <div
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                  border: '1px solid #10B981',
+                  color: '#A7F3D0',
+                  fontSize: '11px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <CheckCircle2 size={13} />
+                <span>{dbStatusMsg}</span>
+              </div>
+            )}
+
+            {/* Filter Pills */}
+            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
+              {[
+                { id: 'all', label: 'Semua' },
+                { id: 'background', label: 'Background' },
+                { id: 'photo', label: 'Foto Subjek' },
+                { id: 'logo', label: 'Logo' },
+                { id: 'project', label: 'Desain Tersimpan' },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setDbFilter(f.id as any)}
+                  className="btn"
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '10px',
+                    borderRadius: '12px',
+                    background: dbFilter === f.id ? 'rgba(56, 189, 248, 0.22)' : 'rgba(255, 255, 255, 0.05)',
+                    border: dbFilter === f.id ? '1px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.08)',
+                    color: dbFilter === f.id ? '#38BDF8' : '#94A3B8',
+                  }}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Saved Projects section */}
+            {(dbFilter === 'all' || dbFilter === 'project') && dbProjects.length > 0 && (
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#FCD34D', marginBottom: '8px' }}>
+                  Desain Tersimpan ({dbProjects.length}):
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {dbProjects.map((p) => (
+                    <div
+                      key={p.id}
+                      style={{
+                        padding: '10px 12px',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <div style={{ overflow: 'hidden' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 700, color: '#F8FAFC' }}>
+                          {p.title}
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#94A3B8' }}>
+                          {new Date(p.createdAt).toLocaleString()} • {p.assets?.topPillText || 'Desain'}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                          onClick={() => handleLoadProjectFromDB(p)}
+                          className="btn btn-primary"
+                          style={{ padding: '4px 10px', fontSize: '10px' }}
+                        >
+                          Terapkan
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProjectFromDB(p.id)}
+                          className="btn"
+                          style={{ padding: '4px 6px', background: 'none', border: 'none', color: '#F43F5E' }}
+                          title="Hapus Desain"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Saved Assets Grid */}
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#CBD5E1', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                <span>Aset Media Tersimpan ({dbAssets.filter((a) => dbFilter === 'all' || a.type === dbFilter).length}):</span>
+                <button
+                  onClick={refreshDatabase}
+                  style={{ background: 'none', border: 'none', color: '#38BDF8', cursor: 'pointer', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <RefreshCw size={10} />
+                  <span>Segarkan</span>
+                </button>
+              </div>
+
+              {dbAssets.filter((a) => dbFilter === 'all' || a.type === dbFilter).length === 0 ? (
+                <div style={{ padding: '24px', textAlign: 'center', color: '#64748B', fontSize: '11px' }}>
+                  Belum ada aset tersimpan di kategori ini. Unggah foto atau logo untuk menyimpannya secara otomatis ke database!
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                  {dbAssets
+                    .filter((a) => dbFilter === 'all' || a.type === dbFilter)
+                    .map((item) => (
+                      <div
+                        key={item.id}
+                        style={{
+                          padding: '8px',
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          border: '1px solid rgba(255, 255, 255, 0.08)',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '6px',
+                        }}
+                      >
+                        <div style={{ height: '70px', borderRadius: '4px', overflow: 'hidden', background: '#0F172A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <img
+                            src={item.dataUrl}
+                            alt={item.name}
+                            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                          />
+                        </div>
+
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: '#F8FAFC', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {item.name}
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                          <span
+                            style={{
+                              fontSize: '9px',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              background: 'rgba(56, 189, 248, 0.15)',
+                              color: '#38BDF8',
+                              textTransform: 'capitalize',
+                            }}
+                          >
+                            {item.type}
+                          </span>
+
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            <button
+                              onClick={() => handleApplyAssetFromDB(item)}
+                              className="btn btn-primary"
+                              style={{ padding: '3px 8px', fontSize: '10px' }}
+                              title="Terapkan aset ini ke kanvas"
+                            >
+                              Pakai
+                            </button>
+                            <button
+                              onClick={() => handleDeleteAssetFromDB(item.id)}
+                              className="btn"
+                              style={{ padding: '3px 5px', background: 'none', border: 'none', color: '#F43F5E' }}
+                              title="Hapus dari database"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: GOOGLE GEMINI AI GENERATE & PARAMETERS */}
         {activeTab === 'gemini' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div
@@ -478,27 +1038,19 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
               <div style={{ fontSize: '11px', color: '#CBD5E1', lineHeight: '1.45', marginBottom: '12px' }}>
                 Gunakan kecerdasan buatan Google Gemini untuk merumuskan judul acara, kartu SPMI, tanggal, serta menganalisis estetika desain secara instan.
               </div>
-
               <button
                 onClick={onOpenGeminiAI}
                 className="btn btn-primary"
-                style={{ width: '100%', padding: '10px', fontSize: '12px' }}
+                style={{ width: '100%', padding: '10px' }}
               >
-                <Zap size={14} />
-                <span>Buka Studio Gemini AI & Parameter</span>
+                <Sparkles size={14} />
+                <span>Buka Gemini AI Studio</span>
               </button>
-            </div>
-
-            <div className="glass-panel" style={{ padding: '14px', fontSize: '11px', color: '#94A3B8', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontWeight: 700, color: '#F8FAFC' }}>Fitur AI yang Tersedia:</div>
-              <div>✨ <strong>Generate Konten Tema</strong>: Merumuskan teks banner atas, kartu acara, dan skema warna harmonis.</div>
-              <div>👁️ <strong>Gemini Vision Critic</strong>: Analisis tangkapan visual kanvas asli dengan Multimodal LLM.</div>
-              <div>⚙️ <strong>Pengaturan Parameter</strong>: Kontrol Temperature (0.1 - 1.0) dan pilihan model (1.5 Flash / Pro).</div>
             </div>
           </div>
         )}
 
-        {/* TAB 3: TEXT & INFORMASI */}
+        {/* TAB 4: TEXT & INFORMASI */}
         {activeTab === 'text' && (
           <>
             <div>
@@ -593,7 +1145,7 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
           </>
         )}
 
-        {/* TAB 4: BANNER ATAS & KARTU SPMI */}
+        {/* TAB 5: BANNER ATAS & KARTU SPMI */}
         {activeTab === 'badge' && (
           <>
             {/* Top Green Banner Pill */}
@@ -722,7 +1274,7 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
           </>
         )}
 
-        {/* TAB 5: SOCIAL MEDIA HANDLES (FOOTER) */}
+        {/* TAB 6: SOCIAL MEDIA HANDLES (FOOTER) */}
         {activeTab === 'social' && (
           <>
             <div style={{ fontSize: '11px', color: '#94A3B8', marginBottom: '4px' }}>

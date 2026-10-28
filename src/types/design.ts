@@ -17,6 +17,15 @@ export interface SocialHandles {
   tiktok: string;
 }
 
+export interface BackgroundLayer {
+  id: string;
+  name?: string;
+  url: string;
+  opacity: number; // 0.0 - 1.0
+  blendMode?: 'normal' | 'multiply' | 'screen' | 'overlay' | 'lighten';
+  visible: boolean;
+}
+
 export interface AssetInputs {
   // Brand & Logo
   logoUrl: string;
@@ -26,6 +35,7 @@ export interface AssetInputs {
   // Background / Template Frame
   customBgImageUrl: string; // User uploaded template background
   useCustomBgImage: boolean;
+  backgroundLayers?: BackgroundLayer[]; // Up to 4 layered backgrounds
   watermarkUrl: string; // Center Garuda / Cultural watermark
   showWatermark: boolean;
 

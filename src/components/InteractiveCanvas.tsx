@@ -24,6 +24,10 @@ interface InteractiveCanvasProps {
 // Strict Z-Index Layer Stacking Order requested by user
 const LAYER_ORDER: Record<string, number> = {
   bg: 1,            // Paling belakang
+  bg_0: 1.01,
+  bg_1: 1.02,
+  bg_2: 1.03,
+  bg_3: 1.04,
   mainMedia: 2,     // Urutan nomor 2 setelah Background (Foto Subjek Utama)
   watermark: 3,     // Watermark Garuda
   eventCard: 4,     // Kartu SPMI di atas foto
@@ -102,8 +106,27 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
       canvas.setHeight(canvasHeight);
       canvas.clear();
 
-      // 1. LAYER 1: BACKGROUND (Template Image or Gradient)
-      if (assets.useCustomBgImage && assets.customBgImageUrl) {
+      // 1. LAYER 1: BACKGROUND (Multi-Layer Backgrounds, Template Image, or Gradient)
+      const visibleBgLayers = (assets.backgroundLayers || []).filter((l) => l.visible && l.url);
+      if (visibleBgLayers.length > 0) {
+        visibleBgLayers.forEach((layer, idx) => {
+          fabric.Image.fromURL(layer.url, (bgImg: any) => {
+            if (!isMounted || !canvas) return;
+            bgImg.set({
+              left: 0,
+              top: 0,
+              scaleX: canvasWidth / (bgImg.width || 1080),
+              scaleY: canvasHeight / (bgImg.height || 1080),
+              opacity: layer.opacity ?? 1.0,
+              selectable: false,
+              evented: false,
+              dataId: `bg_${idx}`,
+            });
+            canvas.add(bgImg);
+            enforceLayerOrdering(canvas);
+          });
+        });
+      } else if (assets.useCustomBgImage && assets.customBgImageUrl) {
         fabric.Image.fromURL(assets.customBgImageUrl, (bgImg: any) => {
           if (!isMounted || !canvas) return;
           bgImg.set({

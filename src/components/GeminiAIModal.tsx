@@ -74,7 +74,7 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
     testConnection();
   };
 
-  // Test Connection
+  // Test Connection & Auto-Detect Recommended Model
   const testConnection = async () => {
     if (!apiKey) {
       setConnectionStatus('error');
@@ -83,7 +83,7 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
     }
 
     setConnectionStatus('testing');
-    setStatusMessage('Menghubungkan ke server Google Gemini AI...');
+    setStatusMessage('Memeriksa izin API Key & mendeteksi model Google Gemini yang tersedia...');
 
     try {
       const res = await fetch('/api/gemini', {
@@ -92,19 +92,25 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
         body: JSON.stringify({
           apiKey,
           model: selectedModel,
-          temperature: 0.2,
-          action: 'generate_design',
-          prompt: 'Tes Koneksi Singkat',
+          action: 'test_connection',
         }),
       });
 
       const data = await res.json();
       if (res.ok && data.success) {
         setConnectionStatus('success');
-        setStatusMessage('Terhubung Berhasil! Google Gemini AI siap digunakan.');
+        if (data.recommendedModel) {
+          setSelectedModel(data.recommendedModel);
+          localStorage.setItem('vg_gemini_model', data.recommendedModel);
+          setStatusMessage(
+            `Terhubung Sukses! Model otomatis disesuaikan ke '${data.recommendedModel}' (kompatibel penuh dengan API Key Anda).`
+          );
+        } else {
+          setStatusMessage(data.message || 'Terhubung Berhasil! Google Gemini AI siap digunakan.');
+        }
       } else {
         setConnectionStatus('error');
-        setStatusMessage(data.error || 'Gagal terhubung ke Gemini API.');
+        setStatusMessage(data.error || 'Gagal terhubung ke Gemini API. Pastikan API Key valid.');
       }
     } catch (e: any) {
       setConnectionStatus('error');
@@ -573,17 +579,50 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
 
               {/* Model Selection */}
               <div>
-                <label className="label-title">Model Google Gemini</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label className="label-title" style={{ marginBottom: 0 }}>Model Google Gemini</label>
+                  <button
+                    onClick={testConnection}
+                    className="btn btn-secondary"
+                    style={{ padding: '2px 8px', fontSize: '10px', color: '#38BDF8', borderColor: 'rgba(56, 189, 248, 0.4)' }}
+                    title="Deteksi model yang kompatibel dengan API Key ini secara otomatis"
+                  >
+                    <RefreshCw size={11} />
+                    <span>Deteksi Otomatis</span>
+                  </button>
+                </div>
                 <select
                   value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedModel(e.target.value);
+                    localStorage.setItem('vg_gemini_model', e.target.value);
+                  }}
                   className="input-control"
                   style={{ cursor: 'pointer' }}
                 >
-                  <option value="gemini-1.5-flash">gemini-1.5-flash (Cepat, Hemat & Multimodal Vision)</option>
-                  <option value="gemini-1.5-pro">gemini-1.5-pro (Penalaran Kompleks & Estetika Tinggi)</option>
-                  <option value="gemini-2.0-flash">gemini-2.0-flash (Generasi Terbaru)</option>
+                  <option value="gemini-1.5-flash">⭐ gemini-1.5-flash (Sangat Direkomendasikan - Cepat, Kuota Gratis & Multimodal)</option>
+                  <option value="gemini-2.0-flash">⚡ gemini-2.0-flash (Generasi Terbaru - Super Cepat)</option>
+                  <option value="gemini-1.5-pro">🧠 gemini-1.5-pro (Penalaran Kompleks & Estetika Tinggi)</option>
+                  <option value="gemini-1.5-flash-8b">🚀 gemini-1.5-flash-8b (Ultra Ringan & Respons Cepat)</option>
                 </select>
+
+                <div
+                  style={{
+                    marginTop: '8px',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(56, 189, 248, 0.08)',
+                    border: '1px solid rgba(56, 189, 248, 0.25)',
+                    fontSize: '11px',
+                    lineHeight: '1.5',
+                    color: '#BAE6FD',
+                  }}
+                >
+                  <div style={{ fontWeight: 700, color: '#38BDF8', marginBottom: '2px' }}>
+                    💡 Rekomendasi Terkoneksi:
+                  </div>
+                  Gunakan <strong>gemini-1.5-flash</strong> untuk API Key gratis/standar Google AI Studio. Model ini memiliki batas kuota harian tertinggi, mendukung analisis visual kanvas instan, dan sangat stabil. Klik <em>Uji Koneksi</em> untuk mencocokkan model secara otomatis.
+                </div>
               </div>
 
               {/* Temperature Parameter Slider */}

@@ -214,6 +214,7 @@ export default function StudioPage() {
           assets={assets}
           onUpdateProperty={handleUpdateAssetProperty}
           onOpenGeminiAI={() => setIsGeminiModalOpen(true)}
+          onApplyFullAssets={(loaded) => setAssets(loaded)}
         />
 
         {/* Center Column: Viewport & Canvas Engine */}

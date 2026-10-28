@@ -4,17 +4,24 @@ interface GeminiRequest {
   apiKey?: string;
   model?: string;
   temperature?: number;
-  action: 'generate_design' | 'vision_critique';
+  action: 'generate_design' | 'vision_critique' | 'list_models' | 'test_connection';
   prompt?: string;
   canvasImageBase64?: string;
   currentAssets?: any;
 }
 
+const FALLBACK_MODELS = [
+  'gemini-1.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-pro',
+  'gemini-1.5-flash-8b',
+];
+
 export async function POST(req: NextRequest) {
   try {
     const body: GeminiRequest = await req.json();
-    const apiKey = body.apiKey || process.env.GEMINI_API_KEY;
-    const model = body.model || 'gemini-1.5-flash';
+    const apiKey = (body.apiKey || process.env.GEMINI_API_KEY || '').trim();
+    let requestedModel = (body.model || 'gemini-1.5-flash').trim();
     const temperature = body.temperature ?? 0.7;
 
     if (!apiKey) {
@@ -27,7 +34,50 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    // ACTION: LIST / VERIFY MODELS FOR THIS KEY
+    if (body.action === 'list_models' || body.action === 'test_connection') {
+      try {
+        const listEndpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+        const listRes = await fetch(listEndpoint);
+
+        if (!listRes.ok) {
+          const errText = await listRes.text();
+          return NextResponse.json(
+            {
+              error: `API Key tidak valid atau ditolak oleh Google (${listRes.status}): ${errText}`,
+              status: listRes.status,
+            },
+            { status: listRes.status }
+          );
+        }
+
+        const data = await listRes.json();
+        const availableModels: string[] = (data.models || [])
+          .filter((m: any) => m.supportedGenerationMethods?.includes('generateContent'))
+          .map((m: any) => m.name.replace(/^models\//, ''));
+
+        // Pick best recommended model
+        let recommended = 'gemini-1.5-flash';
+        for (const pref of ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro']) {
+          if (availableModels.includes(pref)) {
+            recommended = pref;
+            break;
+          }
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: `Koneksi Berhasil! Ditemukan ${availableModels.length} model aktif untuk API Key ini.`,
+          availableModels,
+          recommendedModel: recommended,
+        });
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: `Gagal memeriksa daftar model: ${err.message}` },
+          { status: 500 }
+        );
+      }
+    }
 
     // ACTION 1: GENERATE DESIGN CONTENT (Theme -> Banner, Card, Date, Headline, Colors)
     if (body.action === 'generate_design') {
@@ -53,22 +103,42 @@ Struktur JSON yang WAJIB dihasilkan:
 
       const userMessage = `Tema Kegiatan: "${body.prompt || 'Peringatan Hari Kesaktian Pancasila & Penjaminan Mutu Sekolah'}"`;
 
-      const response = await fetch(geminiEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `${systemPrompt}\n\n${userMessage}` }],
+      // Helper to attempt generateContent with automatic model fallback
+      const tryGenerate = async (targetModel: string) => {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
+        return fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: `${systemPrompt}\n\n${userMessage}` }],
+              },
+            ],
+            generationConfig: {
+              temperature: temperature,
+              responseMimeType: 'application/json',
             },
-          ],
-          generationConfig: {
-            temperature: temperature,
-            responseMimeType: 'application/json',
-          },
-        }),
-      });
+          }),
+        });
+      };
+
+      let response = await tryGenerate(requestedModel);
+
+      // Automatic fallback if model not found (404)
+      if (response.status === 404) {
+        for (const alt of FALLBACK_MODELS) {
+          if (alt !== requestedModel) {
+            const altRes = await tryGenerate(alt);
+            if (altRes.ok) {
+              response = altRes;
+              requestedModel = alt;
+              break;
+            }
+          }
+        }
+      }
 
       if (!response.ok) {
         const errText = await response.text();
@@ -83,7 +153,11 @@ Struktur JSON yang WAJIB dihasilkan:
       const cleanJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
       const parsed = JSON.parse(cleanJson);
 
-      return NextResponse.json({ success: true, result: parsed });
+      return NextResponse.json({
+        success: true,
+        modelUsed: requestedModel,
+        result: parsed,
+      });
     }
 
     // ACTION 2: MULTIMODAL VISION CRITIQUE (Evaluates Canvas Image Base64)
@@ -130,30 +204,49 @@ Balas HANYA dalam format JSON murni:
   ]
 }`;
 
-      const response = await fetch(geminiEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                { text: visionPrompt },
-                {
-                  inlineData: {
-                    mimeType: 'image/png',
-                    data: base64Data,
+      const tryVision = async (targetModel: string) => {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
+        return fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  { text: visionPrompt },
+                  {
+                    inlineData: {
+                      mimeType: 'image/png',
+                      data: base64Data,
+                    },
                   },
-                },
-              ],
+                ],
+              },
+            ],
+            generationConfig: {
+              temperature: 0.3,
+              responseMimeType: 'application/json',
             },
-          ],
-          generationConfig: {
-            temperature: 0.3,
-            responseMimeType: 'application/json',
-          },
-        }),
-      });
+          }),
+        });
+      };
+
+      let response = await tryVision(requestedModel);
+
+      // Automatic fallback if model not found
+      if (response.status === 404) {
+        for (const alt of FALLBACK_MODELS) {
+          if (alt !== requestedModel) {
+            const altRes = await tryVision(alt);
+            if (altRes.ok) {
+              response = altRes;
+              requestedModel = alt;
+              break;
+            }
+          }
+        }
+      }
 
       if (!response.ok) {
         const errText = await response.text();
@@ -168,7 +261,11 @@ Balas HANYA dalam format JSON murni:
       const cleanJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
       const parsed = JSON.parse(cleanJson);
 
-      return NextResponse.json({ success: true, result: parsed });
+      return NextResponse.json({
+        success: true,
+        modelUsed: requestedModel,
+        result: parsed,
+      });
     }
 
     return NextResponse.json({ error: 'Aksi tidak dikenali' }, { status: 400 });

@@ -76,6 +76,85 @@ export const TEMPLATE_BG_SMK = `data:image/svg+xml;utf8,<svg xmlns="http://www.w
   <ellipse cx="540" cy="980" rx="480" ry="60" fill="white" opacity="0.25"/>
 </svg>`;
 
+// Preset Background 2: Modern Cyber & Tech Geometric Grid
+export const TEMPLATE_BG_CYBER_TECH = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
+  <defs>
+    <linearGradient id="cyberBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="%23061126"/>
+      <stop offset="50%" stop-color="%230F172A"/>
+      <stop offset="100%" stop-color="%23022C43"/>
+    </linearGradient>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(56, 189, 248, 0.08)" stroke-width="1"/>
+    </pattern>
+    <radialGradient id="cyberGlow" cx="50%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="%2306B6D4" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="%2306B6D4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(%23cyberBg)"/>
+  <rect width="1080" height="1080" fill="url(%23grid)"/>
+  <circle cx="540" cy="350" r="450" fill="url(%23cyberGlow)"/>
+  <polygon points="120,80 160,105 160,155 120,180 80,155 80,105" stroke="%2338BDF8" stroke-width="1.5" fill="none" opacity="0.25"/>
+  <polygon points="960,140 1000,165 1000,215 960,240 920,215 920,165" stroke="%2338BDF8" stroke-width="1.5" fill="none" opacity="0.25"/>
+  <path d="M0 900 Q 540 820 1080 920 L 1080 1080 L 0 1080 Z" fill="rgba(6, 182, 212, 0.08)"/>
+</svg>`;
+
+// Preset Background 3: Royal Gold & Maroon Prestigious
+export const TEMPLATE_BG_ROYAL_GOLD = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
+  <defs>
+    <linearGradient id="maroonGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="%234A041D"/>
+      <stop offset="50%" stop-color="%232D0612"/>
+      <stop offset="100%" stop-color="%23140207"/>
+    </linearGradient>
+    <radialGradient id="goldAura" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="%23F59E0B" stop-opacity="0.28"/>
+      <stop offset="70%" stop-color="%23B45309" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="%23000000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(%23maroonGrad)"/>
+  <circle cx="540" cy="400" r="500" fill="url(%23goldAura)"/>
+  <!-- Decorative Golden Arches -->
+  <circle cx="540" cy="450" r="420" stroke="%23FCD34D" stroke-width="1.5" stroke-dasharray="8 12" fill="none" opacity="0.25"/>
+  <circle cx="540" cy="450" r="380" stroke="%23F59E0B" stroke-width="1" fill="none" opacity="0.2"/>
+  <rect x="40" y="40" width="1000" height="1000" rx="20" stroke="%23FCD34D" stroke-width="1" fill="none" opacity="0.15"/>
+</svg>`;
+
+// Preset Background 4: Vibrant Neon Mesh Gradient
+export const TEMPLATE_BG_VIBRANT_GRADIENT = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
+  <defs>
+    <linearGradient id="meshBase" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="%231E1B4B"/>
+      <stop offset="100%" stop-color="%230F172A"/>
+    </linearGradient>
+    <radialGradient id="orb1" cx="20%" cy="20%" r="50%">
+      <stop offset="0%" stop-color="%23EC4899" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="%23EC4899" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orb2" cx="80%" cy="60%" r="50%">
+      <stop offset="0%" stop-color="%238B5CF6" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="%238B5CF6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orb3" cx="50%" cy="90%" r="50%">
+      <stop offset="0%" stop-color="%2306B6D4" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="%2306B6D4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(%23meshBase)"/>
+  <rect width="1080" height="1080" fill="url(%23orb1)"/>
+  <rect width="1080" height="1080" fill="url(%23orb2)"/>
+  <rect width="1080" height="1080" fill="url(%23orb3)"/>
+</svg>`;
+
+export const PRESET_BACKGROUND_LIBRARY = [
+  { id: 'bg_hills_smk', name: 'Bukit Hijau & Langit (SMK)', url: TEMPLATE_BG_SMK, previewGradient: 'linear-gradient(135deg, #38BDF8 0%, #84CC16 100%)' },
+  { id: 'bg_cyber_tech', name: 'Cyber Grid & Tech Cyan', url: TEMPLATE_BG_CYBER_TECH, previewGradient: 'linear-gradient(135deg, #061126 0%, #06B6D4 100%)' },
+  { id: 'bg_royal_gold', name: 'Royal Gold & Maroon', url: TEMPLATE_BG_ROYAL_GOLD, previewGradient: 'linear-gradient(135deg, #4A041D 0%, #F59E0B 100%)' },
+  { id: 'bg_vibrant_mesh', name: 'Modern Neon Mesh', url: TEMPLATE_BG_VIBRANT_GRADIENT, previewGradient: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)' },
+];
+
 // Default sample speaker / teacher photo
 export const SAMPLE_SPEAKER_PHOTO = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 650" fill="none">
   <defs>
@@ -144,6 +223,7 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
       // Background
       customBgImageUrl: TEMPLATE_BG_SMK,
       useCustomBgImage: true,
+      backgroundLayers: [],
       watermarkUrl: WATERMARK_GARUDA,
       showWatermark: true,
 
@@ -210,6 +290,7 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
       institutionName: 'SOUNDWAVE MUSIC FEST',
       customBgImageUrl: '',
       useCustomBgImage: false,
+      backgroundLayers: [],
       watermarkUrl: '',
       showWatermark: false,
       topPillText: 'LIVE MUSIC PERFORMANCE 2026',
@@ -266,6 +347,7 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
       institutionName: 'QUANTUM AI GLOBAL',
       customBgImageUrl: '',
       useCustomBgImage: false,
+      backgroundLayers: [],
       watermarkUrl: '',
       showWatermark: false,
       topPillText: 'INTERNATIONAL AI SYMPOSIUM',
