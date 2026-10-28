@@ -37,6 +37,102 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 
+// Helper: Modern Color Picker Field with Swatch Preview, Native Color Dialog & Hex Input
+interface ColorPickerFieldProps {
+  label: string;
+  value: string;
+  onChange: (color: string) => void;
+  presetColors?: string[];
+}
+
+const ColorPickerField: React.FC<ColorPickerFieldProps> = ({
+  label,
+  value,
+  onChange,
+  presetColors = ['#FFFFFF', '#0F172A', '#10B981', '#38BDF8', '#D97706', '#EF4444', '#1E40AF'],
+}) => {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <label className="label-title" style={{ fontSize: '11px', marginBottom: '2px' }}>
+        {label}
+      </label>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Swatch with native color input */}
+        <label
+          style={{
+            position: 'relative',
+            width: '32px',
+            height: '32px',
+            borderRadius: '6px',
+            backgroundColor: value || '#FFFFFF',
+            border: '2px solid rgba(255, 255, 255, 0.25)',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+            cursor: 'pointer',
+            flexShrink: 0,
+            overflow: 'hidden',
+            display: 'block',
+          }}
+          title="Klik untuk memilih warna"
+        >
+          <input
+            type="color"
+            value={value || '#FFFFFF'}
+            onChange={(e) => onChange(e.target.value)}
+            style={{
+              position: 'absolute',
+              top: '-10px',
+              left: '-10px',
+              width: '54px',
+              height: '54px',
+              opacity: 0,
+              cursor: 'pointer',
+            }}
+          />
+        </label>
+
+        {/* Text HEX code input */}
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="input-control"
+          style={{
+            fontSize: '11px',
+            fontFamily: 'monospace',
+            textTransform: 'uppercase',
+            padding: '5px 8px',
+            flex: 1,
+          }}
+          placeholder="#HEX"
+        />
+      </div>
+
+      {/* Preset Quick Swatches */}
+      {presetColors && presetColors.length > 0 && (
+        <div style={{ display: 'flex', gap: '4px', marginTop: '3px' }}>
+          {presetColors.map((color) => (
+            <button
+              key={color}
+              type="button"
+              onClick={() => onChange(color)}
+              style={{
+                width: '16px',
+                height: '16px',
+                borderRadius: '3px',
+                backgroundColor: color,
+                border: value?.toLowerCase() === color.toLowerCase() ? '1.5px solid #38BDF8' : '1px solid rgba(255,255,255,0.2)',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+              title={color}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 interface AssetIngestionPanelProps {
   assets: AssetInputs;
   onUpdateProperty: (key: keyof AssetInputs, value: any) => void;
@@ -50,7 +146,7 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
   onOpenGeminiAI,
   onApplyFullAssets,
 }) => {
-  const [activeTab, setActiveTab] = useState<'upload' | 'database' | 'gemini' | 'text' | 'badge' | 'social'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'text' | 'badge' | 'social' | 'database' | 'gemini'>('upload');
 
   // Input refs
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -288,11 +384,11 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
       >
         {[
           { id: 'upload', label: 'Upload', icon: Upload },
+          { id: 'text', label: 'Teks 1', icon: Type },
+          { id: 'badge', label: 'Teks 2', icon: Layers },
+          { id: 'social', label: 'Sosmed', icon: Share2 },
           { id: 'database', label: 'Database', icon: Database },
           { id: 'gemini', label: 'Gemini', icon: Sparkles },
-          { id: 'text', label: 'Teks', icon: Type },
-          { id: 'badge', label: 'SPMI', icon: Layers },
-          { id: 'social', label: 'Sosmed', icon: Share2 },
         ].map((t) => {
           const Icon = t.icon;
           const isActive = activeTab === t.id;
@@ -1050,12 +1146,58 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
           </div>
         )}
 
-        {/* TAB 4: TEXT & INFORMASI */}
+        {/* TAB 2: TEKS 1 (BANNER ATAS & JUDUL UTAMA) */}
         {activeTab === 'text' && (
-          <>
-            <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ fontSize: '11px', color: '#94A3B8', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '6px' }}>
+              Kontrol teks bagian atas: Banner Peringatan / Event dan Judul Utama Informasi.
+            </div>
+
+            {/* 1. Banner Atas (Peringatan / Event) */}
+            <div className="glass-panel" style={{ padding: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#86EFAC', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>Banner Atas (Peringatan/Event)</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={assets.showTopPill}
+                  onChange={(e) => onUpdateProperty('showTopPill', e.target.checked)}
+                  style={{ cursor: 'pointer', accentColor: '#10B981', width: '16px', height: '16px' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '10px' }}>
+                <label className="label-title">Teks Banner Atas</label>
+                <input
+                  type="text"
+                  value={assets.topPillText}
+                  onChange={(e) => onUpdateProperty('topPillText', e.target.value)}
+                  className="input-control"
+                  placeholder="Contoh: MEMPERINGATI HARI KESAKTIAN PANCASILA"
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <ColorPickerField
+                  label="Warna Latar Banner"
+                  value={assets.topPillBgColor}
+                  onChange={(val) => onUpdateProperty('topPillBgColor', val)}
+                  presetColors={['#10B981', '#059669', '#2563EB', '#DC2626', '#D97706', '#475569']}
+                />
+                <ColorPickerField
+                  label="Warna Teks Banner"
+                  value={assets.topPillTextColor}
+                  onChange={(val) => onUpdateProperty('topPillTextColor', val)}
+                  presetColors={['#FFFFFF', '#0F172A', '#FEF08A', '#E2E8F0']}
+                />
+              </div>
+            </div>
+
+            {/* 2. Judul Utama (Headline) */}
+            <div className="glass-panel" style={{ padding: '14px' }}>
               <label className="label-title">
-                <span>Teks Judul Informasi</span>
+                <span>Teks Judul Informasi (Headline)</span>
               </label>
               <textarea
                 value={assets.headlineText}
@@ -1063,44 +1205,34 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                 rows={2}
                 className="input-control"
                 placeholder="Judul kegiatan..."
-                style={{ resize: 'none' }}
+                style={{ resize: 'none', marginBottom: '10px' }}
               />
-            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div>
-                <label className="label-title">
-                  <span>Ukuran ({assets.headlineFontSize}px)</span>
-                </label>
-                <input
-                  type="range"
-                  min="20"
-                  max="56"
-                  value={assets.headlineFontSize}
-                  onChange={(e) => onUpdateProperty('headlineFontSize', parseInt(e.target.value))}
-                />
-              </div>
-              <div>
-                <label className="label-title">Warna Judul</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', alignItems: 'flex-start' }}>
+                <div>
+                  <label className="label-title">
+                    <span>Ukuran ({assets.headlineFontSize}px)</span>
+                  </label>
                   <input
-                    type="color"
-                    value={assets.headlineColor}
-                    onChange={(e) => onUpdateProperty('headlineColor', e.target.value)}
-                    style={{ width: '36px', height: '36px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
-                  />
-                  <input
-                    type="text"
-                    value={assets.headlineColor}
-                    onChange={(e) => onUpdateProperty('headlineColor', e.target.value)}
-                    className="input-control"
-                    style={{ fontSize: '11px', padding: '6px' }}
+                    type="range"
+                    min="20"
+                    max="56"
+                    value={assets.headlineFontSize}
+                    onChange={(e) => onUpdateProperty('headlineFontSize', parseInt(e.target.value))}
+                    style={{ width: '100%', marginTop: '4px' }}
                   />
                 </div>
+                <ColorPickerField
+                  label="Warna Judul"
+                  value={assets.headlineColor}
+                  onChange={(val) => onUpdateProperty('headlineColor', val)}
+                  presetColors={['#0F172A', '#FFFFFF', '#1E40AF', '#D97706', '#DC2626']}
+                />
               </div>
             </div>
 
-            <div>
+            {/* 3. Sub-Judul / Deskripsi */}
+            <div className="glass-panel" style={{ padding: '14px' }}>
               <label className="label-title">
                 <span>Sub-Judul / Deskripsi</span>
               </label>
@@ -1109,169 +1241,119 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                 value={assets.subtitleText}
                 onChange={(e) => onUpdateProperty('subtitleText', e.target.value)}
                 className="input-control"
-              />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div>
-                <label className="label-title">Ukuran ({assets.subtitleFontSize}px)</label>
-                <input
-                  type="range"
-                  min="12"
-                  max="24"
-                  value={assets.subtitleFontSize}
-                  onChange={(e) => onUpdateProperty('subtitleFontSize', parseInt(e.target.value))}
-                />
-              </div>
-              <div>
-                <label className="label-title">Warna Sub-judul</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <input
-                    type="color"
-                    value={assets.subtitleColor}
-                    onChange={(e) => onUpdateProperty('subtitleColor', e.target.value)}
-                    style={{ width: '36px', height: '36px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
-                  />
-                  <input
-                    type="text"
-                    value={assets.subtitleColor}
-                    onChange={(e) => onUpdateProperty('subtitleColor', e.target.value)}
-                    className="input-control"
-                    style={{ fontSize: '11px', padding: '6px' }}
-                  />
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* TAB 5: BANNER ATAS & KARTU SPMI */}
-        {activeTab === 'badge' && (
-          <>
-            {/* Top Green Banner Pill */}
-            <div className="glass-panel" style={{ padding: '14px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#86EFAC' }}>
-                  Banner Atas (Peringatan/Event)
-                </span>
-                <input
-                  type="checkbox"
-                  checked={assets.showTopPill}
-                  onChange={(e) => onUpdateProperty('showTopPill', e.target.checked)}
-                  style={{ cursor: 'pointer' }}
-                />
-              </div>
-
-              <input
-                type="text"
-                value={assets.topPillText}
-                onChange={(e) => onUpdateProperty('topPillText', e.target.value)}
-                className="input-control"
-                placeholder="Contoh: MEMPERINGATI HARI KESAKTIAN PANCASILA"
+                placeholder="Sub-judul atau tema..."
                 style={{ marginBottom: '10px' }}
               />
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', alignItems: 'flex-start' }}>
                 <div>
-                  <label className="label-title">Warna Latar Banner</label>
+                  <label className="label-title">
+                    <span>Ukuran ({assets.subtitleFontSize}px)</span>
+                  </label>
                   <input
-                    type="color"
-                    value={assets.topPillBgColor}
-                    onChange={(e) => onUpdateProperty('topPillBgColor', e.target.value)}
-                    style={{ width: '100%', height: '34px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
+                    type="range"
+                    min="12"
+                    max="28"
+                    value={assets.subtitleFontSize}
+                    onChange={(e) => onUpdateProperty('subtitleFontSize', parseInt(e.target.value))}
+                    style={{ width: '100%', marginTop: '4px' }}
                   />
                 </div>
-                <div>
-                  <label className="label-title">Warna Teks Banner</label>
-                  <input
-                    type="color"
-                    value={assets.topPillTextColor}
-                    onChange={(e) => onUpdateProperty('topPillTextColor', e.target.value)}
-                    style={{ width: '100%', height: '34px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
-                  />
-                </div>
+                <ColorPickerField
+                  label="Warna Sub-judul"
+                  value={assets.subtitleColor}
+                  onChange={(val) => onUpdateProperty('subtitleColor', val)}
+                  presetColors={['#475569', '#94A3B8', '#FFFFFF', '#1E293B']}
+                />
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Event Card / SPMI Card */}
+        {/* TAB 3: TEKS 2 (INFORMASI DI BAGIAN BAWAH / KARTU SPMI & TANGGAL) */}
+        {activeTab === 'badge' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ fontSize: '11px', color: '#94A3B8', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '6px' }}>
+              Kontrol teks 2 untuk informasi di bagian bawah kanvas: Kartu Kegiatan SPMI & Lencana Tanggal Pelaksanaan.
+            </div>
+
+            {/* 1. Kartu Kegiatan Bawah (SPMI) */}
             <div className="glass-panel" style={{ padding: '14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#FCD34D' }}>
-                  Kartu Kegiatan Bawah (SPMI)
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#FCD34D', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>Kartu Kegiatan Bawah (SPMI)</span>
                 </span>
                 <input
                   type="checkbox"
                   checked={assets.showEventCard}
                   onChange={(e) => onUpdateProperty('showEventCard', e.target.checked)}
-                  style={{ cursor: 'pointer' }}
+                  style={{ cursor: 'pointer', accentColor: '#F59E0B', width: '16px', height: '16px' }}
                 />
               </div>
 
-              <label className="label-title">Nama Kegiatan</label>
-              <input
-                type="text"
-                value={assets.eventCardTitle}
-                onChange={(e) => onUpdateProperty('eventCardTitle', e.target.value)}
-                className="input-control"
-                placeholder="Sistem Penjaminan Mutu Internal"
-                style={{ marginBottom: '8px' }}
-              />
+              <div style={{ marginBottom: '10px' }}>
+                <label className="label-title">Nama Kegiatan</label>
+                <input
+                  type="text"
+                  value={assets.eventCardTitle}
+                  onChange={(e) => onUpdateProperty('eventCardTitle', e.target.value)}
+                  className="input-control"
+                  placeholder="Sistem Penjaminan Mutu Internal"
+                />
+              </div>
 
-              <label className="label-title">Singkatan / Kode Kegiatan</label>
-              <input
-                type="text"
-                value={assets.eventCardSubtitle}
-                onChange={(e) => onUpdateProperty('eventCardSubtitle', e.target.value)}
-                className="input-control"
-                placeholder="SPMI"
-                style={{ marginBottom: '8px' }}
-              />
+              <div style={{ marginBottom: '10px' }}>
+                <label className="label-title">Singkatan / Kode Kegiatan</label>
+                <input
+                  type="text"
+                  value={assets.eventCardSubtitle}
+                  onChange={(e) => onUpdateProperty('eventCardSubtitle', e.target.value)}
+                  className="input-control"
+                  placeholder="SPMI"
+                />
+              </div>
 
-              <label className="label-title">Warna Border Kartu</label>
-              <input
-                type="color"
-                value={assets.eventCardBorderColor}
-                onChange={(e) => onUpdateProperty('eventCardBorderColor', e.target.value)}
-                style={{ width: '100%', height: '34px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
-              />
-            </div>
-
-            {/* Date Badge */}
-            <div className="glass-panel" style={{ padding: '14px' }}>
-              <label className="label-title">
-                <span>Tanggal Kegiatan</span>
-              </label>
-              <input
-                type="text"
-                value={assets.dateText}
-                onChange={(e) => onUpdateProperty('dateText', e.target.value)}
-                className="input-control"
-                placeholder="18 September 2026"
-                style={{ marginBottom: '8px' }}
-              />
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div>
-                  <label className="label-title">Warna Lencana</label>
-                  <input
-                    type="color"
-                    value={assets.dateBgColor}
-                    onChange={(e) => onUpdateProperty('dateBgColor', e.target.value)}
-                    style={{ width: '100%', height: '34px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
-                  />
-                </div>
-                <div>
-                  <label className="label-title">Warna Teks</label>
-                  <input
-                    type="color"
-                    value={assets.dateColor}
-                    onChange={(e) => onUpdateProperty('dateColor', e.target.value)}
-                    style={{ width: '100%', height: '34px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
-                  />
-                </div>
+              <div>
+                <ColorPickerField
+                  label="Warna Border Kartu"
+                  value={assets.eventCardBorderColor}
+                  onChange={(val) => onUpdateProperty('eventCardBorderColor', val)}
+                  presetColors={['#B45309', '#D97706', '#2563EB', '#10B981', '#475569', '#E2E8F0']}
+                />
               </div>
             </div>
-          </>
+
+            {/* 2. Lencana Tanggal Pelaksanaan */}
+            <div className="glass-panel" style={{ padding: '14px' }}>
+              <div style={{ marginBottom: '10px' }}>
+                <label className="label-title">
+                  <span>Tanggal Pelaksanaan Kegiatan</span>
+                </label>
+                <input
+                  type="text"
+                  value={assets.dateText}
+                  onChange={(e) => onUpdateProperty('dateText', e.target.value)}
+                  className="input-control"
+                  placeholder="18 September 2026"
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <ColorPickerField
+                  label="Warna Lencana Tanggal"
+                  value={assets.dateBgColor}
+                  onChange={(val) => onUpdateProperty('dateBgColor', val)}
+                  presetColors={['#2563EB', '#1D4ED8', '#10B981', '#D97706', '#DC2626', '#1E293B']}
+                />
+                <ColorPickerField
+                  label="Warna Teks Tanggal"
+                  value={assets.dateColor}
+                  onChange={(val) => onUpdateProperty('dateColor', val)}
+                  presetColors={['#FFFFFF', '#FEF08A', '#0F172A', '#E2E8F0']}
+                />
+              </div>
+            </div>
+          </div>
         )}
 
         {/* TAB 6: SOCIAL MEDIA HANDLES (FOOTER) */}
