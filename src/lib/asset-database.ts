@@ -182,6 +182,7 @@ export async function dbDeleteAsset(id: string): Promise<boolean> {
 
 /**
  * Save an entire project/design composition state
+ * (Saves to both browser IndexedDB and centralized Server Database)
  */
 export async function dbSaveProject(
   title: string,
@@ -198,6 +199,7 @@ export async function dbSaveProject(
     createdAt: Date.now(),
   };
 
+  // 1. Save to client IndexedDB
   try {
     const db = await openDB();
     await new Promise<void>((resolve, reject) => {
@@ -219,40 +221,72 @@ export async function dbSaveProject(
     }
   }
 
+  // 2. Synchronize to Server Database (for multi-device access across phone, tablet, and PC)
+  if (typeof window !== 'undefined') {
+    fetch('/api/projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(project),
+    }).catch((err) => console.warn('Could not sync project to server database:', err));
+  }
+
   return project;
 }
 
 /**
  * Retrieve all saved projects
+ * (Merges local IndexedDB and server database so all devices stay in sync)
  */
 export async function dbGetProjects(): Promise<SavedProject[]> {
+  let localProjects: SavedProject[] = [];
+
   try {
     const db = await openDB();
-    const projects: SavedProject[] = await new Promise((resolve, reject) => {
+    localProjects = await new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_PROJECTS, 'readonly');
       const store = tx.objectStore(STORE_PROJECTS);
       const req = store.getAll();
       req.onsuccess = () => resolve(req.result || []);
       req.onerror = () => reject(req.error);
     });
-    return projects.sort((a, b) => b.createdAt - a.createdAt);
   } catch {
     if (typeof window !== 'undefined') {
       try {
         const raw = localStorage.getItem(LS_PROJECTS_KEY);
-        return raw ? JSON.parse(raw) : [];
+        localProjects = raw ? JSON.parse(raw) : [];
       } catch {
-        return [];
+        localProjects = [];
       }
     }
-    return [];
   }
+
+  // Fetch from server database for cross-device sync
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch('/api/projects');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.projects)) {
+          const map = new Map<string, SavedProject>();
+          // Combine server and local, prioritizing most recent
+          data.projects.forEach((p: SavedProject) => map.set(p.id, p));
+          localProjects.forEach((p: SavedProject) => map.set(p.id, p));
+          return Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt);
+        }
+      }
+    } catch (e) {
+      // Offline fallback: return local
+    }
+  }
+
+  return localProjects.sort((a, b) => b.createdAt - a.createdAt);
 }
 
 /**
- * Delete a project by ID
+ * Delete a project by ID (from both client IndexedDB and Server Database)
  */
 export async function dbDeleteProject(id: string): Promise<boolean> {
+  // 1. Delete from client IndexedDB
   try {
     const db = await openDB();
     await new Promise<void>((resolve, reject) => {
@@ -273,5 +307,13 @@ export async function dbDeleteProject(id: string): Promise<boolean> {
       }
     }
   }
+
+  // 2. Delete from Server Database
+  if (typeof window !== 'undefined') {
+    fetch(`/api/projects?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }).catch((err) => console.warn('Could not delete project from server database:', err));
+  }
+
   return true;
 }

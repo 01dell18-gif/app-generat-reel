@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { OutputFormat, PresetTemplate } from '@/types/design';
 import {
   Sparkles,
@@ -10,6 +10,10 @@ import {
   Wand2,
   Download,
   Eye,
+  Wifi,
+  Copy,
+  Check,
+  X,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -45,6 +49,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleCritic,
   onOpenGeminiAI,
 }) => {
+  const [showDeviceModal, setShowDeviceModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const lanUrl = 'http://10.10.10.159:3030';
+
+  const handleCopyUrl = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(lanUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
   const getScoreColor = (score: number) => {
     if (score >= 90) return '#10B981';
     if (score >= 70) return '#F59E0B';
@@ -198,6 +214,25 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Right: Tools & Export Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Buka di HP / Perangkat Lain Button */}
+        <button
+          onClick={() => setShowDeviceModal(true)}
+          className="btn"
+          style={{
+            padding: '6px 11px',
+            fontSize: '11.5px',
+            background: 'rgba(16, 185, 129, 0.12)',
+            border: '1px solid rgba(16, 185, 129, 0.35)',
+            color: '#34D399',
+            fontWeight: 600,
+            borderRadius: '8px',
+          }}
+          title="Buka di HP / Tablet / Perangkat Lain (Wi-Fi LAN)"
+        >
+          <Smartphone size={13} color="#34D399" />
+          <span>Buka di HP</span>
+        </button>
+
         {/* Gemini AI Assistant Modal Button */}
         <button
           onClick={onOpenGeminiAI}
@@ -301,6 +336,172 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span>{currentFormat === 'reels_9_16' ? 'Ekspor Video' : 'Ekspor Desain'}</span>
         </button>
       </div>
+
+      {/* Modal Dialog: Akses di Perangkat Lain (HP, Tablet, Laptop) */}
+      {showDeviceModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+          onClick={() => setShowDeviceModal(false)}
+        >
+          <div
+            className="glass-panel"
+            style={{
+              width: '100%',
+              maxWidth: '460px',
+              padding: '24px',
+              borderRadius: '20px',
+              border: '1px solid rgba(56, 189, 248, 0.3)',
+              backgroundColor: '#0F172A',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.15)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                  }}
+                >
+                  <Wifi size={17} color="#34D399" />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#F8FAFC' }}>
+                    Buka di HP / Perangkat Lain
+                  </h3>
+                  <p style={{ fontSize: '11px', color: '#94A3B8' }}>
+                    Akses editor reel & poster langsung dari HP atau tablet
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDeviceModal(false)}
+                className="btn"
+                style={{ padding: '6px', background: 'none', border: 'none', color: '#94A3B8' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* QR Code Container */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                padding: '16px',
+                borderRadius: '14px',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                marginBottom: '16px',
+              }}
+            >
+              <div
+                style={{
+                  padding: '10px',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '12px',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
+                  marginBottom: '10px',
+                }}
+              >
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(lanUrl)}`}
+                  alt="QR Code Akses HP"
+                  style={{ width: '150px', height: '150px', display: 'block' }}
+                />
+              </div>
+              <div style={{ fontSize: '11px', color: '#CBD5E1', fontWeight: 600 }}>
+                Scan QR Code ini dengan Kamera HP Anda
+              </div>
+            </div>
+
+            {/* Direct URL with Copy Button */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '11px', color: '#94A3B8', marginBottom: '6px' }}>
+                Atau ketik alamat URL ini di browser HP:
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 12px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'monospace',
+                    fontSize: '13px',
+                    color: '#38BDF8',
+                    fontWeight: 700,
+                    flex: 1,
+                  }}
+                >
+                  {lanUrl}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyUrl}
+                  className="btn btn-secondary"
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '11px',
+                    color: copied ? '#34D399' : '#F8FAFC',
+                    borderColor: copied ? '#34D399' : 'rgba(255, 255, 255, 0.2)',
+                  }}
+                >
+                  {copied ? <Check size={12} /> : <Copy size={12} />}
+                  <span>{copied ? 'Tersalin!' : 'Salin'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Practical Guide */}
+            <div
+              style={{
+                backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                border: '1px solid rgba(16, 185, 129, 0.2)',
+                borderRadius: '10px',
+                padding: '12px',
+                fontSize: '11px',
+                color: '#CBD5E1',
+                lineHeight: '1.5',
+              }}
+            >
+              <div style={{ fontWeight: 700, color: '#34D399', marginBottom: '4px' }}>
+                Petunjuk Singkat:
+              </div>
+              <ol style={{ paddingLeft: '16px', margin: 0 }}>
+                <li>Pastikan HP / Tablet Anda terhubung ke <b>jaringan Wi-Fi yang sama</b> dengan komputer ini.</li>
+                <li>Buka browser (Google Chrome atau Safari) di HP, lalu buka URL di atas atau scan QR Code.</li>
+                <li>Database project tersinkronisasi otomatis sehingga desain yang disimpan bisa langsung dibuka di HP!</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

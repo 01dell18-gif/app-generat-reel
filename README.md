@@ -55,13 +55,19 @@ Platform generasi desain multi-format terprogram untuk media sosial dengan mesin
   - *Post Overlay*: Header akun, tombol like, comment, share, bookmark, dan caption.
   - *Reels Overlay*: Status bar atas, kolom aksi kanan (heart count, comment, share, audio disc spinning), dan deskripsi bawah.
 
-### 6. Rotasi & Mirror (Flip) Media Terunggah
+### 6. Rotasi, Mirror (Flip) & Pindah Posisi Media / Background
 
+- **Auto-Frame Lengkung Logo Instansi**: Gambar logo apapun yang diunggah (meski berformat kotak dengan latar putih/padat) secara otomatis dibingkai melengkung estetik (*curved capsule / rounded badge*), dilengkapi *clip-path* sehingga sudut kotak tajam terpotong mulus.
 - **Rotasi Presisi**: Tombol cepat putar $-90^\circ$ / $+90^\circ$ dan *slider* bebas derajat ($-180^\circ$ s/d $+180^\circ$) untuk foto subjek utama dan layer latar belakang.
 - **Mirroring / Flip**: Balik horizontal (Flip H) dan balik vertikal (Flip V) instan pada kanvas poster maupun animasi gerak Reels 9:16.
-- **Multi-Background Layers**: Manajemen hingga 4 layer gambar latar dengan kontrol rotasi, flip, opacity, dan urutan layer (*z-index*).
+- **Multi-Background Layers (Max 4)**: Manajemen hingga 4 layer gambar latar dengan kontrol rotasi, flip, opacity, urutan layer (*z-index*), serta **Pindah Posisi (Offset X & Y)** dengan slider, D-Pad, atau *drag-and-drop* langsung pada kanvas.
 
-### 7. Rekomendasi Cerdas Desain AI & Studio Google Gemini
+### 7. Database Desain & Sinkronisasi Antar Perangkat
+
+- **Database Klien (IndexedDB)**: Menyimpan otomatis aset dan project desain dalam penyimpanan lokal browser tanpa batasan ukuran file.
+- **Database Server Terpusat (`/api/projects`)**: Menyimpan komposisi project ke file server (`data/projects.json`), sehingga desain yang disimpan di komputer dapat langsung dibuka dan disunting dari HP atau tablet di jaringan yang sama.
+
+### 8. Rekomendasi Cerdas Desain AI & Studio Google Gemini
 
 - **Rekomendasi Cerdas 1-Klik**: Preset teruji untuk Resmi SPMI, Semangat Vokasi & Hari Pahlawan, Dies Natalis & Prestasi Unggulan, serta Hari Guru & Karakter Bangsa.
 - **Koneksi Resmi Model Gemini**: Sinkronisasi dinamis daftar model (`gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-2.0-flash`, dll.) langsung dengan kuota API Key pengguna Google AI Studio.

@@ -28,6 +28,8 @@ export interface BackgroundLayer {
   flipH?: boolean; // Flip horizontal (mirror)
   flipV?: boolean; // Flip vertical
   scale?: number; // Zoom/scale factor (0.5 - 3.0)
+  x?: number; // X position offset in pixels (-400 to 400)
+  y?: number; // Y position offset in pixels (-400 to 400)
 }
 
 export interface AssetInputs {
@@ -35,6 +37,7 @@ export interface AssetInputs {
   logoUrl: string;
   logoLocked: boolean;
   institutionName?: string;
+  logoFrameShape?: 'capsule' | 'rounded' | 'none'; // Frame lengkung logo: kapsul, rounded card, atau none
 
   // Background / Template Frame
   customBgImageUrl: string; // User uploaded template background

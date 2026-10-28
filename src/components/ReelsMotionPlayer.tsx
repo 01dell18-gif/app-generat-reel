@@ -59,6 +59,8 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       rotation?: number;
       flipH?: boolean;
       flipV?: boolean;
+      x?: number;
+      y?: number;
     }[]
   >([]);
   const logoImgRef = useRef<HTMLImageElement | null>(null);
@@ -82,6 +84,8 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
           rotation: layer.rotation || 0,
           flipH: !!layer.flipH,
           flipV: !!layer.flipV,
+          x: layer.x || 0,
+          y: layer.y || 0,
         };
       });
     } else {
@@ -162,14 +166,14 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       ctx.fillStyle = assets.bgColor || '#0F172A';
       ctx.fillRect(0, 0, w, h);
 
-      bgLayersImgsRef.current.forEach(({ img, opacity, blendMode, scale, rotation, flipH, flipV }) => {
+      bgLayersImgsRef.current.forEach(({ img, opacity, blendMode, scale, rotation, flipH, flipV, x, y }) => {
         if (img && img.complete) {
           ctx.save();
           ctx.globalAlpha = opacity;
           if (blendMode && blendMode !== 'normal') {
             ctx.globalCompositeOperation = blendMode as GlobalCompositeOperation;
           }
-          ctx.translate(w / 2, h / 2);
+          ctx.translate(w / 2 + (x || 0), h / 2 + (y || 0));
           if (rotation) {
             ctx.rotate((rotation * Math.PI) / 180);
           }
@@ -364,15 +368,69 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       ctx.restore();
     }
 
-    // LAYER 7: TOP LOGO (SMK Negeri 1 Klungkung) - Modern Curved Capsule Logo ON TOP OF PHOTO!
+    // LAYER 7: TOP LOGO (SMK Negeri 1 Klungkung / Custom Logo) - ADAPTIVE CURVED FRAME (BUKAN KOTAK)
     if (logoImgRef.current && logoImgRef.current.complete) {
       ctx.save();
-      const lW = w * 0.52;
-      const lH = lW * (logoImgRef.current.naturalHeight / (logoImgRef.current.naturalWidth || 1));
-      ctx.shadowColor = 'rgba(15, 23, 42, 0.22)';
-      ctx.shadowBlur = 16;
-      ctx.shadowOffsetY = 4;
-      ctx.drawImage(logoImgRef.current, w * 0.04, h * 0.05, lW, lH);
+      const img = logoImgRef.current;
+      const isOfficialSvgPill =
+        typeof assets.logoUrl === 'string' &&
+        assets.logoUrl.includes('data:image/svg+xml') &&
+        (assets.logoUrl.includes('pillBg') || assets.logoUrl.includes('pillGlow') || assets.logoUrl.includes('viewBox%3D%220%200%20380'));
+
+      if (isOfficialSvgPill) {
+        const lW = w * 0.52;
+        const lH = lW * (img.naturalHeight / (img.naturalWidth || 1));
+        ctx.shadowColor = 'rgba(15, 23, 42, 0.22)';
+        ctx.shadowBlur = 16;
+        ctx.shadowOffsetY = 4;
+        ctx.drawImage(img, w * 0.04, h * 0.05, lW, lH);
+      } else {
+        // Any custom uploaded logo (JPG, PNG, square, rectangular):
+        // Automatically wrap & clip in an elegant curved frame (capsule or rounded badge)
+        const origW = img.naturalWidth || 200;
+        const origH = img.naturalHeight || 200;
+        const isWide = origW / origH >= 1.8;
+
+        const targetW = w * (isWide ? 0.54 : 0.32);
+        const scale = targetW / origW;
+        const finalW = targetW;
+        const finalH = origH * scale;
+
+        const padX = isWide ? 10 : 8;
+        const padY = 8;
+        const frameW = finalW + padX * 2;
+        const frameH = finalH + padY * 2;
+        const frameRadius = isWide ? frameH / 2 : Math.min(26, frameH / 2);
+
+        const lX = w * 0.04;
+        const lY = h * 0.05;
+
+        // 1. Draw Curved Frame Background with soft shadow
+        ctx.shadowColor = 'rgba(15, 23, 42, 0.25)';
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetY = 5;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.roundRect(lX, lY, frameW, frameH, frameRadius);
+        ctx.fill();
+
+        // 2. Clip context so uploaded square corners are smoothly cut into curves
+        ctx.save();
+        ctx.shadowColor = 'transparent';
+        ctx.beginPath();
+        ctx.roundRect(lX, lY, frameW, frameH, frameRadius);
+        ctx.clip();
+        ctx.drawImage(img, lX + padX, lY + padY, finalW, finalH);
+        ctx.restore();
+
+        // 3. Draw smooth border
+        ctx.shadowColor = 'transparent';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.roundRect(lX, lY, frameW, frameH, frameRadius);
+        ctx.stroke();
+      }
       ctx.restore();
     }
 

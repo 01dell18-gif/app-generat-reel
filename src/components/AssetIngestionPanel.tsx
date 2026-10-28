@@ -40,6 +40,12 @@ import {
   FlipHorizontal,
   FlipVertical,
   Zap,
+  Move,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  Crosshair,
 } from 'lucide-react';
 import { AI_DESIGN_RECOMMENDATIONS, AIDesignPreset } from './GeminiAIModal';
 
@@ -805,6 +811,24 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                 <Sparkles size={12} />
                 <span>Pakai Logo Kapsul Lengkung Modern SMK</span>
               </button>
+
+              <div
+                style={{
+                  marginTop: '8px',
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                  border: '1px solid rgba(16, 185, 129, 0.25)',
+                  fontSize: '9.5px',
+                  color: '#6EE7B7',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <CheckCircle2 size={13} style={{ flexShrink: 0 }} />
+                <span>Auto-Frame Lengkung: Gambar logo apapun yang di-upload (meski kotak) otomatis dibingkai kapsul melengkung estetik.</span>
+              </div>
             </div>
 
             {/* 3. MULTI-BACKGROUND IMAGE MANAGEMENT (MAX 4 LAYERS) */}
@@ -991,60 +1015,196 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                         />
                       </div>
 
-                      {/* Transform Controls for Layer: Rotate & Flip */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateBackgroundLayer(idx, { rotation: ((layer.rotation || 0) + 90) % 360 })}
-                          className="btn btn-secondary"
-                          style={{ padding: '4px 6px', fontSize: '9.5px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
-                          title="Putar Layer 90 Derajat"
-                        >
-                          <RotateCw size={11} />
-                          <span>Rotasi ({layer.rotation || 0}°)</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateBackgroundLayer(idx, { flipH: !layer.flipH })}
-                          className="btn"
-                          style={{
-                            padding: '4px 6px',
-                            fontSize: '9.5px',
-                            flex: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '4px',
-                            background: layer.flipH ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                            border: layer.flipH ? '1px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.1)',
-                            color: layer.flipH ? '#38BDF8' : '#CBD5E1',
-                          }}
-                          title="Mirror Horizontal"
-                        >
-                          <FlipHorizontal size={11} />
-                          <span>Mirror H</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateBackgroundLayer(idx, { flipV: !layer.flipV })}
-                          className="btn"
-                          style={{
-                            padding: '4px 6px',
-                            fontSize: '9.5px',
-                            flex: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '4px',
-                            background: layer.flipV ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                            border: layer.flipV ? '1px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.1)',
-                            color: layer.flipV ? '#38BDF8' : '#CBD5E1',
-                          }}
-                          title="Mirror Vertikal"
-                        >
-                          <FlipVertical size={11} />
-                          <span>Mirror V</span>
-                        </button>
+                      {/* 1. Posisi / Pindah-Pindah (Offset X & Y) */}
+                      <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '8px', borderRadius: '6px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '10px', fontWeight: 700, color: '#C084FC', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Move size={11} />
+                            <span>Pindah Posisi Background</span>
+                          </span>
+                          <span style={{ fontSize: '9px', color: '#94A3B8' }}>
+                            X: {layer.x || 0}px | Y: {layer.y || 0}px
+                          </span>
+                        </div>
+
+                        {/* Slider X & Y */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '6px' }}>
+                          <div>
+                            <div style={{ fontSize: '8.5px', color: '#94A3B8', marginBottom: '2px' }}>Geser Kiri / Kanan (X)</div>
+                            <input
+                              type="range"
+                              min="-350"
+                              max="350"
+                              step="5"
+                              value={layer.x || 0}
+                              onChange={(e) => handleUpdateBackgroundLayer(idx, { x: parseInt(e.target.value, 10) })}
+                            />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '8.5px', color: '#94A3B8', marginBottom: '2px' }}>Geser Atas / Bawah (Y)</div>
+                            <input
+                              type="range"
+                              min="-350"
+                              max="350"
+                              step="5"
+                              value={layer.y || 0}
+                              onChange={(e) => handleUpdateBackgroundLayer(idx, { y: parseInt(e.target.value, 10) })}
+                            />
+                          </div>
+                        </div>
+
+                        {/* D-Pad Directional Controls & Center Button */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateBackgroundLayer(idx, { x: (layer.x || 0) - 20 })}
+                            className="btn btn-secondary"
+                            style={{ padding: '3px 8px', fontSize: '9px', flex: 1 }}
+                            title="Geser Kiri 20px"
+                          >
+                            <ArrowLeft size={11} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateBackgroundLayer(idx, { y: (layer.y || 0) - 20 })}
+                            className="btn btn-secondary"
+                            style={{ padding: '3px 8px', fontSize: '9px', flex: 1 }}
+                            title="Geser Atas 20px"
+                          >
+                            <ArrowUp size={11} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateBackgroundLayer(idx, { x: 0, y: 0 })}
+                            className="btn btn-secondary"
+                            style={{ padding: '3px 8px', fontSize: '9px', flex: 1.2, color: '#38BDF8' }}
+                            title="Kembalikan ke Posisi Tengah (0,0)"
+                          >
+                            <Crosshair size={11} />
+                            <span>Tengah</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateBackgroundLayer(idx, { y: (layer.y || 0) + 20 })}
+                            className="btn btn-secondary"
+                            style={{ padding: '3px 8px', fontSize: '9px', flex: 1 }}
+                            title="Geser Bawah 20px"
+                          >
+                            <ArrowDown size={11} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateBackgroundLayer(idx, { x: (layer.x || 0) + 20 })}
+                            className="btn btn-secondary"
+                            style={{ padding: '3px 8px', fontSize: '9px', flex: 1 }}
+                            title="Geser Kanan 20px"
+                          >
+                            <ArrowRight size={11} />
+                          </button>
+                        </div>
+                        <div style={{ fontSize: '8px', color: '#64748B', marginTop: '4px', textAlign: 'center' }}>
+                          Bisa juga langsung diklik & digeser (drag) di kanvas
+                        </div>
+                      </div>
+
+                      {/* 2. Rotasi & Mirror Controls */}
+                      <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '8px', borderRadius: '6px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        {/* Rotation Free Slider */}
+                        <div style={{ marginBottom: '6px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#94A3B8', marginBottom: '2px' }}>
+                            <span>Sudut Rotasi Background</span>
+                            <span style={{ color: '#38BDF8', fontWeight: 700 }}>{layer.rotation || 0}°</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="-180"
+                            max="180"
+                            step="1"
+                            value={layer.rotation || 0}
+                            onChange={(e) => handleUpdateBackgroundLayer(idx, { rotation: parseInt(e.target.value, 10) })}
+                          />
+                        </div>
+
+                        {/* Quick Rotate Buttons (-90, +90, 0) */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateBackgroundLayer(idx, { rotation: ((layer.rotation || 0) - 90) % 360 })}
+                            className="btn btn-secondary"
+                            style={{ padding: '3px 6px', fontSize: '9px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}
+                            title="Putar -90 Derajat"
+                          >
+                            <RotateCcw size={10} />
+                            <span>-90°</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateBackgroundLayer(idx, { rotation: 0 })}
+                            className="btn btn-secondary"
+                            style={{ padding: '3px 6px', fontSize: '9px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            title="Reset Sudut ke 0 Derajat"
+                          >
+                            <span>Reset (0°)</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateBackgroundLayer(idx, { rotation: ((layer.rotation || 0) + 90) % 360 })}
+                            className="btn btn-secondary"
+                            style={{ padding: '3px 6px', fontSize: '9px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}
+                            title="Putar +90 Derajat"
+                          >
+                            <RotateCw size={10} />
+                            <span>+90°</span>
+                          </button>
+                        </div>
+
+                        {/* Mirror Horizontal & Vertical Buttons */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateBackgroundLayer(idx, { flipH: !layer.flipH })}
+                            className="btn"
+                            style={{
+                              padding: '5px 8px',
+                              fontSize: '9.5px',
+                              flex: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px',
+                              background: layer.flipH ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                              border: layer.flipH ? '1px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.1)',
+                              color: layer.flipH ? '#38BDF8' : '#CBD5E1',
+                              fontWeight: layer.flipH ? 700 : 500,
+                            }}
+                            title="Mirror Horizontal (Balik Kiri-Kanan)"
+                          >
+                            <FlipHorizontal size={12} />
+                            <span>Mirror Horisontal {layer.flipH ? '✓' : ''}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateBackgroundLayer(idx, { flipV: !layer.flipV })}
+                            className="btn"
+                            style={{
+                              padding: '5px 8px',
+                              fontSize: '9.5px',
+                              flex: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px',
+                              background: layer.flipV ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                              border: layer.flipV ? '1px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.1)',
+                              color: layer.flipV ? '#38BDF8' : '#CBD5E1',
+                              fontWeight: layer.flipV ? 700 : 500,
+                            }}
+                            title="Mirror Vertikal (Balik Atas-Bawah)"
+                          >
+                            <FlipVertical size={12} />
+                            <span>Mirror Vertikal {layer.flipV ? '✓' : ''}</span>
+                          </button>
+                        </div>
                       </div>
 
                       {/* Upload Replacement for this Layer */}

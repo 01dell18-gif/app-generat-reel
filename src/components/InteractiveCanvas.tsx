@@ -103,6 +103,21 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
             onUpdateAssetProperty('mainMediaRotation', Math.round(obj.angle || 0));
             onUpdateAssetProperty('mainMediaX', Math.round(obj.left));
             onUpdateAssetProperty('mainMediaY', Math.round(obj.top));
+          } else if (typeof obj.dataId === 'string' && obj.dataId.startsWith('bg_')) {
+            const layerIdx = parseInt(obj.dataId.replace('bg_', ''), 10);
+            if (!isNaN(layerIdx) && assets.backgroundLayers && assets.backgroundLayers[layerIdx]) {
+              const newX = Math.round(obj.left - canvasWidth / 2);
+              const newY = Math.round(obj.top - canvasHeight / 2);
+              const newRot = Math.round(obj.angle || 0);
+              const updatedLayers = [...assets.backgroundLayers];
+              updatedLayers[layerIdx] = {
+                ...updatedLayers[layerIdx],
+                x: newX,
+                y: newY,
+                rotation: newRot,
+              };
+              onUpdateAssetProperty('backgroundLayers', updatedLayers);
+            }
           }
         });
       }
@@ -119,9 +134,11 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           fabric.Image.fromURL(layer.url, (bgImg: any) => {
             if (!isMounted || !canvas) return;
             const layerScale = layer.scale || 1.0;
+            const posX = canvasWidth / 2 + (layer.x || 0);
+            const posY = canvasHeight / 2 + (layer.y || 0);
             bgImg.set({
-              left: canvasWidth / 2,
-              top: canvasHeight / 2,
+              left: posX,
+              top: posY,
               originX: 'center',
               originY: 'center',
               scaleX: (canvasWidth / (bgImg.width || 1080)) * layerScale,
@@ -130,8 +147,9 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
               angle: layer.rotation || 0,
               flipX: !!layer.flipH,
               flipY: !!layer.flipV,
-              selectable: false,
-              evented: false,
+              selectable: true,
+              hasBorders: true,
+              cornerColor: '#C084FC',
               dataId: `bg_${idx}`,
             });
             canvas.add(bgImg);
@@ -367,29 +385,98 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
         canvas.add(topPillGroup);
       }
 
-      // 7. LAYER 7: LOGO INSTANSI / SEKOLAH (Top Left) - ON TOP OF PHOTO
+      // 7. LAYER 7: LOGO INSTANSI / SEKOLAH (Top Left) - CURVED FRAME ADAPTATION (BUKAN KOTAK)
       if (assets.logoUrl) {
         fabric.Image.fromURL(assets.logoUrl, (logoImg: any) => {
           if (!isMounted || !canvas) return;
-          const targetW = canvasWidth * 0.46;
-          const scale = targetW / (logoImg.width || 380);
 
-          logoImg.set({
-            left: canvasWidth * 0.04,
-            top: canvasHeight * 0.04,
-            scaleX: scale,
-            scaleY: scale,
-            selectable: !assets.logoLocked,
-            lockMovementX: assets.logoLocked,
-            lockMovementY: assets.logoLocked,
-            shadow: new fabric.Shadow({
-              color: 'rgba(15, 23, 42, 0.2)',
-              blur: 14,
-              offsetY: 4,
-            }),
-            dataId: 'logo',
-          });
-          canvas.add(logoImg);
+          // Check if this is the official SVG capsule logo with pre-built curved background
+          const isOfficialSvgPill =
+            typeof assets.logoUrl === 'string' &&
+            assets.logoUrl.includes('data:image/svg+xml') &&
+            (assets.logoUrl.includes('pillBg') || assets.logoUrl.includes('pillGlow') || assets.logoUrl.includes('viewBox%3D%220%200%20380'));
+
+          if (isOfficialSvgPill) {
+            const targetW = canvasWidth * 0.46;
+            const scale = targetW / (logoImg.width || 380);
+
+            logoImg.set({
+              left: canvasWidth * 0.04,
+              top: canvasHeight * 0.04,
+              scaleX: scale,
+              scaleY: scale,
+              selectable: !assets.logoLocked,
+              lockMovementX: assets.logoLocked,
+              lockMovementY: assets.logoLocked,
+              shadow: new fabric.Shadow({
+                color: 'rgba(15, 23, 42, 0.2)',
+                blur: 14,
+                offsetY: 4,
+              }),
+              dataId: 'logo',
+            });
+            canvas.add(logoImg);
+          } else {
+            // ANY user-uploaded logo (JPG, PNG, square, rectangular):
+            // Wrap in an elegant Curved Capsule or Rounded Card frame to remove sharp boxy edges!
+            const origW = logoImg.width || 200;
+            const origH = logoImg.height || 200;
+            const isWide = origW / origH >= 1.8;
+
+            const targetW = canvasWidth * (isWide ? 0.48 : 0.28);
+            const scale = targetW / origW;
+            const finalW = targetW;
+            const finalH = origH * scale;
+
+            const padX = isWide ? 10 : 8;
+            const padY = 8;
+            const frameW = finalW + padX * 2;
+            const frameH = finalH + padY * 2;
+            const frameRadius = isWide ? frameH / 2 : Math.min(24, frameH / 2);
+
+            const frameBg = new fabric.Rect({
+              width: frameW,
+              height: frameH,
+              rx: frameRadius,
+              ry: frameRadius,
+              fill: '#FFFFFF',
+              stroke: 'rgba(255, 255, 255, 0.9)',
+              strokeWidth: 2,
+              originX: 'center',
+              originY: 'center',
+              shadow: new fabric.Shadow({
+                color: 'rgba(15, 23, 42, 0.22)',
+                blur: 14,
+                offsetY: 4,
+              }),
+            });
+
+            // Clip the uploaded image to curved corners
+            logoImg.set({
+              originX: 'center',
+              originY: 'center',
+              scaleX: scale,
+              scaleY: scale,
+              clipPath: new fabric.Rect({
+                width: origW,
+                height: origH,
+                rx: frameRadius / scale,
+                ry: frameRadius / scale,
+                originX: 'center',
+                originY: 'center',
+              }),
+            });
+
+            const logoGroup = new fabric.Group([frameBg, logoImg], {
+              left: canvasWidth * 0.04,
+              top: canvasHeight * 0.04,
+              selectable: !assets.logoLocked,
+              lockMovementX: assets.logoLocked,
+              lockMovementY: assets.logoLocked,
+              dataId: 'logo',
+            });
+            canvas.add(logoGroup);
+          }
           enforceLayerOrdering(canvas);
         });
       }
