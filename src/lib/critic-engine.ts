@@ -9,11 +9,14 @@ import {
  * Formula Perceptual Luminance (WCAG 2.1)
  * Standard relative luminance of sRGB colors
  */
-export function getRelativeLuminance(hex: string): number {
-  const cleanHex = hex.replace('#', '');
+export function getRelativeLuminance(hex?: string): number {
+  if (!hex || typeof hex !== 'string') return 0.5;
+  const cleanHex = hex.replace('#', '').trim();
+  if (cleanHex.length !== 6) return 0.5;
   const r = parseInt(cleanHex.substring(0, 2), 16) / 255;
   const g = parseInt(cleanHex.substring(2, 4), 16) / 255;
   const b = parseInt(cleanHex.substring(4, 6), 16) / 255;
+  if (isNaN(r) || isNaN(g) || isNaN(b)) return 0.5;
 
   const a = [r, g, b].map((v) => {
     return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
@@ -98,11 +101,24 @@ export function getSafeZoneForFormat(
  * Evaluates Contrast, Hierarchy, Spatial Balance, and Visual Density
  */
 export function runACGTDeterministicAnalysis(
-  assets: AssetInputs,
+  rawAssets: Partial<AssetInputs> | AssetInputs,
   format: OutputFormat,
   canvasWidth: number = 800,
   canvasHeight: number = 800
 ): ACGTReport {
+  const assets: AssetInputs = {
+    bgColor: '#070B14',
+    headlineColor: '#FFFFFF',
+    headlineFontSize: 36,
+    subtitleColor: '#94A3B8',
+    subtitleFontSize: 16,
+    dateColor: '#FFFFFF',
+    dateBgColor: '#2563EB',
+    footerHeightPercent: 12,
+    supportingGraphics: [],
+    ...(rawAssets || {}),
+  } as AssetInputs;
+
   const startTime = performance.now();
   const issues: CriticIssue[] = [];
 
@@ -332,10 +348,10 @@ export function runACGTDeterministicAnalysis(
 
   // 4. KERAPATAN VISUAL (Visual Density: 30% - 70%)
   // Approximate filled surface area
-  const headlineArea = (w * 0.75 * (assets.headlineFontSize * 2)) / (w * h);
+  const headlineArea = (w * 0.75 * ((assets.headlineFontSize || 36) * 2)) / (w * h);
   const mediaArea = assets.mainMediaUrl ? 0.35 : 0.05;
-  const footerArea = assets.footerHeightPercent / 100;
-  const graphicsArea = (assets.supportingGraphics.length * 0.03);
+  const footerArea = (assets.footerHeightPercent || 12) / 100;
+  const graphicsArea = ((assets.supportingGraphics || []).length * 0.03);
   const estimatedFilledRatio = Number(
     Math.min(0.95, headlineArea + mediaArea + footerArea + graphicsArea).toFixed(2)
   );

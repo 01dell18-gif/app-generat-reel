@@ -122,6 +122,17 @@ def evaluate_design_acgt(assets: Dict[str, Any], format_type: str = "poster_1_1"
 
 
 class CriticHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(json.dumps({
+            "status": "healthy",
+            "service": "Python ACGT Visual Critic v1.0",
+            "port": 8000
+        }).encode('utf-8'))
+
     def do_POST(self):
         content_len = int(self.headers.get('Content-Length', 0))
         post_body = self.rfile.read(content_len)
