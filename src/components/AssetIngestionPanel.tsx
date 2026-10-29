@@ -195,7 +195,7 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
       // Seed database with default master project if fresh/empty
       if (allProjects.length === 0 && PRESET_TEMPLATES.length > 0) {
         await dbSaveProject(
-          'SMK N 1 Klungkung (Default Master)',
+          'FYJ Channel (Default Master)',
           'poster_1_1',
           PRESET_TEMPLATES[0].data
         );

@@ -178,7 +178,7 @@ export default function StudioPage() {
     if (canvas) {
       const dataUrl = canvas.toDataURL('image/png', 1.0);
       const link = document.createElement('a');
-      link.download = `smk-klungkung-${currentFormat}-${Date.now()}.png`;
+      link.download = `fyj-${currentFormat}-${Date.now()}.png`;
       link.href = dataUrl;
       link.click();
     }

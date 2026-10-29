@@ -1,6 +1,6 @@
 import { PresetTemplate, SocialHandles } from '@/types/design';
 
-// SVG Logo SMK Negeri 1 Klungkung - Modern Curved Capsule Pill Shape (LENGKUNG SEMPURNA, BUKAN KOTAK)
+// SVG Logo FYJ Channel - Modern Curved Capsule Pill Shape (LENGKUNG SEMPURNA, BUKAN KOTAK)
 const RAW_LOGO_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 64" fill="none">
   <defs>
@@ -18,62 +18,39 @@ const RAW_LOGO_SVG = `
       <stop offset="50%" stop-color="#93C5FD" stop-opacity="0.6"/>
       <stop offset="100%" stop-color="#86EFAC" stop-opacity="0.6"/>
     </linearGradient>
-    <linearGradient id="blueCrest" x1="0" y1="0" x2="0" y2="1">
+    <!-- FYJ Gradient Colors -->
+    <linearGradient id="fyjBadgeGrad" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#2563EB"/>
-      <stop offset="100%" stop-color="#1E3A8A"/>
+      <stop offset="50%" stop-color="#06B6D4"/>
+      <stop offset="100%" stop-color="#10B981"/>
     </linearGradient>
-    <linearGradient id="greenCrest" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#84CC16"/>
-      <stop offset="100%" stop-color="#3F6212"/>
-    </linearGradient>
-    <linearGradient id="goldFlame" x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0%" stop-color="#EA580C"/>
-      <stop offset="50%" stop-color="#EF4444"/>
-      <stop offset="100%" stop-color="#FBBF24"/>
-    </linearGradient>
-    <linearGradient id="goldWing" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="goldStar" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#FDE047"/>
-      <stop offset="100%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#EA580C"/>
     </linearGradient>
   </defs>
 
   <!-- Perfectly Curved Pill Container (LENGKUNG SEMPURNA, BUKAN KOTAK) -->
   <rect x="3" y="3" width="374" height="58" rx="29" fill="url(#pillBg)" stroke="url(#pillStroke)" stroke-width="1.8" filter="url(#pillGlow)"/>
 
-  <!-- Left Emblem: Dinas Pendidikan Bali Shield -->
-  <g transform="translate(14, 12)">
-    <polygon points="20,0 40,9 40,29 20,40 0,29 0,9" fill="url(#blueCrest)" stroke="#1D4ED8" stroke-width="1.2"/>
-    <polygon points="20,3 37,11 37,27 20,37 3,27 3,11" stroke="#FDE047" stroke-width="1" fill="none" opacity="0.9"/>
-    <!-- Candi / Spire -->
-    <polygon points="20,7 24,15 16,15" fill="#FCD34D"/>
-    <polygon points="20,13 26,22 14,22" fill="#F59E0B"/>
-    <polygon points="20,20 28,30 12,30" fill="#D97706"/>
-    <rect x="14" y="30" width="12" height="3" rx="1.5" fill="#FEF08A"/>
-    <!-- Green Garland wreath -->
-    <path d="M7 26 C 7 16, 13 9, 20 9 C 27 9, 33 16, 33 26" stroke="#4ADE80" stroke-width="1.6" fill="none"/>
+  <!-- Left Emblem: Modern FYJ Crest Badge with Play & Star -->
+  <g transform="translate(14, 10)">
+    <rect x="0" y="0" width="44" height="44" rx="22" fill="url(#fyjBadgeGrad)"/>
+    <circle cx="22" cy="22" r="20" stroke="#FFFFFF" stroke-width="1.5" stroke-opacity="0.75" fill="none"/>
+    <!-- Modern Play Triangle Symbol -->
+    <polygon points="17,14 31,22 17,30" fill="#FFFFFF"/>
+    <!-- Golden Accent Star -->
+    <polygon points="31,14 32.5,17.5 36,17.5 33,19.5 34,23 31,21 28,23 29,19.5 26,17.5 29.5,17.5" fill="url(#goldStar)"/>
   </g>
 
-  <!-- Right Emblem: SMK Negeri 1 Klungkung Wings & Torch -->
-  <g transform="translate(58, 12)">
-    <polygon points="20,0 40,9 40,29 20,40 0,29 0,9" fill="url(#greenCrest)" stroke="#365314" stroke-width="1.2"/>
-    <polygon points="20,3 37,11 37,27 20,37 3,27 3,11" stroke="#FEF08A" stroke-width="1" fill="none" opacity="0.9"/>
-    <!-- Wings -->
-    <path d="M20 20 C 14 13, 5 14, 3 20 C 7 25, 15 25, 20 23 Z" fill="url(#goldWing)"/>
-    <path d="M20 20 C 26 13, 35 14, 37 20 C 33 25, 25 25, 20 23 Z" fill="url(#goldWing)"/>
-    <!-- Torch -->
-    <line x1="20" y1="18" x2="20" y2="31" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="20" y1="19" x2="20" y2="30" stroke="#71717A" stroke-width="1.2" stroke-linecap="round"/>
-    <path d="M20 7 C 23 11, 25 14, 23 18 C 21 19, 19 19, 17 18 C 15 14, 17 11, 20 7 Z" fill="url(#goldFlame)"/>
-    <rect x="8" y="31" width="24" height="4.5" rx="2" fill="#FEF08A" stroke="#CA8A04" stroke-width="0.8"/>
-  </g>
-
-  <!-- Modern Clean Typography -->
-  <text x="108" y="36" fill="#0F172A" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="15" letter-spacing="0.3px">SMK NEGERI 1 KLUNGKUNG</text>
-  <text x="109" y="49" fill="#2563EB" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="8.5" letter-spacing="1.4px">PUSAT KEUNGGULAN • ISO 9001</text>
+  <!-- Modern Clean Typography for FYJ -->
+  <text x="68" y="35" fill="#0F172A" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="19" letter-spacing="1.2px">FYJ CHANNEL</text>
+  <text x="70" y="49" fill="#2563EB" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="8.5" letter-spacing="1.5px">OFFICIAL MEDIA • CREATIVE PRODUCTION</text>
 </svg>
 `.trim();
 
-export const LOGO_SMK_KLUNGKUNG = `data:image/svg+xml;utf8,${encodeURIComponent(RAW_LOGO_SVG)}`;
+export const LOGO_FYJ = `data:image/svg+xml;utf8,${encodeURIComponent(RAW_LOGO_SVG)}`;
+export const LOGO_SMK_KLUNGKUNG = LOGO_FYJ;
 
 // Subtle Garuda / Balinese Cultural Watermark
 export const WATERMARK_GARUDA = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" fill="none" opacity="0.18">
@@ -307,7 +284,7 @@ export const TEMPLATE_BG_CULINARY = `data:image/svg+xml;utf8,<svg xmlns="http://
 </svg>`;
 
 export const PRESET_BACKGROUND_LIBRARY = [
-  { id: 'bg_hills_smk', name: 'Bukit Hijau & Langit (SMK)', url: TEMPLATE_BG_SMK, previewGradient: 'linear-gradient(135deg, #38BDF8 0%, #84CC16 100%)' },
+  { id: 'bg_hills_smk', name: 'Bukit Hijau & Langit (FYJ)', url: TEMPLATE_BG_SMK, previewGradient: 'linear-gradient(135deg, #38BDF8 0%, #84CC16 100%)' },
   { id: 'bg_patriotik', name: 'Patriotik Merah Putih & Emas', url: TEMPLATE_BG_PATRIOTIK, previewGradient: 'linear-gradient(135deg, #DC2626 0%, #F59E0B 100%)' },
   { id: 'bg_ppdb', name: 'PPDB Vokasi Biru & Oranye', url: TEMPLATE_BG_PPDB, previewGradient: 'linear-gradient(135deg, #1E3A8A 0%, #EA580C 100%)' },
   { id: 'bg_cyber_tech', name: 'Cyber Grid & Tech Cyan', url: TEMPLATE_BG_CYBER_TECH, previewGradient: 'linear-gradient(135deg, #061126 0%, #06B6D4 100%)' },
@@ -373,14 +350,14 @@ export const SAMPLE_SPEAKER_PHOTO = `data:image/svg+xml;utf8,<svg xmlns="http://
 export const PRESET_TEMPLATES: PresetTemplate[] = [
   {
     id: 'smk_klungkung',
-    name: 'SMK N 1 Klungkung - Kesaktian Pancasila & SPMI',
-    category: 'Sekolah & Institusi Pendidikan',
-    description: 'Template resmi institusi: Latar bukit hijau & langit biru, banner atas hijau tua, kartu SPMI, dan bar sosial media biru.',
+    name: 'FYJ - Kesaktian Pancasila & SPMI',
+    category: 'Media & Institusi Publikasi',
+    description: 'Template resmi FYJ: Latar bukit hijau & langit biru, banner atas hijau tua, kartu SPMI, dan bar sosial media biru.',
     previewGradient: 'linear-gradient(135deg, #0284C7 0%, #84CC16 60%, #15803D 100%)',
     data: {
       logoUrl: LOGO_SMK_KLUNGKUNG,
       logoLocked: true,
-      institutionName: 'SMK NEGERI 1 KLUNGKUNG',
+      institutionName: 'FYJ CHANNEL',
 
       // Background
       customBgImageUrl: TEMPLATE_BG_SMK,
@@ -459,7 +436,7 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
     data: {
       logoUrl: LOGO_SMK_KLUNGKUNG,
       logoLocked: true,
-      institutionName: 'SMK NEGERI 1 KLUNGKUNG',
+      institutionName: 'FYJ CHANNEL',
       customBgImageUrl: TEMPLATE_BG_PATRIOTIK,
       useCustomBgImage: true,
       backgroundLayers: [],
@@ -523,7 +500,7 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
     data: {
       logoUrl: LOGO_SMK_KLUNGKUNG,
       logoLocked: true,
-      institutionName: 'SMK NEGERI 1 KLUNGKUNG',
+      institutionName: 'FYJ CHANNEL',
       customBgImageUrl: TEMPLATE_BG_PPDB,
       useCustomBgImage: true,
       backgroundLayers: [],
@@ -543,7 +520,7 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
       headlineColor: '#0F172A',
       headlineFontSize: 27,
       headlineFontFamily: "'Plus Jakarta Sans', sans-serif",
-      subtitleText: 'Daftar sekarang melalui portal online resmi: ppdb.smkn1klk.sch.id',
+      subtitleText: 'Daftar sekarang melalui portal online resmi: ppdb.fyjchannel.co.id',
       subtitleColor: '#334155',
       subtitleFontSize: 14,
       dateText: 'Pendaftaran: 1 - 30 Juni 2026',
@@ -587,7 +564,7 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
     data: {
       logoUrl: LOGO_SMK_KLUNGKUNG,
       logoLocked: true,
-      institutionName: 'SMK NEGERI 1 KLUNGKUNG',
+      institutionName: 'FYJ CHANNEL',
       customBgImageUrl: TEMPLATE_BG_VIBRANT_GRADIENT,
       useCustomBgImage: true,
       backgroundLayers: [],
@@ -840,7 +817,7 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
     data: {
       logoUrl: LOGO_SMK_KLUNGKUNG,
       logoLocked: true,
-      institutionName: 'SMK NEGERI 1 KLUNGKUNG',
+      institutionName: 'FYJ CHANNEL',
       customBgImageUrl: TEMPLATE_BG_ROYAL_GOLD,
       useCustomBgImage: true,
       backgroundLayers: [],

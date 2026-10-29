@@ -399,7 +399,7 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       ctx.restore();
     }
 
-    // LAYER 7: TOP LOGO (SMK Negeri 1 Klungkung / Custom Logo) - ADAPTIVE CURVED FRAME (BUKAN KOTAK)
+    // LAYER 7: TOP LOGO (FYJ Channel / Custom Logo) - ADAPTIVE CURVED FRAME (BUKAN KOTAK)
     if (logoImgRef.current && logoImgRef.current.complete) {
       ctx.save();
       const img = logoImgRef.current;
@@ -535,7 +535,7 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `reels-smk-klungkung-${Date.now()}.webm`;
+      a.download = `reels-fyj-${Date.now()}.webm`;
       a.click();
       URL.revokeObjectURL(url);
       setIsRecording(false);
@@ -658,7 +658,7 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
                 </div>
 
                 <div style={{ fontSize: '12px', lineHeight: '1.4', marginBottom: '8px' }}>
-                  {assets.topPillText} • {assets.eventCardTitle} #smknegeri1klungkung #pancasila
+                  {assets.topPillText} • {assets.eventCardTitle} #fyj #fyjchannel #kreatif
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', opacity: 0.9 }}>

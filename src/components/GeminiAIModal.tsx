@@ -354,6 +354,7 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
   );
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generationResult, setGenerationResult] = useState<any>(null);
+  const [applyVisualAssets, setApplyVisualAssets] = useState<boolean>(true);
 
   // Online Dynamic Recommendations Generated from Google Gemini
   const [onlineRecommendations, setOnlineRecommendations] = useState<AIDesignPreset[]>([]);
@@ -428,6 +429,12 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
             socialFooterBorderColor: res.eventCardBorderColor || '#F59E0B',
             showTopPill: true,
             showEventCard: true,
+            ...(res.customBgImageUrl
+              ? { customBgImageUrl: res.customBgImageUrl, useCustomBgImage: true }
+              : {}),
+            ...(res.mainMediaUrl
+              ? { mainMediaUrl: res.mainMediaUrl, isolateSubject: true }
+              : {}),
           },
         };
 
@@ -467,9 +474,15 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
       subtitleText: generationResult.subtitleText || assets.subtitleText,
       showTopPill: true,
       showEventCard: true,
+      ...(applyVisualAssets && generationResult.customBgImageUrl
+        ? { customBgImageUrl: generationResult.customBgImageUrl, useCustomBgImage: true }
+        : {}),
+      ...(applyVisualAssets && generationResult.mainMediaUrl
+        ? { mainMediaUrl: generationResult.mainMediaUrl, isolateSubject: true }
+        : {}),
     };
     await dbSaveProject(`AI: ${generationResult.topPillText || promptTopic}`, 'poster_1_1', merged);
-    setDbNotification('Hasil rancangan AI berhasil disimpan ke Database!');
+    setDbNotification('Hasil rancangan & aset AI berhasil disimpan ke Database!');
     setTimeout(() => setDbNotification(''), 3000);
   };
 
@@ -632,11 +645,11 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
     }
   };
 
-  // Apply Generated Content to Canvas
+  // Apply Generated Content & Visual Assets to Canvas
   const handleApplyToCanvas = () => {
     if (!generationResult) return;
 
-    onApplyGeneratedAssets({
+    const updates: Partial<AssetInputs> = {
       topPillText: generationResult.topPillText || assets.topPillText,
       topPillBgColor: generationResult.topPillBgColor || assets.topPillBgColor,
       topPillTextColor: generationResult.topPillTextColor || assets.topPillTextColor,
@@ -649,8 +662,18 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
       subtitleText: generationResult.subtitleText || assets.subtitleText,
       showTopPill: true,
       showEventCard: true,
-    });
+    };
 
+    if (applyVisualAssets && generationResult.customBgImageUrl) {
+      updates.customBgImageUrl = generationResult.customBgImageUrl;
+      updates.useCustomBgImage = true;
+    }
+    if (applyVisualAssets && generationResult.mainMediaUrl) {
+      updates.mainMediaUrl = generationResult.mainMediaUrl;
+      updates.isolateSubject = true;
+    }
+
+    onApplyGeneratedAssets(updates);
     onClose();
   };
 
@@ -1483,6 +1506,120 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
                       ))}
                     </div>
                   </div>
+
+                  {/* Aset Visual yang Dihasilkan AI (Background & Subjek Media) */}
+                  {(generationResult.customBgImageUrl || generationResult.mainMediaUrl) && (
+                    <div style={{
+                      background: 'rgba(15, 23, 42, 0.7)',
+                      border: '1px solid rgba(56, 189, 248, 0.35)',
+                      borderRadius: '10px',
+                      padding: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#38BDF8', fontWeight: 700, fontSize: '12px' }}>
+                          <Sparkles size={14} />
+                          <span>🎨 Aset Visual yang Dihasilkan AI:</span>
+                        </div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '11px', color: '#E2E8F0', userSelect: 'none' }}>
+                          <input
+                            type="checkbox"
+                            checked={applyVisualAssets}
+                            onChange={(e) => setApplyVisualAssets(e.target.checked)}
+                            style={{ cursor: 'pointer', accentColor: '#10B981' }}
+                          />
+                          <span>Sertakan & Terapkan ke Kanvas</span>
+                        </label>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '10px' }}>
+                        {/* Background Asset Preview */}
+                        {generationResult.customBgImageUrl && (
+                          <div style={{
+                            display: 'flex',
+                            gap: '10px',
+                            alignItems: 'center',
+                            background: 'rgba(0, 0, 0, 0.35)',
+                            border: '1px solid rgba(56, 189, 248, 0.25)',
+                            borderRadius: '8px',
+                            padding: '8px 10px',
+                          }}>
+                            <div style={{
+                              width: '48px',
+                              height: '48px',
+                              borderRadius: '6px',
+                              overflow: 'hidden',
+                              border: '1px solid rgba(56, 189, 248, 0.5)',
+                              flexShrink: 0,
+                              background: '#090D16',
+                            }}>
+                              <img
+                                src={generationResult.customBgImageUrl}
+                                alt="AI Background"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                              <span style={{ fontSize: '10px', color: '#38BDF8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                                🖼️ Background AI
+                              </span>
+                              <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#F1F5F9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {generationResult.bgName || 'Background Tema AI'}
+                              </span>
+                              <span style={{ fontSize: '10px', color: '#94A3B8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {generationResult.bgDescription || 'Vektor beresolusi tinggi'}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Main Media / Subject Asset Preview */}
+                        {generationResult.mainMediaUrl && (
+                          <div style={{
+                            display: 'flex',
+                            gap: '10px',
+                            alignItems: 'center',
+                            background: 'rgba(0, 0, 0, 0.35)',
+                            border: '1px solid rgba(245, 158, 11, 0.3)',
+                            borderRadius: '8px',
+                            padding: '8px 10px',
+                          }}>
+                            <div style={{
+                              width: '48px',
+                              height: '48px',
+                              borderRadius: '6px',
+                              overflow: 'hidden',
+                              border: '1px solid rgba(245, 158, 11, 0.5)',
+                              flexShrink: 0,
+                              background: '#090D16',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}>
+                              <img
+                                src={generationResult.mainMediaUrl}
+                                alt="AI Subject"
+                                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                              />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                              <span style={{ fontSize: '10px', color: '#F59E0B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                                👤 Subjek / Hero AI
+                              </span>
+                              <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#F1F5F9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {generationResult.mainMediaName || 'Karakter/Objek AI'}
+                              </span>
+                              <span style={{ fontSize: '10px', color: '#94A3B8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {generationResult.mainMediaDescription || 'Subjek visual utama tema'}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '12px' }}>
                     <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '8px' }}>

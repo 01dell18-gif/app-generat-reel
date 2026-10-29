@@ -5,7 +5,7 @@ title VibeGenesis - Studio Desain Reel & Poster Sosmed
 echo.
 echo ======================================================================
 echo    VIBEGENESIS - STUDIO DESAIN REEL & POSTER SOSMED
-echo    SMK NEGERI 1 KLUNGKUNG
+echo    FYJ CHANNEL - OFFICIAL CREATIVE STUDIO
 echo ======================================================================
 echo.
 

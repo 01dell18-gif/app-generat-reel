@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAIAssetsForTopic } from '@/lib/ai-generative-assets';
 
 interface GeminiRequest {
   apiKey?: string;
@@ -96,6 +97,8 @@ function createSemanticDesignFallback(prompt: string) {
     }
   }
 
+  const visualAssets = getAIAssetsForTopic(prompt);
+
   return {
     topPillText: title,
     topPillBgColor: topPillBg,
@@ -109,6 +112,13 @@ function createSemanticDesignFallback(prompt: string) {
     headlineText: headline,
     subtitleText: subtitle,
     reasoning: `Konsep desain visual cerdas disesuaikan otomatis dengan tema "${prompt}" untuk kontras warna optimal WCAG AA dan keselarasan informasi media sosial.`,
+    customBgImageUrl: visualAssets.customBgImageUrl,
+    bgName: visualAssets.bgName,
+    bgDescription: visualAssets.bgDescription,
+    mainMediaUrl: visualAssets.mainMediaUrl,
+    mainMediaName: visualAssets.mainMediaName,
+    mainMediaDescription: visualAssets.mainMediaDescription,
+    useCustomBgImage: true,
   };
 }
 
@@ -339,17 +349,31 @@ Struktur JSON yang WAJIB dihasilkan:
       const data = await response.json();
       const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
       const cleanJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-      let parsed = {};
+      let parsed: any = {};
       try {
         parsed = JSON.parse(cleanJson);
       } catch {
         parsed = { topPillText: body.prompt || 'Kegiatan Sekolah', headlineText: body.prompt || '' };
       }
 
+      const visualAssets = getAIAssetsForTopic(
+        (body.prompt || '') + ' ' + (parsed.topPillText || '') + ' ' + (parsed.headlineText || '')
+      );
+      const combinedResult = {
+        ...parsed,
+        customBgImageUrl: visualAssets.customBgImageUrl,
+        bgName: visualAssets.bgName,
+        bgDescription: visualAssets.bgDescription,
+        mainMediaUrl: visualAssets.mainMediaUrl,
+        mainMediaName: visualAssets.mainMediaName,
+        mainMediaDescription: visualAssets.mainMediaDescription,
+        useCustomBgImage: true,
+      };
+
       return NextResponse.json({
         success: true,
         modelUsed: modelUsed,
-        result: parsed,
+        result: combinedResult,
       });
     }
 
@@ -473,7 +497,7 @@ Balas HANYA dalam format JSON murni:
       const data = await response.json();
       const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
       const cleanJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-      let parsed = {};
+      let parsed: any = {};
       try {
         parsed = JSON.parse(cleanJson);
       } catch {
