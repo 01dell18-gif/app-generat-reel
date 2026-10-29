@@ -667,6 +667,7 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
     if (applyVisualAssets && generationResult.customBgImageUrl) {
       updates.customBgImageUrl = generationResult.customBgImageUrl;
       updates.useCustomBgImage = true;
+      updates.backgroundLayers = [];
     }
     if (applyVisualAssets && generationResult.mainMediaUrl) {
       updates.mainMediaUrl = generationResult.mainMediaUrl;

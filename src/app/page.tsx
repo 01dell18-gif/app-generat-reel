@@ -16,6 +16,7 @@ import { AssetIngestionPanel } from '@/components/AssetIngestionPanel';
 import { CriticDrawer } from '@/components/CriticDrawer';
 import { GeminiAIModal } from '@/components/GeminiAIModal';
 import confetti from 'canvas-confetti';
+import { Square, Sliders, ShieldAlert, Sparkles, Download } from 'lucide-react';
 
 // Dynamic imports to prevent SSR issues with HTML5 Canvas / Fabric.js
 const InteractiveCanvas = dynamic(
@@ -38,6 +39,19 @@ export default function StudioPage() {
   const [isGeminiModalOpen, setIsGeminiModalOpen] = useState<boolean>(false);
   const [iterationHistory, setIterationHistory] = useState<IterationLog[]>([]);
   const [reelsExportTrigger, setReelsExportTrigger] = useState<number>(0);
+
+  // Mobile layout state
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [mobileActiveTab, setMobileActiveTab] = useState<'canvas' | 'editor' | 'critic'>('canvas');
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 860);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Compute live ACGT Critic Report whenever assets or format changes
   const report = useMemo(() => {
@@ -205,80 +219,327 @@ export default function StudioPage() {
         isCriticOpen={isCriticOpen}
         onToggleCritic={() => setIsCriticOpen(!isCriticOpen)}
         onOpenGeminiAI={() => setIsGeminiModalOpen(true)}
+        isMobile={isMobile}
       />
 
-      {/* 3-Column Studio Workspace Grid */}
-      <main
-        style={{
-          display: 'grid',
-          gridTemplateColumns: isCriticOpen ? '320px 1fr 240px' : '320px 1fr',
-          height: 'calc(100vh - 64px)',
-          overflow: 'hidden',
-          transition: 'grid-template-columns 0.3s ease',
-        }}
-      >
-        {/* Left Column: Asset Ingestion Panel */}
-        <AssetIngestionPanel
-          assets={assets}
-          onUpdateProperty={handleUpdateAssetProperty}
-          onUpdatePropertiesBatch={handleUpdateAssetsBatch}
-          onOpenGeminiAI={() => setIsGeminiModalOpen(true)}
-          onApplyFullAssets={(loaded) => setAssets(loaded)}
-        />
-
-        {/* Center Column: Viewport & Canvas Engine */}
-        <section
+      {/* Main Studio Workspace: Responsive 3-Column on Desktop, Full Single-Column Tabs on Mobile */}
+      {!isMobile ? (
+        <main
           style={{
-            position: 'relative',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#050811',
-            backgroundImage:
-              'radial-gradient(#1e293b 1px, transparent 1px), radial-gradient(#1e293b 1px, #050811 1px)',
-            backgroundSize: '40px 40px',
-            backgroundPosition: '0 0, 20px 20px',
+            display: 'grid',
+            gridTemplateColumns: isCriticOpen ? '320px 1fr 240px' : '320px 1fr',
+            height: 'calc(100vh - 58px)',
             overflow: 'hidden',
+            transition: 'grid-template-columns 0.3s ease',
           }}
         >
-          {currentFormat === 'reels_9_16' ? (
-            <ReelsMotionPlayer
-              assets={assets}
-              issues={report.issues}
-              showSocialOverlay={showSocialOverlay}
-              exportTrigger={reelsExportTrigger}
-              onExportVideo={handleExport}
-            />
-          ) : (
-            <InteractiveCanvas
-              assets={assets}
-              format={currentFormat}
-              issues={report.issues}
-              showSocialOverlay={showSocialOverlay}
+          {/* Left Column: Asset Ingestion Panel */}
+          <AssetIngestionPanel
+            assets={assets}
+            onUpdateProperty={handleUpdateAssetProperty}
+            onUpdatePropertiesBatch={handleUpdateAssetsBatch}
+            onOpenGeminiAI={() => setIsGeminiModalOpen(true)}
+            onApplyFullAssets={(loaded) => setAssets(loaded)}
+          />
+
+          {/* Center Column: Viewport & Canvas Engine */}
+          <section
+            style={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#050811',
+              backgroundImage:
+                'radial-gradient(#1e293b 1px, transparent 1px), radial-gradient(#1e293b 1px, #050811 1px)',
+              backgroundSize: '40px 40px',
+              backgroundPosition: '0 0, 20px 20px',
+              overflow: 'hidden',
+            }}
+          >
+            {currentFormat === 'reels_9_16' ? (
+              <ReelsMotionPlayer
+                assets={assets}
+                issues={report.issues}
+                showSocialOverlay={showSocialOverlay}
+                exportTrigger={reelsExportTrigger}
+                onExportVideo={handleExport}
+              />
+            ) : (
+              <InteractiveCanvas
+                assets={assets}
+                format={currentFormat}
+                issues={report.issues}
+                showSocialOverlay={showSocialOverlay}
+                selectedIssueId={selectedIssueId}
+                onSelectIssue={setSelectedIssueId}
+                onApplySingleFix={handleApplySingleFix}
+                onUpdateAssetProperty={handleUpdateAssetProperty}
+                onUpdateAssetsBatch={handleUpdateAssetsBatch}
+              />
+            )}
+          </section>
+
+          {/* Right Column: ACGT AI Critic Drawer */}
+          {isCriticOpen && (
+            <CriticDrawer
+              report={report}
               selectedIssueId={selectedIssueId}
               onSelectIssue={setSelectedIssueId}
               onApplySingleFix={handleApplySingleFix}
-              onUpdateAssetProperty={handleUpdateAssetProperty}
-              onUpdateAssetsBatch={handleUpdateAssetsBatch}
+              onApplyAllFixes={handleApplyAllFixes}
+              iterationHistory={iterationHistory}
+              isOpen={isCriticOpen}
+              onClose={() => setIsCriticOpen(false)}
             />
           )}
-        </section>
+        </main>
+      ) : (
+        /* Mobile Dedicated Smartphone Workspace (Full-height tabs with zero squishing) */
+        <main
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: 'calc(100vh - 58px - 62px)',
+            overflow: 'hidden',
+            position: 'relative',
+          }}
+        >
+          {/* Mobile Tab 1: Editor Aset */}
+          <div
+            style={{
+              display: mobileActiveTab === 'editor' ? 'flex' : 'none',
+              flexDirection: 'column',
+              width: '100%',
+              height: '100%',
+              overflow: 'hidden',
+            }}
+          >
+            <AssetIngestionPanel
+              assets={assets}
+              onUpdateProperty={handleUpdateAssetProperty}
+              onUpdatePropertiesBatch={handleUpdateAssetsBatch}
+              onOpenGeminiAI={() => setIsGeminiModalOpen(true)}
+              onApplyFullAssets={(loaded) => setAssets(loaded)}
+            />
+          </div>
 
-        {/* Right Column: ACGT AI Critic Drawer */}
-        {isCriticOpen && (
-          <CriticDrawer
-            report={report}
-            selectedIssueId={selectedIssueId}
-            onSelectIssue={setSelectedIssueId}
-            onApplySingleFix={handleApplySingleFix}
-            onApplyAllFixes={handleApplyAllFixes}
-            iterationHistory={iterationHistory}
-            isOpen={isCriticOpen}
-            onClose={() => setIsCriticOpen(false)}
-          />
-        )}
-      </main>
+          {/* Mobile Tab 2: Kanvas Engine (ALWAYS mounted to preserve Fabric.js state & elements) */}
+          <section
+            style={{
+              display: mobileActiveTab === 'canvas' ? 'flex' : 'none',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              height: '100%',
+              backgroundColor: '#050811',
+              backgroundImage:
+                'radial-gradient(#1e293b 1px, transparent 1px), radial-gradient(#1e293b 1px, #050811 1px)',
+              backgroundSize: '40px 40px',
+              backgroundPosition: '0 0, 20px 20px',
+              overflow: 'hidden',
+              position: 'relative',
+            }}
+          >
+            {currentFormat === 'reels_9_16' ? (
+              <ReelsMotionPlayer
+                assets={assets}
+                issues={report.issues}
+                showSocialOverlay={showSocialOverlay}
+                exportTrigger={reelsExportTrigger}
+                onExportVideo={handleExport}
+              />
+            ) : (
+              <InteractiveCanvas
+                assets={assets}
+                format={currentFormat}
+                issues={report.issues}
+                showSocialOverlay={showSocialOverlay}
+                selectedIssueId={selectedIssueId}
+                onSelectIssue={setSelectedIssueId}
+                onApplySingleFix={handleApplySingleFix}
+                onUpdateAssetProperty={handleUpdateAssetProperty}
+                onUpdateAssetsBatch={handleUpdateAssetsBatch}
+              />
+            )}
+          </section>
+
+          {/* Mobile Tab 3: ACGT AI Critic Drawer */}
+          <div
+            style={{
+              display: mobileActiveTab === 'critic' ? 'flex' : 'none',
+              flexDirection: 'column',
+              width: '100%',
+              height: '100%',
+              overflow: 'hidden',
+            }}
+          >
+            <CriticDrawer
+              report={report}
+              selectedIssueId={selectedIssueId}
+              onSelectIssue={setSelectedIssueId}
+              onApplySingleFix={handleApplySingleFix}
+              onApplyAllFixes={handleApplyAllFixes}
+              iterationHistory={iterationHistory}
+              isOpen={true}
+              onClose={() => setMobileActiveTab('canvas')}
+            />
+          </div>
+        </main>
+      )}
+
+      {/* Mobile Dedicated Bottom Navigation Tab Bar */}
+      {isMobile && (
+        <nav
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '62px',
+            backgroundColor: 'rgba(7, 11, 20, 0.98)',
+            backdropFilter: 'blur(20px)',
+            borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-around',
+            zIndex: 90,
+            padding: '0 6px',
+            boxShadow: '0 -6px 24px rgba(0, 0, 0, 0.6)',
+          }}
+        >
+          {/* Tab 1: Kanvas */}
+          <button
+            onClick={() => setMobileActiveTab('canvas')}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '3px',
+              background: mobileActiveTab === 'canvas' ? 'rgba(56, 189, 248, 0.15)' : 'none',
+              border: mobileActiveTab === 'canvas' ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid transparent',
+              color: mobileActiveTab === 'canvas' ? '#38BDF8' : '#94A3B8',
+              cursor: 'pointer',
+              padding: '6px 14px',
+              borderRadius: '10px',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Square size={18} color={mobileActiveTab === 'canvas' ? '#38BDF8' : '#94A3B8'} />
+            <span style={{ fontSize: '10.5px', fontWeight: mobileActiveTab === 'canvas' ? 800 : 600 }}>Kanvas</span>
+          </button>
+
+          {/* Tab 2: Editor */}
+          <button
+            onClick={() => setMobileActiveTab('editor')}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '3px',
+              background: mobileActiveTab === 'editor' ? 'rgba(168, 85, 247, 0.15)' : 'none',
+              border: mobileActiveTab === 'editor' ? '1px solid rgba(168, 85, 247, 0.35)' : '1px solid transparent',
+              color: mobileActiveTab === 'editor' ? '#C084FC' : '#94A3B8',
+              cursor: 'pointer',
+              padding: '6px 14px',
+              borderRadius: '10px',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Sliders size={18} color={mobileActiveTab === 'editor' ? '#C084FC' : '#94A3B8'} />
+            <span style={{ fontSize: '10.5px', fontWeight: mobileActiveTab === 'editor' ? 800 : 600 }}>Editor</span>
+          </button>
+
+          {/* Tab 3: Critic Score */}
+          <button
+            onClick={() => setMobileActiveTab('critic')}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '3px',
+              background: mobileActiveTab === 'critic' ? 'rgba(16, 185, 129, 0.15)' : 'none',
+              border: mobileActiveTab === 'critic' ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid transparent',
+              color: mobileActiveTab === 'critic' ? '#34D399' : '#94A3B8',
+              cursor: 'pointer',
+              padding: '6px 14px',
+              borderRadius: '10px',
+              position: 'relative',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <div style={{ position: 'relative' }}>
+              <ShieldAlert size={18} color={mobileActiveTab === 'critic' ? '#34D399' : '#94A3B8'} />
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '-4px',
+                  right: '-12px',
+                  backgroundColor: report.overall_score >= 90 ? '#10B981' : '#F59E0B',
+                  color: '#FFFFFF',
+                  fontSize: '9px',
+                  fontWeight: 900,
+                  padding: '1px 4px',
+                  borderRadius: '10px',
+                  lineHeight: '1',
+                }}
+              >
+                {report.overall_score}
+              </span>
+            </div>
+            <span style={{ fontSize: '10.5px', fontWeight: mobileActiveTab === 'critic' ? 800 : 600 }}>Critic</span>
+          </button>
+
+          {/* Tab 4: Gemini AI */}
+          <button
+            onClick={() => setIsGeminiModalOpen(true)}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '3px',
+              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2))',
+              border: '1px solid rgba(56, 189, 248, 0.4)',
+              color: '#38BDF8',
+              cursor: 'pointer',
+              padding: '6px 12px',
+              borderRadius: '10px',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Sparkles size={18} color="#38BDF8" />
+            <span style={{ fontSize: '10.5px', fontWeight: 800 }}>Gemini AI</span>
+          </button>
+
+          {/* Tab 5: Ekspor */}
+          <button
+            onClick={handleExport}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '3px',
+              background: 'none',
+              border: '1px solid transparent',
+              color: '#F8FAFC',
+              cursor: 'pointer',
+              padding: '6px 12px',
+              borderRadius: '10px',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Download size={18} color="#F8FAFC" />
+            <span style={{ fontSize: '10.5px', fontWeight: 600 }}>Ekspor</span>
+          </button>
+        </nav>
+      )}
 
       {/* Google Gemini AI Studio & Parameters Modal */}
       <GeminiAIModal

@@ -245,6 +245,57 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       ctx.restore();
     }
 
+    // LAYER 3.8: HEADLINE TEXT ("PAHLAWANKU TELADANKU, VOKASI UNGGUL INDONESIA MAJU")
+    if (assets.headlineText && t >= 0.5) {
+      const hProgress = Math.min(1, (t - 0.5) / 0.5);
+      const hEase = 1 - Math.pow(1 - hProgress, 3);
+      const defaultHY = h * 0.65;
+      const targetHY = typeof assets.headlineY === 'number' ? (assets.headlineY / 675) * h : defaultHY;
+      const hY = targetHY + (1 - hEase) * 25;
+      const hX = typeof assets.headlineX === 'number' ? (assets.headlineX / 540) * w : w / 2;
+      const hScale = assets.headlineScale || 1.0;
+
+      ctx.save();
+      ctx.globalAlpha = hProgress;
+      ctx.translate(hX, hY);
+      if (hScale !== 1.0) ctx.scale(hScale, hScale);
+
+      const headlineSize = Math.round((assets.headlineFontSize || 22) * 1.15);
+      ctx.font = `900 ${headlineSize}px "Plus Jakarta Sans", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+      ctx.shadowBlur = 14;
+      ctx.shadowOffsetY = 4;
+      ctx.fillStyle = assets.headlineColor || '#FFFFFF';
+
+      const words = assets.headlineText.split(' ');
+      let line = '';
+      const lines: string[] = [];
+      const maxTextWidth = w * 0.85;
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxTextWidth && n > 0) {
+          lines.push(line.trim());
+          line = words[n] + ' ';
+        } else {
+          line = testLine;
+        }
+      }
+      lines.push(line.trim());
+
+      const lineHeight = headlineSize * 1.25;
+      const totalH = lines.length * lineHeight;
+      const startY = -totalH / 2 + lineHeight / 2;
+      lines.forEach((l, idx) => {
+        ctx.fillText(l, 0, startY + idx * lineHeight);
+      });
+
+      ctx.restore();
+    }
+
     // LAYER 4: EVENT CARD (SPMI) - Staggered entrance at t >= 0.8s (ON TOP OF PHOTO)
     if (assets.showEventCard && t >= 0.8) {
       const cardProgress = Math.min(1, (t - 0.8) / 0.6);
@@ -704,6 +755,8 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
         className="glass-panel"
         style={{
           width: `${displayWidth + 40}px`,
+          maxWidth: '100%',
+          boxSizing: 'border-box',
           padding: '12px 16px',
           display: 'flex',
           flexDirection: 'column',

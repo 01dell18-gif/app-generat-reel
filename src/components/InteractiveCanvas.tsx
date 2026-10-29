@@ -31,12 +31,23 @@ const LAYER_ORDER: Record<string, number> = {
   bg_3: 1.04,
   mainMedia: 2,     // Urutan nomor 2 setelah Background (Foto Subjek Utama)
   watermark: 3,     // Watermark Garuda
-  eventCard: 4,     // Kartu SPMI di atas foto
-  dateBadge: 5,     // Lencana tanggal
-  topPill: 6,       // Banner atas di atas foto
-  logo: 7,          // Logo di atas foto
-  socialFooter: 8,  // Footer sosial media paling depan
+  headline: 4,      // Judul Informasi Headline di atas foto
+  subtitle: 4.1,    // Sub-judul informasi
+  eventCard: 5,     // Kartu SPMI di atas foto
+  dateBadge: 6,     // Lencana tanggal
+  topPill: 7,       // Banner atas di atas foto
+  logo: 8,          // Logo di atas foto
+  socialFooter: 9,  // Footer sosial media paling depan
 };
+
+function sanitizeMediaUrl(url: string): string {
+  if (!url) return '';
+  if (url.startsWith('data:image/svg+xml;utf8,<svg') && !url.includes('%3Csvg')) {
+    const raw = url.replace('data:image/svg+xml;utf8,', '');
+    return `data:image/svg+xml;utf8,${encodeURIComponent(raw.trim())}`;
+  }
+  return url;
+}
 
 export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
   assets,
@@ -67,6 +78,36 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
   const isSquare = format === 'poster_1_1';
   const canvasWidth = isSquare ? 580 : 540;
   const canvasHeight = isSquare ? 580 : 675;
+
+  // Auto-Scale state for responsive mobile viewports
+  const [scaleFactor, setScaleFactor] = useState<number>(1.0);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    const handleResize = () => {
+      const targetEl = containerRef.current;
+      if (!targetEl) return;
+      const w = targetEl.clientWidth - 20;
+      const h = targetEl.clientHeight - 20;
+      if (w <= 0 || h <= 0) return;
+      const scaleW = w / canvasWidth;
+      const scaleH = h / canvasHeight;
+      const fit = Math.min(1.0, scaleW, scaleH);
+      setScaleFactor(Math.max(0.25, fit));
+    };
+
+    handleResize();
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && el) {
+      ro = new ResizeObserver(() => handleResize());
+      ro.observe(el);
+    }
+    window.addEventListener('resize', handleResize);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [canvasWidth, canvasHeight]);
 
   // Re-sorts all objects in Fabric.js so the Photo is ALWAYS layer #2
   const enforceLayerOrdering = (canvas: any) => {
@@ -247,13 +288,16 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           });
         });
       } else if (assets.useCustomBgImage && assets.customBgImageUrl) {
-        fabric.Image.fromURL(assets.customBgImageUrl, (bgImg: any) => {
-          if (!isMounted || !canvas) return;
+        const safeBgUrl = sanitizeMediaUrl(assets.customBgImageUrl);
+        fabric.Image.fromURL(safeBgUrl, (bgImg: any) => {
+          if (!isMounted || !canvas || !bgImg) return;
+          const bgW = (bgImg.width && bgImg.width > 20) ? bgImg.width : 1080;
+          const bgH = (bgImg.height && bgImg.height > 20) ? bgImg.height : 1080;
           bgImg.set({
             left: 0,
             top: 0,
-            scaleX: canvasWidth / (bgImg.width || 1080),
-            scaleY: canvasHeight / (bgImg.height || 1080),
+            scaleX: canvasWidth / bgW,
+            scaleY: canvasHeight / bgH,
             selectable: false,
             evented: false,
             dataId: 'bg',
@@ -267,9 +311,12 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
 
       // 2. LAYER 2: FOTO SUBJEK UTAMA (Urutan Belakang No. 2 setelah Background)
       if (assets.mainMediaUrl) {
-        fabric.Image.fromURL(assets.mainMediaUrl, (img: any) => {
-          if (!isMounted || !canvas) return;
-          const baseScale = (canvasWidth * 0.62) / Math.max(img.width || 500, img.height || 500);
+        const safeUrl = sanitizeMediaUrl(assets.mainMediaUrl);
+        fabric.Image.fromURL(safeUrl, (img: any) => {
+          if (!isMounted || !canvas || !img) return;
+          const origW = (img.width && img.width > 20) ? img.width : 500;
+          const origH = (img.height && img.height > 20) ? img.height : 650;
+          const baseScale = (canvasWidth * 0.62) / Math.max(origW, origH);
           const finalScale = baseScale * (assets.mainMediaScale || 1.0);
           img._baseScale = baseScale;
 
@@ -312,7 +359,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
       // 3. LAYER 3: WATERMARK GARUDA (Center)
       if (assets.showWatermark && assets.watermarkUrl) {
         fabric.Image.fromURL(assets.watermarkUrl, (wmImg: any) => {
-          if (!isMounted || !canvas) return;
+          if (!isMounted || !canvas || !wmImg) return;
           const wmSize = canvasWidth * 0.65;
           const scale = wmSize / (wmImg.width || 600);
           wmImg.set({
@@ -330,6 +377,61 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           canvas.add(wmImg);
           enforceLayerOrdering(canvas);
         });
+      }
+
+      // 3.5 LAYER 4: HEADLINE TEXT ("PAHLAWANKU TELADANKU, VOKASI UNGGUL INDONESIA MAJU")
+      if (assets.headlineText) {
+        const hFontSize = assets.headlineFontSize || (isSquare ? 20 : 22);
+        const headlineObj = new fabric.Textbox(assets.headlineText, {
+          fontSize: hFontSize,
+          fontWeight: '900',
+          fill: assets.headlineColor || '#FFFFFF',
+          fontFamily: assets.headlineFontFamily || "'Plus Jakarta Sans', Arial, sans-serif",
+          textAlign: 'center',
+          width: canvasWidth * 0.86,
+          left: typeof assets.headlineX === 'number' ? assets.headlineX : canvasWidth / 2,
+          top: typeof assets.headlineY === 'number' ? assets.headlineY : canvasHeight * 0.68,
+          scaleX: assets.headlineScale || 1.0,
+          scaleY: assets.headlineScale || 1.0,
+          angle: assets.headlineRotation || 0,
+          originX: 'center',
+          originY: 'center',
+          selectable: true,
+          shadow: new fabric.Shadow({
+            color: 'rgba(0, 0, 0, 0.75)',
+            blur: 14,
+            offsetX: 0,
+            offsetY: 3,
+          }),
+          dataId: 'headline',
+        });
+        canvas.add(headlineObj);
+      }
+
+      // 3.6 LAYER 4.1: SUBTITLE TEXT
+      if (assets.subtitleText) {
+        const sFontSize = assets.subtitleFontSize || (isSquare ? 11.5 : 13);
+        const subtitleObj = new fabric.Textbox(assets.subtitleText, {
+          fontSize: sFontSize,
+          fontWeight: '600',
+          fill: assets.subtitleColor || '#E2E8F0',
+          fontFamily: "'Plus Jakarta Sans', Arial, sans-serif",
+          textAlign: 'center',
+          width: canvasWidth * 0.82,
+          left: typeof assets.subtitleX === 'number' ? assets.subtitleX : canvasWidth / 2,
+          top: typeof assets.subtitleY === 'number' ? assets.subtitleY : canvasHeight * 0.74,
+          originX: 'center',
+          originY: 'center',
+          selectable: true,
+          shadow: new fabric.Shadow({
+            color: 'rgba(0, 0, 0, 0.6)',
+            blur: 10,
+            offsetX: 0,
+            offsetY: 2,
+          }),
+          dataId: 'subtitle',
+        });
+        canvas.add(subtitleObj);
       }
 
       // 4. LAYER 4: EVENT CARD (SPMI) - Middle Bottom
@@ -498,11 +600,17 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           const isOfficialSvgPill =
             typeof assets.logoUrl === 'string' &&
             assets.logoUrl.includes('data:image/svg+xml') &&
-            (assets.logoUrl.includes('pillBg') || assets.logoUrl.includes('pillGlow') || assets.logoUrl.includes('viewBox%3D%220%200%20380'));
+            (assets.logoUrl.includes('pillBg') ||
+              assets.logoUrl.includes('pillGlow') ||
+              assets.logoUrl.includes('FYJ') ||
+              assets.logoUrl.includes('fyjBadgeGrad') ||
+              assets.logoUrl.includes('380') ||
+              assets.logoUrl.includes('viewBox%3D%220%200%20380'));
 
           if (isOfficialSvgPill) {
-            const targetW = canvasWidth * 0.46;
-            const baseScale = targetW / (logoImg.width || 380);
+            const targetW = canvasWidth * 0.48;
+            const logoW = (logoImg.width && logoImg.width > 50) ? logoImg.width : 380;
+            const baseScale = targetW / logoW;
             logoImg._baseScale = baseScale;
 
             logoImg.set({
@@ -659,10 +767,12 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
         justifyContent: 'center',
         width: '100%',
         height: '100%',
-        padding: '20px',
+        padding: scaleFactor < 0.9 ? '8px' : '20px',
+        overflow: 'hidden',
+        touchAction: 'manipulation',
       }}
     >
-      {/* Canvas Wrapper */}
+      {/* Canvas Wrapper with Auto-Scale for Smartphone / Tablet */}
       <div
         style={{
           position: 'relative',
@@ -672,6 +782,12 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           borderRadius: '24px',
           overflow: 'hidden',
           backgroundColor: '#FFFFFF',
+          transform: scaleFactor < 1 ? `scale(${scaleFactor})` : undefined,
+          transformOrigin: 'center center',
+          transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+          touchAction: 'none',
+          userSelect: 'none',
+          flexShrink: 0,
         }}
       >
         <canvas ref={canvasRef} id="main-interactive-canvas" />

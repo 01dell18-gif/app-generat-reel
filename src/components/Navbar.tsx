@@ -32,6 +32,7 @@ interface NavbarProps {
   isCriticOpen: boolean;
   onToggleCritic: () => void;
   onOpenGeminiAI: () => void;
+  isMobile?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -49,6 +50,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   isCriticOpen,
   onToggleCritic,
   onOpenGeminiAI,
+  isMobile = false,
 }) => {
   const [showDeviceModal, setShowDeviceModal] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -111,12 +113,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Sparkles size={17} color="#FFFFFF" />
           </div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: '14px', letterSpacing: '-0.3px', color: '#F8FAFC', lineHeight: '1.2' }}>
+            <div style={{ fontWeight: 800, fontSize: isMobile ? '13px' : '14px', letterSpacing: '-0.3px', color: '#F8FAFC', lineHeight: '1.2' }}>
               VIBEGENESIS
             </div>
-            <div style={{ fontSize: '10px', color: '#38BDF8', fontWeight: 700 }}>
-              Sosmed Reels & Poster Editor
-            </div>
+            {!isMobile && (
+              <div style={{ fontSize: '10px', color: '#38BDF8', fontWeight: 700 }}>
+                Sosmed Reels & Poster Editor
+              </div>
+            )}
           </div>
         </div>
 
@@ -125,7 +129,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Preset Selector Dropdown */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 600 }}>Template Sosmed:</span>
+          {!isMobile && <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 600 }}>Template:</span>}
           <select
             value={activePresetId}
             onChange={(e) => onSelectPreset(e.target.value)}
@@ -134,12 +138,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               border: '1px solid rgba(255, 255, 255, 0.12)',
               color: '#F8FAFC',
               borderRadius: '8px',
-              padding: '5px 10px',
-              fontSize: '12px',
+              padding: '5px 8px',
+              fontSize: '11.5px',
               fontWeight: 600,
               cursor: 'pointer',
               outline: 'none',
-              maxWidth: '240px',
+              maxWidth: isMobile ? '120px' : '240px',
             }}
           >
             {presets.map((p) => (
@@ -167,7 +171,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           onClick={() => onFormatChange('poster_1_1')}
           className="btn"
           style={{
-            padding: '5px 12px',
+            padding: isMobile ? '5px 8px' : '5px 12px',
             fontSize: '11.5px',
             fontWeight: 600,
             borderRadius: '7px',
@@ -178,14 +182,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           title="Format Poster Persegi 1:1 untuk Post Feed Instagram & Facebook"
         >
           <Square size={13} />
-          <span>Poster 1:1</span>
+          <span>{isMobile ? '1:1' : 'Poster 1:1'}</span>
         </button>
 
         <button
           onClick={() => onFormatChange('poster_4_5')}
           className="btn"
           style={{
-            padding: '5px 12px',
+            padding: isMobile ? '5px 8px' : '5px 12px',
             fontSize: '11.5px',
             fontWeight: 600,
             borderRadius: '7px',
@@ -196,14 +200,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           title="Format Feed Portrait 4:5 Optimal Layar Handphone"
         >
           <Layout size={13} />
-          <span>Feed 4:5</span>
+          <span>{isMobile ? '4:5' : 'Feed 4:5'}</span>
         </button>
 
         <button
           onClick={() => onFormatChange('reels_9_16')}
           className="btn"
           style={{
-            padding: '5px 12px',
+            padding: isMobile ? '5px 8px' : '5px 12px',
             fontSize: '11.5px',
             fontWeight: 600,
             borderRadius: '7px',
@@ -214,49 +218,53 @@ export const Navbar: React.FC<NavbarProps> = ({
           title="Format Video Gerak 9:16 untuk Reels Instagram, TikTok & YouTube Shorts"
         >
           <Smartphone size={13} />
-          <span>Reels 9:16 (Motion)</span>
+          <span>{isMobile ? 'Reels' : 'Reels 9:16 (Motion)'}</span>
         </button>
       </div>
 
       {/* Right: Tools & Export Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {/* Buka di HP / Perangkat Lain Button */}
-        <button
-          onClick={() => setShowDeviceModal(true)}
-          className="btn"
-          style={{
-            padding: '6px 11px',
-            fontSize: '11.5px',
-            background: 'rgba(16, 185, 129, 0.12)',
-            border: '1px solid rgba(16, 185, 129, 0.35)',
-            color: '#34D399',
-            fontWeight: 600,
-            borderRadius: '8px',
-          }}
-          title="Buka di HP / Tablet / Perangkat Lain (Wi-Fi LAN)"
-        >
-          <Smartphone size={13} color="#34D399" />
-          <span>Buka di HP</span>
-        </button>
+        {/* Buka di HP / Perangkat Lain Button (Only on desktop) */}
+        {!isMobile && (
+          <button
+            onClick={() => setShowDeviceModal(true)}
+            className="btn"
+            style={{
+              padding: '6px 11px',
+              fontSize: '11.5px',
+              background: 'rgba(16, 185, 129, 0.12)',
+              border: '1px solid rgba(16, 185, 129, 0.35)',
+              color: '#34D399',
+              fontWeight: 600,
+              borderRadius: '8px',
+            }}
+            title="Buka di HP / Tablet / Perangkat Lain (Wi-Fi LAN)"
+          >
+            <Smartphone size={13} color="#34D399" />
+            <span>Buka di HP</span>
+          </button>
+        )}
 
-        {/* Gemini AI Assistant Modal Button */}
-        <button
-          onClick={onOpenGeminiAI}
-          className="btn"
-          style={{
-            padding: '6px 11px',
-            fontSize: '11.5px',
-            background: 'rgba(56, 189, 248, 0.1)',
-            border: '1px solid rgba(56, 189, 248, 0.3)',
-            color: '#38BDF8',
-            fontWeight: 600,
-            borderRadius: '8px',
-          }}
-          title="Buka Google Gemini AI Studio"
-        >
-          <Sparkles size={13} color="#38BDF8" />
-          <span>Gemini AI</span>
-        </button>
+        {/* Gemini AI Assistant Modal Button (Desktop only, mobile has bottom bar) */}
+        {!isMobile && (
+          <button
+            onClick={onOpenGeminiAI}
+            className="btn"
+            style={{
+              padding: '6px 11px',
+              fontSize: '11.5px',
+              background: 'rgba(56, 189, 248, 0.1)',
+              border: '1px solid rgba(56, 189, 248, 0.3)',
+              color: '#38BDF8',
+              fontWeight: 600,
+              borderRadius: '8px',
+            }}
+            title="Buka Google Gemini AI Studio"
+          >
+            <Sparkles size={13} color="#38BDF8" />
+            <span>Gemini AI</span>
+          </button>
+        )}
 
         {/* Toggle Social Safe Zone Overlay */}
         <button
@@ -289,42 +297,44 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
         )}
 
-        {/* AI Critic Score Toggle Button */}
-        <button
-          onClick={onToggleCritic}
-          className="btn"
-          style={{
-            padding: '4px 8px',
-            background: 'rgba(255, 255, 255, 0.04)',
-            border: `1px solid ${getScoreColor(overallScore)}40`,
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-          title="Buka Panel Evaluasi ACGT Visual Critic"
-        >
-          <div
+        {/* AI Critic Score Toggle Button (Desktop only) */}
+        {!isMobile && (
+          <button
+            onClick={onToggleCritic}
+            className="btn"
             style={{
-              width: '22px',
-              height: '22px',
-              borderRadius: '50%',
-              backgroundColor: `${getScoreColor(overallScore)}22`,
-              border: `1.5px solid ${getScoreColor(overallScore)}`,
+              padding: '4px 8px',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: `1px solid ${getScoreColor(overallScore)}40`,
+              borderRadius: '8px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 800,
-              fontSize: '10px',
-              color: getScoreColor(overallScore),
+              gap: '6px',
             }}
+            title="Buka Panel Evaluasi ACGT Visual Critic"
           >
-            {overallScore}
-          </div>
-          <span style={{ fontSize: '11px', fontWeight: 600, color: '#F8FAFC' }}>
-            Critic
-          </span>
-        </button>
+            <div
+              style={{
+                width: '22px',
+                height: '22px',
+                borderRadius: '50%',
+                backgroundColor: `${getScoreColor(overallScore)}22`,
+                border: `1.5px solid ${getScoreColor(overallScore)}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 800,
+                fontSize: '10px',
+                color: getScoreColor(overallScore),
+              }}
+            >
+              {overallScore}
+            </div>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: '#F8FAFC' }}>
+              Critic
+            </span>
+          </button>
+        )}
 
         {/* Primary Export Action */}
         <button

@@ -2,7 +2,7 @@ import { PresetTemplate, SocialHandles } from '@/types/design';
 
 // SVG Logo FYJ Channel - Modern Curved Capsule Pill Shape (LENGKUNG SEMPURNA, BUKAN KOTAK)
 const RAW_LOGO_SVG = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 64" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" width="380" height="64" viewBox="0 0 380 64" fill="none">
   <defs>
     <!-- Soft Ambient Glow & Drop Shadow -->
     <filter id="pillGlow" x="-10%" y="-20%" width="125%" height="150%">
