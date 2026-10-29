@@ -145,11 +145,12 @@ const ColorPickerField: React.FC<ColorPickerFieldProps> = ({
   );
 };
 
-interface AssetIngestionPanelProps {
+export interface AssetIngestionPanelProps {
   assets: AssetInputs;
   onUpdateProperty: (key: keyof AssetInputs, value: any) => void;
   onOpenGeminiAI: () => void;
   onApplyFullAssets?: (assets: AssetInputs) => void;
+  onUpdatePropertiesBatch?: (updates: Partial<AssetInputs>) => void;
 }
 
 export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
@@ -157,7 +158,16 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
   onUpdateProperty,
   onOpenGeminiAI,
   onApplyFullAssets,
+  onUpdatePropertiesBatch,
 }) => {
+  const batchUpdate = (updates: Partial<AssetInputs>) => {
+    if (onUpdatePropertiesBatch) {
+      onUpdatePropertiesBatch(updates);
+    } else {
+      Object.entries(updates).forEach(([k, v]) => onUpdateProperty(k as any, v));
+    }
+  };
+
   const [activeTab, setActiveTab] = useState<'upload' | 'text' | 'badge' | 'social' | 'database' | 'gemini'>('upload');
 
   // Input refs
@@ -1800,7 +1810,7 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
                 <ColorPickerField
                   label="Warna Latar Banner"
                   value={assets.topPillBgColor}
@@ -1813,6 +1823,168 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                   onChange={(val) => onUpdateProperty('topPillTextColor', val)}
                   presetColors={['#FFFFFF', '#0F172A', '#FEF08A', '#E2E8F0']}
                 />
+              </div>
+
+              {/* Ukuran Font & Presets */}
+              <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#CBD5E1' }}>Ukuran Tulisan Banner:</span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#86EFAC' }}>{assets.topPillFontSize || 13}px</span>
+                </div>
+                <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
+                  {[
+                    { label: 'Kecil (11)', size: 11 },
+                    { label: 'Standar (13)', size: 13 },
+                    { label: 'Besar (16)', size: 16 },
+                    { label: 'Ekstra (20)', size: 20 },
+                  ].map((p) => {
+                    const active = (assets.topPillFontSize || 13) === p.size;
+                    return (
+                      <button
+                        key={p.size}
+                        type="button"
+                        onClick={() => onUpdateProperty('topPillFontSize', p.size)}
+                        style={{
+                          flex: 1,
+                          padding: '4px 2px',
+                          fontSize: '10px',
+                          fontWeight: active ? 700 : 500,
+                          backgroundColor: active ? '#059669' : 'rgba(255, 255, 255, 0.06)',
+                          color: active ? '#FFFFFF' : '#94A3B8',
+                          border: active ? '1px solid #10B981' : '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="28"
+                  value={assets.topPillFontSize || 13}
+                  onChange={(e) => onUpdateProperty('topPillFontSize', parseInt(e.target.value))}
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              {/* Tataletak, Skala & Rotasi Banner */}
+              <div style={{ padding: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.06)', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#38BDF8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Sliders size={12} />
+                    <span>Tata Letak & Ukuran Banner</span>
+                  </span>
+                  {(typeof assets.topPillX === 'number' || typeof assets.topPillY === 'number' || typeof assets.topPillScale === 'number' || typeof assets.topPillRotation === 'number' || typeof assets.topPillFontSize === 'number') && (
+                    <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38BDF8', fontWeight: 600 }}>
+                      Tersimpan Permanen
+                    </span>
+                  )}
+                </div>
+
+                {/* Skala / Pembesaran Banner */}
+                <div style={{ marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
+                    <span>Skala Banner</span>
+                    <span style={{ fontWeight: 700, color: '#38BDF8' }}>{Math.round((assets.topPillScale || 1.0) * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2.2"
+                    step="0.05"
+                    value={assets.topPillScale || 1.0}
+                    onChange={(e) => onUpdateProperty('topPillScale', parseFloat(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* Posisi Geser X */}
+                <div style={{ marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
+                    <span>Posisi Geser Horizontal (X)</span>
+                    <span style={{ fontWeight: 700, color: '#E2E8F0' }}>{typeof assets.topPillX === 'number' ? `${assets.topPillX}px` : 'Tengah (290px)'}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="530"
+                    value={typeof assets.topPillX === 'number' ? assets.topPillX : 290}
+                    onChange={(e) => onUpdateProperty('topPillX', parseInt(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* Posisi Geser Y */}
+                <div style={{ marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
+                    <span>Posisi Geser Vertikal (Y)</span>
+                    <span style={{ fontWeight: 700, color: '#E2E8F0' }}>{typeof assets.topPillY === 'number' ? `${assets.topPillY}px` : 'Atas (92px)'}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="20"
+                    max="320"
+                    value={typeof assets.topPillY === 'number' ? assets.topPillY : 92}
+                    onChange={(e) => onUpdateProperty('topPillY', parseInt(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* Rotasi Banner */}
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
+                    <span>Rotasi / Kemiringan</span>
+                    <span style={{ fontWeight: 700, color: '#E2E8F0' }}>{assets.topPillRotation || 0}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-45"
+                    max="45"
+                    value={assets.topPillRotation || 0}
+                    onChange={(e) => onUpdateProperty('topPillRotation', parseInt(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* Tombol Reset Banner Atas */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    batchUpdate({
+                      topPillX: undefined,
+                      topPillY: undefined,
+                      topPillScale: undefined,
+                      topPillRotation: undefined,
+                      topPillFontSize: undefined,
+                    });
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '7px 10px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                    color: '#F87171',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.22)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.12)')}
+                >
+                  <RefreshCw size={12} />
+                  <span>↺ Reset Tata Letak & Ukuran Banner</span>
+                </button>
               </div>
             </div>
 
@@ -1850,6 +2022,39 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                   onChange={(val) => onUpdateProperty('headlineColor', val)}
                   presetColors={['#0F172A', '#FFFFFF', '#1E40AF', '#D97706', '#DC2626']}
                 />
+              </div>
+
+              <div style={{ marginTop: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    batchUpdate({
+                      headlineFontSize: 28,
+                      headlineScale: undefined,
+                      headlineRotation: undefined,
+                      headlineX: undefined,
+                      headlineY: undefined,
+                    });
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '6px 10px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                    color: '#F87171',
+                    border: '1px solid rgba(239, 68, 68, 0.25)',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <RefreshCw size={11} />
+                  <span>↺ Reset Ukuran & Posisi Judul</span>
+                </button>
               </div>
             </div>
 
@@ -1963,13 +2168,129 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                 />
               </div>
 
-              <div>
+              <div style={{ marginBottom: '12px' }}>
                 <ColorPickerField
                   label="Warna Border Kartu"
                   value={assets.eventCardBorderColor}
                   onChange={(val) => onUpdateProperty('eventCardBorderColor', val)}
                   presetColors={['#B45309', '#D97706', '#2563EB', '#10B981', '#475569', '#E2E8F0']}
                 />
+              </div>
+
+              {/* Tataletak, Skala & Rotasi Kartu SPMI */}
+              <div style={{ padding: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#FCD34D', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Sliders size={12} />
+                    <span>Tata Letak & Ukuran Kartu SPMI</span>
+                  </span>
+                  {(typeof assets.eventCardX === 'number' || typeof assets.eventCardY === 'number' || typeof assets.eventCardScale === 'number' || typeof assets.eventCardRotation === 'number' || typeof assets.eventCardTitleFontSize === 'number' || typeof assets.eventCardSubtitleFontSize === 'number') && (
+                    <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#FCD34D', fontWeight: 600 }}>
+                      Tersimpan Permanen
+                    </span>
+                  )}
+                </div>
+
+                {/* Skala Kartu */}
+                <div style={{ marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
+                    <span>Skala Kartu SPMI</span>
+                    <span style={{ fontWeight: 700, color: '#FCD34D' }}>{Math.round((assets.eventCardScale || 1.0) * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2.2"
+                    step="0.05"
+                    value={assets.eventCardScale || 1.0}
+                    onChange={(e) => onUpdateProperty('eventCardScale', parseFloat(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* Posisi Geser X */}
+                <div style={{ marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
+                    <span>Posisi Geser Horizontal (X)</span>
+                    <span style={{ fontWeight: 700, color: '#E2E8F0' }}>{typeof assets.eventCardX === 'number' ? `${assets.eventCardX}px` : 'Tengah (290px)'}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="530"
+                    value={typeof assets.eventCardX === 'number' ? assets.eventCardX : 290}
+                    onChange={(e) => onUpdateProperty('eventCardX', parseInt(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* Posisi Geser Y */}
+                <div style={{ marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
+                    <span>Posisi Geser Vertikal (Y)</span>
+                    <span style={{ fontWeight: 700, color: '#E2E8F0' }}>{typeof assets.eventCardY === 'number' ? `${assets.eventCardY}px` : 'Bawah (470px)'}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="200"
+                    max="620"
+                    value={typeof assets.eventCardY === 'number' ? assets.eventCardY : 470}
+                    onChange={(e) => onUpdateProperty('eventCardY', parseInt(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* Rotasi Kartu */}
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
+                    <span>Rotasi / Kemiringan</span>
+                    <span style={{ fontWeight: 700, color: '#E2E8F0' }}>{assets.eventCardRotation || 0}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-45"
+                    max="45"
+                    value={assets.eventCardRotation || 0}
+                    onChange={(e) => onUpdateProperty('eventCardRotation', parseInt(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* Tombol Reset Kartu SPMI */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    batchUpdate({
+                      eventCardX: undefined,
+                      eventCardY: undefined,
+                      eventCardScale: undefined,
+                      eventCardRotation: undefined,
+                      eventCardTitleFontSize: undefined,
+                      eventCardSubtitleFontSize: undefined,
+                    });
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '7px 10px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                    color: '#F87171',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.22)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.12)')}
+                >
+                  <RefreshCw size={12} />
+                  <span>↺ Reset Tata Letak & Ukuran Kartu</span>
+                </button>
               </div>
             </div>
 
@@ -2001,7 +2322,7 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
                 <ColorPickerField
                   label="Warna Lencana Tanggal"
                   value={assets.dateBgColor}
@@ -2014,6 +2335,121 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                   onChange={(val) => onUpdateProperty('dateColor', val)}
                   presetColors={['#FFFFFF', '#FEF08A', '#0F172A', '#E2E8F0']}
                 />
+              </div>
+
+              {/* Tataletak, Skala & Rotasi Lencana Tanggal */}
+              <div style={{ padding: '10px', backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#38BDF8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Sliders size={12} />
+                    <span>Tata Letak & Ukuran Tanggal</span>
+                  </span>
+                  {(typeof assets.dateBadgeX === 'number' || typeof assets.dateBadgeY === 'number' || typeof assets.dateBadgeScale === 'number' || typeof assets.dateBadgeRotation === 'number' || typeof assets.dateFontSize === 'number') && (
+                    <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38BDF8', fontWeight: 600 }}>
+                      Tersimpan Permanen
+                    </span>
+                  )}
+                </div>
+
+                {/* Skala Tanggal */}
+                <div style={{ marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
+                    <span>Skala Lencana Tanggal</span>
+                    <span style={{ fontWeight: 700, color: '#38BDF8' }}>{Math.round((assets.dateBadgeScale || 1.0) * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2.2"
+                    step="0.05"
+                    value={assets.dateBadgeScale || 1.0}
+                    onChange={(e) => onUpdateProperty('dateBadgeScale', parseFloat(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* Posisi Geser X */}
+                <div style={{ marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
+                    <span>Posisi Geser Horizontal (X)</span>
+                    <span style={{ fontWeight: 700, color: '#E2E8F0' }}>{typeof assets.dateBadgeX === 'number' ? `${assets.dateBadgeX}px` : 'Tengah (290px)'}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="530"
+                    value={typeof assets.dateBadgeX === 'number' ? assets.dateBadgeX : 290}
+                    onChange={(e) => onUpdateProperty('dateBadgeX', parseInt(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* Posisi Geser Y */}
+                <div style={{ marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
+                    <span>Posisi Geser Vertikal (Y)</span>
+                    <span style={{ fontWeight: 700, color: '#E2E8F0' }}>{typeof assets.dateBadgeY === 'number' ? `${assets.dateBadgeY}px` : 'Bawah (516px)'}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="200"
+                    max="640"
+                    value={typeof assets.dateBadgeY === 'number' ? assets.dateBadgeY : 516}
+                    onChange={(e) => onUpdateProperty('dateBadgeY', parseInt(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* Rotasi Tanggal */}
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '2px' }}>
+                    <span>Rotasi / Kemiringan</span>
+                    <span style={{ fontWeight: 700, color: '#E2E8F0' }}>{assets.dateBadgeRotation || 0}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-45"
+                    max="45"
+                    value={assets.dateBadgeRotation || 0}
+                    onChange={(e) => onUpdateProperty('dateBadgeRotation', parseInt(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* Tombol Reset Tanggal */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    batchUpdate({
+                      dateBadgeX: undefined,
+                      dateBadgeY: undefined,
+                      dateBadgeScale: undefined,
+                      dateBadgeRotation: undefined,
+                      dateFontSize: undefined,
+                    });
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '7px 10px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                    color: '#F87171',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.22)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.12)')}
+                >
+                  <RefreshCw size={12} />
+                  <span>↺ Reset Tata Letak & Ukuran Tanggal</span>
+                </button>
               </div>
             </div>
           </div>

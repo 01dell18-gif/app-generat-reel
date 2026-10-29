@@ -221,6 +221,7 @@ export default function StudioPage() {
         <AssetIngestionPanel
           assets={assets}
           onUpdateProperty={handleUpdateAssetProperty}
+          onUpdatePropertiesBatch={handleUpdateAssetsBatch}
           onOpenGeminiAI={() => setIsGeminiModalOpen(true)}
           onApplyFullAssets={(loaded) => setAssets(loaded)}
         />

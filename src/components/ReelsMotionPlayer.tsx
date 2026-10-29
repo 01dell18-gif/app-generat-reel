@@ -249,16 +249,25 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
     if (assets.showEventCard && t >= 0.8) {
       const cardProgress = Math.min(1, (t - 0.8) / 0.6);
       const cardEase = 1 - Math.pow(1 - cardProgress, 3);
-      const cardY = h * 0.78 + (1 - cardEase) * 40;
+      const defaultY = h * 0.78;
+      const targetY = typeof assets.eventCardY === 'number' ? (assets.eventCardY / 675) * h : defaultY;
+      const cardY = targetY + (1 - cardEase) * 40;
+      const cardX = typeof assets.eventCardX === 'number' ? (assets.eventCardX / 540) * w : w / 2;
+      const scale = assets.eventCardScale || 1.0;
+      const rot = ((assets.eventCardRotation || 0) * Math.PI) / 180;
 
       ctx.save();
       ctx.globalAlpha = cardProgress;
+      ctx.translate(cardX, cardY);
+      if (rot !== 0) ctx.rotate(rot);
+      if (scale !== 1.0) ctx.scale(scale, scale);
 
       const titleSize = Math.round((assets.eventCardTitleFontSize || 13) * 1.35);
       const subSize = Math.round((assets.eventCardSubtitleFontSize || 18) * 1.45);
       const cH = Math.max(76, titleSize + subSize + 34);
       const cW = Math.max(w * 0.68, 300);
-      const cX = w / 2 - cW / 2;
+      const cX = -cW / 2;
+      const cY = -cH / 2;
       const cardRadius = Math.min(26, Math.round(cH / 2.3));
 
       // Card Background with smooth rounded curves & soft shadow (BUKAN KOTAK)
@@ -267,7 +276,7 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       ctx.shadowOffsetY = 8;
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.roundRect(cX, cardY, cW, cH, cardRadius);
+      ctx.roundRect(cX, cY, cW, cH, cardRadius);
       ctx.fill();
 
       // Card Border with matching smooth curves
@@ -277,18 +286,18 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       ctx.strokeStyle = assets.eventCardBorderColor || '#F59E0B';
       ctx.lineWidth = 3.5;
       ctx.beginPath();
-      ctx.roundRect(cX, cardY, cW, cH, cardRadius);
+      ctx.roundRect(cX, cY, cW, cH, cardRadius);
       ctx.stroke();
 
       // Card Title
       ctx.fillStyle = '#0F172A';
       ctx.textAlign = 'center';
       ctx.font = `bold ${titleSize}px "Plus Jakarta Sans", sans-serif`;
-      ctx.fillText(assets.eventCardTitle || 'Sistem Penjaminan Mutu Internal', w / 2, cardY + titleSize + 16);
+      ctx.fillText(assets.eventCardTitle || 'Sistem Penjaminan Mutu Internal', 0, cY + titleSize + 16);
 
       // Card Subtitle (SPMI)
       ctx.font = `900 ${subSize}px "Plus Jakarta Sans", sans-serif`;
-      ctx.fillText(assets.eventCardSubtitle || 'SPMI', w / 2, cardY + titleSize + subSize + 24);
+      ctx.fillText(assets.eventCardSubtitle || 'SPMI', 0, cY + titleSize + subSize + 24);
 
       ctx.restore();
     }
@@ -296,17 +305,25 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
     // LAYER 5: DATE BADGE ("18 September 2026") - entrance at t >= 1.2s (Modern Curved Pill)
     if (assets.dateText && t >= 1.2) {
       const dProgress = Math.min(1, (t - 1.2) / 0.5);
-      const dY = h * 0.86;
+      const defaultY = h * 0.86;
+      const dY = typeof assets.dateBadgeY === 'number' ? (assets.dateBadgeY / 675) * h : defaultY;
+      const dX = typeof assets.dateBadgeX === 'number' ? (assets.dateBadgeX / 540) * w : w / 2;
+      const scale = assets.dateBadgeScale || 1.0;
+      const rot = ((assets.dateBadgeRotation || 0) * Math.PI) / 180;
 
       ctx.save();
       ctx.globalAlpha = dProgress;
+      ctx.translate(dX, dY);
+      if (rot !== 0) ctx.rotate(rot);
+      if (scale !== 1.0) ctx.scale(scale, scale);
 
       const dateSize = Math.round((assets.dateFontSize || 11) * 1.35);
       ctx.font = `bold ${dateSize}px "Plus Jakarta Sans", sans-serif`;
       const dMetrics = ctx.measureText(assets.dateText);
       const dbW = dMetrics.width + 44;
       const dbH = dateSize + 22;
-      const dbX = w / 2 - dbW / 2;
+      const dbX = -dbW / 2;
+      const dbY = -dbH / 2;
       const dateRadius = dbH / 2;
 
       ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
@@ -314,7 +331,7 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       ctx.shadowOffsetY = 4;
       ctx.fillStyle = assets.dateBgColor || '#2563EB';
       ctx.beginPath();
-      ctx.roundRect(dbX, dY, dbW, dbH, dateRadius);
+      ctx.roundRect(dbX, dbY, dbW, dbH, dateRadius);
       ctx.fill();
 
       // Subtle stroke
@@ -323,12 +340,13 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.roundRect(dbX, dY, dbW, dbH, dateRadius);
+      ctx.roundRect(dbX, dbY, dbW, dbH, dateRadius);
       ctx.stroke();
 
       ctx.fillStyle = assets.dateColor || '#FFFFFF';
       ctx.textAlign = 'center';
-      ctx.fillText(assets.dateText, w / 2, dY + 24);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(assets.dateText, 0, 0);
       ctx.restore();
     }
 
@@ -336,16 +354,26 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
     if (assets.showTopPill && assets.topPillText) {
       const enterProgress = Math.min(1, t / 0.8);
       const ease = 1 - Math.pow(1 - enterProgress, 3);
-      const pillY = h * 0.15 - (1 - ease) * 60;
+      const defaultY = h * 0.15;
+      const targetY = typeof assets.topPillY === 'number' ? (assets.topPillY / 675) * h : defaultY;
+      const pillY = targetY - (1 - ease) * 60;
+      const pillX = typeof assets.topPillX === 'number' ? (assets.topPillX / 540) * w : w / 2;
+      const scale = assets.topPillScale || 1.0;
+      const rot = ((assets.topPillRotation || 0) * Math.PI) / 180;
 
       ctx.save();
       ctx.globalAlpha = enterProgress;
+      ctx.translate(pillX, pillY);
+      if (rot !== 0) ctx.rotate(rot);
+      if (scale !== 1.0) ctx.scale(scale, scale);
 
-      ctx.font = '900 20px "Plus Jakarta Sans", Arial, sans-serif';
+      const topFontSize = Math.round((assets.topPillFontSize || 13) * 1.54);
+      ctx.font = `900 ${topFontSize}px "Plus Jakarta Sans", Arial, sans-serif`;
       const textMetrics = ctx.measureText(assets.topPillText.toUpperCase());
       const bW = Math.max(w * 0.88, textMetrics.width + 52);
-      const bH = 52;
-      const bX = w / 2 - bW / 2;
+      const bH = Math.max(52, topFontSize + 32);
+      const bX = -bW / 2;
+      const bY = -bH / 2;
       const pillRadius = bH / 2;
 
       ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
@@ -353,7 +381,7 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       ctx.shadowOffsetY = 5;
       ctx.fillStyle = assets.topPillBgColor || '#05472A';
       ctx.beginPath();
-      ctx.roundRect(bX, pillY, bW, bH, pillRadius);
+      ctx.roundRect(bX, bY, bW, bH, pillRadius);
       ctx.fill();
 
       ctx.shadowColor = 'transparent';
@@ -361,12 +389,13 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.roundRect(bX, pillY, bW, bH, pillRadius);
+      ctx.roundRect(bX, bY, bW, bH, pillRadius);
       ctx.stroke();
 
       ctx.fillStyle = assets.topPillTextColor || '#86EFAC';
       ctx.textAlign = 'center';
-      ctx.fillText(assets.topPillText.toUpperCase(), w / 2, pillY + 33);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(assets.topPillText.toUpperCase(), 0, 0);
       ctx.restore();
     }
 

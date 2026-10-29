@@ -54,9 +54,14 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
   const fabricCanvasRef = useRef<any>(null);
   const [activeIssue, setActiveIssue] = useState<CriticIssue | null>(null);
 
-  // Keep a mutable ref of fresh assets to prevent stale closure in Fabric event callbacks
+  // Keep a mutable ref of fresh assets and callbacks to prevent stale closure in Fabric event callbacks
   const assetsRef = useRef(assets);
   assetsRef.current = assets;
+  const onUpdateAssetsBatchRef = useRef(onUpdateAssetsBatch);
+  onUpdateAssetsBatchRef.current = onUpdateAssetsBatch;
+  const onUpdateAssetPropertyRef = useRef(onUpdateAssetProperty);
+  onUpdateAssetPropertyRef.current = onUpdateAssetProperty;
+  const activeSelectionDataIdRef = useRef<string | null>(null);
 
   // Canvas Display Dimensions
   const isSquare = format === 'poster_1_1';
@@ -75,6 +80,15 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
     objs.forEach((obj: any, index: number) => {
       obj.moveTo(index);
     });
+
+    // Re-highlight active selection so handles don't vanish on state update
+    if (activeSelectionDataIdRef.current) {
+      const activeObj = objs.find((o: any) => o.dataId === activeSelectionDataIdRef.current);
+      if (activeObj && canvas.getActiveObject() !== activeObj) {
+        canvas.setActiveObject(activeObj);
+      }
+    }
+
     canvas.renderAll();
   };
 
@@ -95,73 +109,89 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           preserveObjectStacking: true,
         });
 
+        // Track active selection across canvas updates
+        fabricCanvasRef.current.on('selection:created', (e: any) => {
+          const selected = e.selected?.[0];
+          if (selected?.dataId) activeSelectionDataIdRef.current = selected.dataId;
+        });
+        fabricCanvasRef.current.on('selection:updated', (e: any) => {
+          const selected = e.selected?.[0];
+          if (selected?.dataId) activeSelectionDataIdRef.current = selected.dataId;
+        });
+        fabricCanvasRef.current.on('selection:cleared', () => {
+          activeSelectionDataIdRef.current = null;
+        });
+
         // Listen for user drag/scale/rotate modifications on any canvas element
         fabricCanvasRef.current.on('object:modified', (e: any) => {
           const obj = e.target;
           if (!obj) return;
           const currentAssets = assetsRef.current;
+          const batchUpdate = onUpdateAssetsBatchRef.current;
+          const propUpdate = onUpdateAssetPropertyRef.current;
+
+          const applyUpdates = (updates: Partial<AssetInputs>) => {
+            if (batchUpdate) {
+              batchUpdate(updates);
+            } else if (propUpdate) {
+              Object.entries(updates).forEach(([k, v]) => propUpdate(k as any, v));
+            }
+          };
 
           if (obj.dataId === 'headline') {
-            onUpdateAssetProperty('headlineFontSize', Math.round(obj.fontSize * (obj.scaleY || 1)));
+            activeSelectionDataIdRef.current = 'headline';
+            applyUpdates({
+              headlineFontSize: Math.round(obj.fontSize * (obj.scaleY || 1)),
+              headlineX: Math.round(obj.left),
+              headlineY: Math.round(obj.top),
+              headlineScale: Number((obj.scaleX || 1).toFixed(2)),
+              headlineRotation: Math.round(obj.angle || 0),
+            });
           } else if (obj.dataId === 'mainMedia') {
+            activeSelectionDataIdRef.current = 'mainMedia';
             const base = obj._baseScale || 1;
             const currentScale = obj.scaleX || 1;
             const normalized = Number((currentScale / base).toFixed(2));
-            const updates: Partial<AssetInputs> = {
+            applyUpdates({
               mainMediaScale: Math.max(0.1, Math.min(4.0, normalized)),
               mainMediaRotation: Math.round(obj.angle || 0),
               mainMediaX: Math.round(obj.left),
               mainMediaY: Math.round(obj.top),
-            };
-            if (onUpdateAssetsBatch) {
-              onUpdateAssetsBatch(updates);
-            } else {
-              Object.entries(updates).forEach(([k, v]) => onUpdateAssetProperty(k as any, v));
-            }
+            });
           } else if (obj.dataId === 'logo') {
+            activeSelectionDataIdRef.current = 'logo';
             const baseScale = obj._baseScale || 1;
             const finalScale = Number(((obj.scaleX || 1) / baseScale).toFixed(2));
-            const updates: Partial<AssetInputs> = {
+            applyUpdates({
               logoX: Math.round(obj.left),
               logoY: Math.round(obj.top),
               logoScale: Math.max(0.2, Math.min(3.0, finalScale)),
               logoRotation: Math.round(obj.angle || 0),
-            };
-            if (onUpdateAssetsBatch) {
-              onUpdateAssetsBatch(updates);
-            } else {
-              Object.entries(updates).forEach(([k, v]) => onUpdateAssetProperty(k as any, v));
-            }
+            });
           } else if (obj.dataId === 'topPill') {
-            const updates: Partial<AssetInputs> = {
+            activeSelectionDataIdRef.current = 'topPill';
+            applyUpdates({
               topPillX: Math.round(obj.left),
               topPillY: Math.round(obj.top),
-            };
-            if (onUpdateAssetsBatch) onUpdateAssetsBatch(updates);
-            else {
-              onUpdateAssetProperty('topPillX', updates.topPillX);
-              onUpdateAssetProperty('topPillY', updates.topPillY);
-            }
+              topPillScale: Number((obj.scaleX || 1).toFixed(2)),
+              topPillRotation: Math.round(obj.angle || 0),
+            });
           } else if (obj.dataId === 'eventCard') {
-            const updates: Partial<AssetInputs> = {
+            activeSelectionDataIdRef.current = 'eventCard';
+            applyUpdates({
               eventCardX: Math.round(obj.left),
               eventCardY: Math.round(obj.top),
-            };
-            if (onUpdateAssetsBatch) onUpdateAssetsBatch(updates);
-            else {
-              onUpdateAssetProperty('eventCardX', updates.eventCardX);
-              onUpdateAssetProperty('eventCardY', updates.eventCardY);
-            }
+              eventCardScale: Number((obj.scaleX || 1).toFixed(2)),
+              eventCardRotation: Math.round(obj.angle || 0),
+            });
           } else if (obj.dataId === 'dateBadge') {
-            const updates: Partial<AssetInputs> = {
+            activeSelectionDataIdRef.current = 'dateBadge';
+            applyUpdates({
               dateBadgeX: Math.round(obj.left),
               dateBadgeY: Math.round(obj.top),
-            };
-            if (onUpdateAssetsBatch) onUpdateAssetsBatch(updates);
-            else {
-              onUpdateAssetProperty('dateBadgeX', updates.dateBadgeX);
-              onUpdateAssetProperty('dateBadgeY', updates.dateBadgeY);
-            }
+              dateBadgeScale: Number((obj.scaleX || 1).toFixed(2)),
+              dateBadgeRotation: Math.round(obj.angle || 0),
+            });
           } else if (typeof obj.dataId === 'string' && obj.dataId.startsWith('bg_')) {
             const layerId = obj.layerId;
             const layers = currentAssets.backgroundLayers || [];
@@ -172,13 +202,10 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                 ...updatedLayers[targetIdx],
                 x: Math.round(obj.left - canvasWidth / 2),
                 y: Math.round(obj.top - canvasHeight / 2),
+                scale: Number((obj.scaleX / (canvasWidth / (obj.width || 1080))).toFixed(2)),
                 rotation: Math.round(obj.angle || 0),
               };
-              if (onUpdateAssetsBatch) {
-                onUpdateAssetsBatch({ backgroundLayers: updatedLayers });
-              } else {
-                onUpdateAssetProperty('backgroundLayers', updatedLayers);
-              }
+              applyUpdates({ backgroundLayers: updatedLayers });
             }
           }
         });
@@ -353,6 +380,9 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
         const eventCardGroup = new fabric.Group([cardBg, cardTitle, cardSub], {
           left: typeof assets.eventCardX === 'number' ? assets.eventCardX : canvasWidth / 2,
           top: typeof assets.eventCardY === 'number' ? assets.eventCardY : canvasHeight * 0.81,
+          scaleX: assets.eventCardScale || 1.0,
+          scaleY: assets.eventCardScale || 1.0,
+          angle: assets.eventCardRotation || 0,
           originX: 'center',
           originY: 'center',
           selectable: true,
@@ -397,6 +427,9 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
         const dateGroup = new fabric.Group([dateBgObj, dateTextObj], {
           left: typeof assets.dateBadgeX === 'number' ? assets.dateBadgeX : canvasWidth / 2,
           top: typeof assets.dateBadgeY === 'number' ? assets.dateBadgeY : canvasHeight * 0.89,
+          scaleX: assets.dateBadgeScale || 1.0,
+          scaleY: assets.dateBadgeScale || 1.0,
+          angle: assets.dateBadgeRotation || 0,
           originX: 'center',
           originY: 'center',
           selectable: true,
@@ -408,7 +441,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
       // 6. LAYER 6: TOP PILL BANNER ("MEMPERINGATI HARI KESAKTIAN PANCASILA") - MUST BE ON TOP OF PHOTO!
       if (assets.showTopPill && assets.topPillText) {
         const topText = new fabric.Text(assets.topPillText.toUpperCase(), {
-          fontSize: 13,
+          fontSize: assets.topPillFontSize || 13,
           fontWeight: '900',
           fill: assets.topPillTextColor || '#86EFAC',
           fontFamily: "'Plus Jakarta Sans', Arial, sans-serif",
@@ -417,7 +450,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
         });
 
         const pillW = Math.max(canvasWidth * 0.74, topText.width + 52);
-        const pillH = 40;
+        const pillH = Math.max(40, (assets.topPillFontSize || 13) + 26);
         const pillRadius = pillH / 2;
 
         const pillBg = new fabric.Rect({
@@ -440,6 +473,9 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
         const topPillGroup = new fabric.Group([pillBg, topText], {
           left: typeof assets.topPillX === 'number' ? assets.topPillX : canvasWidth / 2,
           top: typeof assets.topPillY === 'number' ? assets.topPillY : canvasHeight * 0.16,
+          scaleX: assets.topPillScale || 1.0,
+          scaleY: assets.topPillScale || 1.0,
+          angle: assets.topPillRotation || 0,
           originX: 'center',
           originY: 'center',
           selectable: true,

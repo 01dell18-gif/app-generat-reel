@@ -57,6 +57,9 @@ export interface AssetInputs {
   showTopPill: boolean;
   topPillX?: number; // Custom X position
   topPillY?: number; // Custom Y position
+  topPillScale?: number; // Custom scale factor (0.4 - 2.5)
+  topPillRotation?: number; // Custom rotation (-180 to 180)
+  topPillFontSize?: number; // Custom font size (default 13)
 
   // Event Card / Sub-Information (Middle-Bottom)
   eventCardTitle: string; // e.g. "Sistem Penjaminan Mutu Internal"
@@ -67,15 +70,23 @@ export interface AssetInputs {
   showEventCard: boolean;
   eventCardX?: number; // Custom X position
   eventCardY?: number; // Custom Y position
+  eventCardScale?: number; // Custom scale factor (0.4 - 2.5)
+  eventCardRotation?: number; // Custom rotation (-180 to 180)
 
   // Informational Text (Headline & Subtitle)
   headlineText: string;
   headlineColor: string;
   headlineFontSize: number;
   headlineFontFamily: string;
+  headlineX?: number;
+  headlineY?: number;
+  headlineScale?: number;
+  headlineRotation?: number;
   subtitleText: string;
   subtitleColor: string;
   subtitleFontSize: number;
+  subtitleX?: number;
+  subtitleY?: number;
 
   // Date Badge
   dateText: string;
@@ -85,6 +96,8 @@ export interface AssetInputs {
   dateBadgeStyle: 'pill' | 'rect' | 'glass';
   dateBadgeX?: number; // Custom X position
   dateBadgeY?: number; // Custom Y position
+  dateBadgeScale?: number; // Custom scale factor (0.4 - 2.5)
+  dateBadgeRotation?: number; // Custom rotation (-180 to 180)
 
   // Main Media (Uploaded Photo / Subject)
   mainMediaUrl: string;
