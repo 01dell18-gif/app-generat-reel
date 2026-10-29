@@ -340,7 +340,7 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
 
   // Gemini Settings State (stored in localStorage)
   const [apiKey, setApiKey] = useState<string>('');
-  const [selectedModel, setSelectedModel] = useState<string>('gemini-3.8-flash');
+  const [selectedModel, setSelectedModel] = useState<string>('gemini-1.5-flash');
   const [availableModels, setAvailableModels] = useState<GeminiModelOption[]>([]);
   const [temperature, setTemperature] = useState<number>(0.7);
   const [tone, setTone] = useState<string>('formal');
@@ -477,11 +477,16 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedKey = (localStorage.getItem('GEMINI_API_KEY') || '').trim();
-      let savedModel = (localStorage.getItem('GEMINI_MODEL') || 'gemini-3.8-flash').trim();
-      // Automatically migrate deprecated 2.5 models to gemini-3.8-flash
-      if (savedModel.includes('2.5') || savedModel === 'gemini-2.5-flash') {
-        savedModel = 'gemini-3.8-flash';
-        localStorage.setItem('GEMINI_MODEL', 'gemini-3.8-flash');
+      let savedModel = (localStorage.getItem('GEMINI_MODEL') || 'gemini-1.5-flash').trim();
+      // Automatically migrate deprecated or invalid models to gemini-1.5-flash
+      if (
+        !savedModel ||
+        savedModel.includes('2.5') ||
+        savedModel.includes('3.8') ||
+        savedModel.includes('3.5')
+      ) {
+        savedModel = 'gemini-1.5-flash';
+        localStorage.setItem('GEMINI_MODEL', 'gemini-1.5-flash');
       }
       const savedModelsJson = localStorage.getItem('GEMINI_AVAILABLE_MODELS');
       
@@ -492,13 +497,18 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
         try {
           let parsed: GeminiModelOption[] = JSON.parse(savedModelsJson);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            // Filter out deprecated 2.5 models
-            parsed = parsed.filter((m) => !m.id.includes('2.5'));
-            if (!parsed.some((m) => m.id === 'gemini-3.8-flash')) {
+            // Filter out deprecated or invalid models
+            parsed = parsed.filter(
+              (m) =>
+                !m.id.includes('2.5') &&
+                !m.id.includes('3.8') &&
+                !m.id.includes('3.5')
+            );
+            if (!parsed.some((m) => m.id === 'gemini-1.5-flash')) {
               parsed.unshift({
-                id: 'gemini-3.8-flash',
-                displayName: 'Gemini 3.8 Flash (Rekomendasi Utama)',
-                description: 'Model generasi terbaru resmi dari Google AI, tercepat dan paling stabil',
+                id: 'gemini-1.5-flash',
+                displayName: 'Gemini 1.5 Flash (Rekomendasi Utama Google)',
+                description: 'Model multimodal tercepat, paling stabil, dan efisien untuk teks & poster',
               });
             }
             setAvailableModels(parsed);
@@ -549,20 +559,25 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
         
         const models: GeminiModelOption[] = (data.availableModels || [])
           .map((m: any) => (typeof m === 'string' ? { id: m, displayName: m } : m))
-          .filter((m: any) => !m.id.includes('2.5'));
+          .filter(
+            (m: any) =>
+              !m.id.includes('2.5') &&
+              !m.id.includes('3.8') &&
+              !m.id.includes('3.5')
+          );
 
-        if (!models.some((m) => m.id === 'gemini-3.8-flash')) {
+        if (!models.some((m) => m.id === 'gemini-1.5-flash')) {
           models.unshift({
-            id: 'gemini-3.8-flash',
-            displayName: 'Gemini 3.8 Flash (Rekomendasi Utama)',
-            description: 'Model generasi terbaru resmi dari Google AI, tercepat dan paling stabil',
+            id: 'gemini-1.5-flash',
+            displayName: 'Gemini 1.5 Flash (Rekomendasi Utama Google)',
+            description: 'Model multimodal tercepat, paling stabil, dan efisien untuk teks & poster',
           });
         }
 
         setAvailableModels(models);
 
-        // Auto-select recommended model (e.g. gemini-3.8-flash) or fallback
-        const recModel = data.recommendedModel || 'gemini-3.8-flash';
+        // Auto-select recommended model (e.g. gemini-1.5-flash) or fallback
+        const recModel = data.recommendedModel || 'gemini-1.5-flash';
         setSelectedModel(recModel);
 
         if (typeof window !== 'undefined') {
@@ -585,29 +600,30 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
   };
 
   // Trigger Gemini AI Generation for Content & Layout
-  const handleGenerateContent = async () => {
+  const handleGenerateContent = async (topicOverride?: string) => {
+    const topicToUse = (topicOverride || promptTopic).trim() || 'Peringatan Hari Pahlawan 10 November & Peningkatan Mutu Vokasi';
     setIsGenerating(true);
     setGenerationResult(null);
 
     try {
       const { ok, data } = await safeFetchJson('/api/gemini', {
-        apiKey,
+        apiKey: apiKey.trim(),
         model: selectedModel,
         temperature,
         action: 'generate_design',
-        prompt: `${promptTopic} (Gaya Tone: ${tone})`,
+        prompt: `${topicToUse} (Gaya Tone: ${tone})`,
       });
 
-      if (ok && data.success) {
+      if (ok && data.success && data.result) {
         setGenerationResult(data.result);
-        if (data.modelUsed && data.modelUsed !== selectedModel) {
+        if (data.modelUsed && data.modelUsed !== selectedModel && !data.modelUsed.includes('Smart') && !data.modelUsed.includes('Tanpa')) {
           setSelectedModel(data.modelUsed);
           if (typeof window !== 'undefined') {
             localStorage.setItem('GEMINI_MODEL', data.modelUsed);
           }
         }
       } else {
-        alert(data.error || 'Gagal generate dengan Gemini AI. Periksa API Key di Pengaturan.');
+        alert(data.error || 'Gagal generate dengan Gemini AI. Silakan coba klik sekali lagi.');
       }
     } catch (e: any) {
       alert(`Terjadi kesalahan: ${e.message}`);
@@ -1332,12 +1348,15 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
                     type="text"
                     value={promptTopic}
                     onChange={(e) => setPromptTopic(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleGenerateContent();
+                    }}
                     placeholder="Contoh: Peringatan Hari Guru Nasional 2026 atau Workshop SPMI"
                     className="input-control"
                     style={{ fontSize: '13px' }}
                   />
                   <button
-                    onClick={handleGenerateContent}
+                    onClick={() => handleGenerateContent()}
                     disabled={isGenerating}
                     className="btn btn-primary"
                     style={{ padding: '0 18px', whiteSpace: 'nowrap' }}
@@ -1351,7 +1370,7 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
               {/* Quick Prompt Ideas */}
               <div>
                 <span style={{ fontSize: '11px', color: '#94A3B8', marginBottom: '6px', display: 'block' }}>
-                  Atau pilih contoh ide tema cepat:
+                  Atau pilih contoh ide tema cepat (1-klik langsung generate):
                 </span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {[
@@ -1363,15 +1382,18 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
                   ].map((idea) => (
                     <button
                       key={idea}
-                      onClick={() => setPromptTopic(idea)}
+                      onClick={() => {
+                        setPromptTopic(idea);
+                        handleGenerateContent(idea);
+                      }}
                       className="glass-pill"
                       style={{
                         padding: '4px 10px',
                         fontSize: '11px',
-                        color: '#CBD5E1',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        color: promptTopic === idea ? '#38BDF8' : '#CBD5E1',
+                        border: promptTopic === idea ? '1px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.12)',
                         cursor: 'pointer',
-                        background: 'rgba(255, 255, 255, 0.04)',
+                        background: promptTopic === idea ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255, 255, 255, 0.04)',
                       }}
                     >
                       {idea}
@@ -1398,16 +1420,28 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
                       <CheckCircle2 size={16} />
                       <span>Rekomendasi AI Selesai Dibuat</span>
                     </div>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <button onClick={handleApplyToCanvas} className="btn btn-autofix" style={{ padding: '6px 12px', fontSize: '11.5px' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={handleApplyToCanvas}
+                        className="btn btn-autofix"
+                        style={{
+                          padding: '7px 14px',
+                          fontSize: '11.5px',
+                          fontWeight: 700,
+                          background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                          boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
+                          color: '#FFFFFF',
+                          border: 'none',
+                        }}
+                      >
                         <Wand2 size={13} />
-                        <span>Terapkan ke Kanvas</span>
+                        <span>✨ Terapkan ke Kanvas Sekarang</span>
                       </button>
                       <button
                         onClick={handleSaveGeneratedToDatabase}
                         className="btn"
                         style={{
-                          padding: '6px 10px',
+                          padding: '7px 10px',
                           fontSize: '11px',
                           background: 'rgba(252, 211, 77, 0.12)',
                           border: '1px solid #FCD34D',
@@ -1421,6 +1455,32 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
                         <Save size={12} />
                         <span>Simpan DB</span>
                       </button>
+                    </div>
+                  </div>
+
+                  {/* Visual Palet Warna yang Dihasilkan AI */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600 }}>Palet Warna AI:</span>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      {[
+                        { label: 'Latar Banner', color: generationResult.topPillBgColor || '#05472A' },
+                        { label: 'Teks Banner', color: generationResult.topPillTextColor || '#86EFAC' },
+                        { label: 'Border SPMI', color: generationResult.eventCardBorderColor || '#F59E0B' },
+                        { label: 'Lencana Tanggal', color: generationResult.dateBgColor || '#2563EB' },
+                      ].map((item, idx) => (
+                        <span
+                          key={idx}
+                          style={{
+                            width: '16px',
+                            height: '16px',
+                            borderRadius: '50%',
+                            backgroundColor: item.color,
+                            border: '1.5px solid rgba(255,255,255,0.4)',
+                            display: 'inline-block',
+                          }}
+                          title={`${item.label}: ${item.color}`}
+                        />
+                      ))}
                     </div>
                   </div>
 
@@ -1662,14 +1722,12 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
                 >
                   {availableModels.length > 0 ? (
                     availableModels.map((m) => {
-                      const is38Flash = m.id === 'gemini-3.8-flash';
                       const isFlash = m.id === 'gemini-1.5-flash';
                       const isPro = m.id === 'gemini-1.5-pro';
                       const is20Flash = m.id === 'gemini-2.0-flash';
                       let badge = '';
-                      if (is38Flash) badge = '⭐ [Rekomendasi Utama Google - Aktif & Tercepat]';
+                      if (isFlash) badge = '⭐ [Rekomendasi Utama Google - Aktif & Tercepat]';
                       else if (is20Flash) badge = '⚡ [Generasi 2.0 - Super Cepat]';
-                      else if (isFlash) badge = '🚀 [Versi 1.5 Flash]';
                       else if (isPro) badge = '🧠 [Penalaran Kompleks]';
 
                       return (
@@ -1680,11 +1738,10 @@ export const GeminiAIModal: React.FC<GeminiAIModalProps> = ({
                     })
                   ) : (
                     <>
-                      <option value="gemini-3.8-flash">⭐ gemini-3.8-flash (Rekomendasi Utama Google - Aktif & Cepat)</option>
+                      <option value="gemini-1.5-flash">⭐ gemini-1.5-flash (Rekomendasi Utama Google - Aktif & Cepat)</option>
                       <option value="gemini-2.0-flash">⚡ gemini-2.0-flash (Generasi 2.0 - Super Cepat)</option>
-                      <option value="gemini-1.5-flash">🚀 gemini-1.5-flash (Versi 1.5 Kuota Gratis)</option>
                       <option value="gemini-1.5-pro">🧠 gemini-1.5-pro (Penalaran Kompleks & Estetika Tinggi)</option>
-                      <option value="gemini-2.0-flash-lite">🍃 gemini-2.0-flash-lite (Ultra Ringan)</option>
+                      <option value="gemini-1.5-flash-8b">🍃 gemini-1.5-flash-8b (Ultra Ringan)</option>
                     </>
                   )}
                 </select>

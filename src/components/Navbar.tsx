@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { OutputFormat, PresetTemplate } from '@/types/design';
 import {
   Sparkles,
@@ -51,7 +52,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [showDeviceModal, setShowDeviceModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const lanUrl = 'http://10.10.10.159:3030';
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleCopyUrl = () => {
     if (navigator.clipboard) {
@@ -337,15 +343,15 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
       </div>
 
-      {/* Modal Dialog: Akses di Perangkat Lain (HP, Tablet, Laptop) */}
-      {showDeviceModal && (
+      {/* Modal Dialog: Akses di Perangkat Lain (HP, Tablet, Laptop) via Portal langsung ke document.body */}
+      {showDeviceModal && isMounted && createPortal(
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 1000,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 99999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -360,9 +366,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               maxWidth: '460px',
               padding: '24px',
               borderRadius: '20px',
-              border: '1px solid rgba(56, 189, 248, 0.3)',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
               backgroundColor: '#0F172A',
-              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.15)',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(56, 189, 248, 0.2)',
+              maxHeight: '92vh',
+              overflowY: 'auto',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -395,7 +403,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={() => setShowDeviceModal(false)}
                 className="btn"
-                style={{ padding: '6px', background: 'none', border: 'none', color: '#94A3B8' }}
+                style={{ padding: '6px', background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer' }}
               >
                 <X size={18} />
               </button>
@@ -500,7 +508,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </ol>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );
