@@ -48,11 +48,12 @@
       "socialFooterBgColor": "#1D4ED8",
       "socialFooterTextColor": "#FFFFFF",
       "socialFooterBorderColor": "rgba(255, 255, 255, 0.22)",
+      "socialFooterFontSize": 18,
       "socialHandles": {
-        "instagram": "smkn1klk",
-        "website": "smkn1klk.sch.id",
-        "facebook": "SMK Negeri 1 Klungkung",
-        "tiktok": "smkn1klungkung"
+        "instagram": "fyjchannel",
+        "website": "fyjchannel.co.id",
+        "facebook": "FYJ Channel",
+        "tiktok": "fyjchannel"
       },
       "accentColor": "#10B981",
       "bgColor": "#E0F2FE",

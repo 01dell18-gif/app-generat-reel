@@ -121,17 +121,17 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
     if (assets.useDefaultSocialFooter) {
       const fSvg = generateSocialFooterSvg(
         assets.socialHandles || {
-          instagram: 'smkn1klk',
-          website: 'smkn1klk.sch.id',
-          facebook: 'SMK Negeri 1 Klungkung',
-          tiktok: 'smkn1klungkung',
+          instagram: 'fyjchannel',
+          website: 'fyjchannel.co.id',
+          facebook: 'FYJ Channel',
+          tiktok: 'fyjchannel',
         },
         1000,
         56,
         assets.socialFooterBgColor || '#1D4ED8',
         assets.socialFooterTextColor || '#FFFFFF',
         assets.socialFooterBorderColor || 'rgba(255, 255, 255, 0.22)',
-        assets.socialFooterFontSize || 13
+        assets.socialFooterFontSize || 18
       );
       const fImg = new Image();
       fImg.src = fSvg;
@@ -612,7 +612,7 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
                   >
                     SMK
                   </div>
-                  <span style={{ fontWeight: 700, fontSize: '13px' }}>smkn1klk</span>
+                  <span style={{ fontWeight: 700, fontSize: '13px' }}>{assets.socialHandles?.instagram || 'fyjchannel'}</span>
                   <button
                     style={{
                       background: 'transparent',

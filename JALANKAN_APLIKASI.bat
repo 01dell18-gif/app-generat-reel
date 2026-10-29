@@ -78,3 +78,4 @@ echo Tekan tombol Ctrl + C jika ingin menghentikan server.
 echo.
 
 call npm run dev
+

@@ -559,17 +559,17 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
       if (assets.useDefaultSocialFooter) {
         const footerSvgUrl = generateSocialFooterSvg(
           assets.socialHandles || {
-            instagram: 'smkn1klk',
-            website: 'smkn1klk.sch.id',
-            facebook: 'SMK Negeri 1 Klungkung',
-            tiktok: 'smkn1klungkung',
+            instagram: 'fyjchannel',
+            website: 'fyjchannel.co.id',
+            facebook: 'FYJ Channel',
+            tiktok: 'fyjchannel',
           },
           1000,
           56,
           assets.socialFooterBgColor || '#1D4ED8',
           assets.socialFooterTextColor || '#FFFFFF',
           assets.socialFooterBorderColor || 'rgba(255,255,255,0.22)',
-          assets.socialFooterFontSize || 13
+          assets.socialFooterFontSize || 18
         );
 
         fabric.Image.fromURL(footerSvgUrl, (footerImg: any) => {
@@ -801,8 +801,8 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '12px', fontWeight: 700 }}>smkn1klk</div>
-                  <div style={{ fontSize: '10px', color: '#CBD5E1' }}>SMK Negeri 1 Klungkung</div>
+                  <div style={{ fontSize: '12px', fontWeight: 700 }}>{assets.socialHandles?.instagram || 'fyjchannel'}</div>
+                  <div style={{ fontSize: '10px', color: '#CBD5E1' }}>{assets.socialHandles?.facebook || 'FYJ Channel'}</div>
                 </div>
               </div>
               <MoreHorizontal size={18} color="#FFFFFF" />

@@ -16,10 +16,10 @@ export function generateSocialFooterSvg(
   borderColor: string = 'rgba(255, 255, 255, 0.22)',
   customFontSize?: number
 ): string {
-  const ig = (handles?.instagram || 'smkn1klk').trim();
-  const web = (handles?.website || 'smkn1klk.sch.id').trim();
-  const fb = (handles?.facebook || 'SMK Negeri 1 Klungkung').trim();
-  const tt = (handles?.tiktok || 'smkn1klungkung').trim();
+  const ig = (handles?.instagram || 'fyjchannel').trim();
+  const web = (handles?.website || 'fyjchannel.co.id').trim();
+  const fb = (handles?.facebook || 'FYJ Channel').trim();
+  const tt = (handles?.tiktok || 'fyjchannel').trim();
 
   // SVG Icons with dynamic colors
   const igIcon = `
@@ -63,7 +63,7 @@ export function generateSocialFooterSvg(
   const usableWidth = width - safeMargin * 2;
 
   // Custom or Adaptive font sizing based on handle text lengths
-  let fontSize = customFontSize && customFontSize > 6 ? customFontSize : 14;
+  let fontSize = customFontSize && customFontSize > 6 ? customFontSize : 18;
   if (!customFontSize) {
     const totalChars = items.reduce((acc, it) => acc + it.text.length, 0);
 

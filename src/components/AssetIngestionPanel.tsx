@@ -2073,9 +2073,9 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                   marginTop: '4px',
                 }}
               >
-                <span>📷 {assets.socialHandles?.instagram || 'smkn1klk'}</span>
-                <span>🌐 {assets.socialHandles?.website || 'smkn1klk.sch.id'}</span>
-                <span>🎵 {assets.socialHandles?.tiktok || 'smkn1klungkung'}</span>
+                <span>📷 {assets.socialHandles?.instagram || 'fyjchannel'}</span>
+                <span>🌐 {assets.socialHandles?.website || 'fyjchannel.co.id'}</span>
+                <span>🎵 {assets.socialHandles?.tiktok || 'fyjchannel'}</span>
               </div>
             </div>
 
@@ -2086,7 +2086,7 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                   Akun & URL Media Sosial:
                 </span>
                 <span style={{ fontSize: '10px', color: '#38BDF8', fontWeight: 600 }}>
-                  Ukuran: {assets.socialFooterFontSize || 13}px
+                  Ukuran: {assets.socialFooterFontSize || 18}px
                 </span>
               </div>
 
@@ -2121,9 +2121,9 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                           padding: '2px 6px',
                           fontSize: '9.5px',
                           borderRadius: '4px',
-                          background: (assets.socialFooterFontSize || 13) === sz.val ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                          border: (assets.socialFooterFontSize || 13) === sz.val ? '1px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.1)',
-                          color: (assets.socialFooterFontSize || 13) === sz.val ? '#38BDF8' : '#CBD5E1',
+                          background: (assets.socialFooterFontSize || 18) === sz.val ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                          border: (assets.socialFooterFontSize || 18) === sz.val ? '1px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.1)',
+                          color: (assets.socialFooterFontSize || 18) === sz.val ? '#38BDF8' : '#CBD5E1',
                           cursor: 'pointer',
                         }}
                       >
@@ -2137,7 +2137,7 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                   min="9"
                   max="24"
                   step="1"
-                  value={assets.socialFooterFontSize || 13}
+                  value={assets.socialFooterFontSize || 18}
                   onChange={(e) => onUpdateProperty('socialFooterFontSize', parseInt(e.target.value))}
                 />
               </div>
@@ -2154,7 +2154,7 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                     })
                   }
                   className="input-control"
-                  placeholder="smkn1klk"
+                  placeholder="fyjchannel"
                 />
               </div>
 
@@ -2170,7 +2170,7 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                     })
                   }
                   className="input-control"
-                  placeholder="smkn1klk.sch.id"
+                  placeholder="fyjchannel.co.id"
                 />
               </div>
 
@@ -2186,7 +2186,7 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                     })
                   }
                   className="input-control"
-                  placeholder="SMK Negeri 1 Klungkung"
+                  placeholder="FYJ Channel"
                 />
               </div>
 
@@ -2202,7 +2202,7 @@ export const AssetIngestionPanel: React.FC<AssetIngestionPanelProps> = ({
                     })
                   }
                   className="input-control"
-                  placeholder="smkn1klungkung"
+                  placeholder="fyjchannel"
                 />
               </div>
             </div>
