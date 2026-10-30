@@ -69,14 +69,20 @@ Platform generasi desain multi-format terprogram untuk media sosial dengan mesin
 
 ### 8. Rekomendasi Cerdas Desain AI & Studio Google Gemini
 
-- **Rekomendasi Cerdas 1-Klik**: Preset teruji untuk Resmi SPMI, Semangat Vokasi & Hari Pahlawan, Dies Natalis & Prestasi Unggulan, serta Hari Guru & Karakter Bangsa.
-- **Koneksi Resmi Model Gemini**: Sinkronisasi dinamis daftar model (`gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-2.0-flash`, dll.) langsung dengan kuota API Key pengguna Google AI Studio.
+- **Prompt Generator Otomatis & AI Visual Assets**: Masukkan ide tema acara apa saja (misal: "Hari Pahlawan", "Turnamen E-Sport", "Dies Natalis"), Gemini AI secara otomatis merancang judul headline, lencana tanggal, kartu SPMI/kegiatan, banner atas, palet warna WCAG AA, serta **membuat aset visual (Background AI & Subjek Pejuang/Hero AI)** dalam format vektor SVG siap terap langsung ke kanvas.
+- **Koneksi Resmi Model Gemini**: Sinkronisasi dinamis daftar model (`gemini-2.5-flash`, `gemini-1.5-pro`, `gemini-2.0-flash`, dll.) langsung dengan kuota API Key pengguna Google AI Studio.
 - **Gemini Vision Critic**: Pemindaian tangkapan kanvas multimodal untuk evaluasi komposisi visual.
 
-### 8. Kustomisasi Lengkap Warna Footer Media Sosial
+### 9. Kustomisasi Lengkap Warna Footer Media Sosial & Brand FYJ
 
-- **Palet Terintegrasi**: Pengaturan warna latar footer bar (*pill*), warna teks dan ikon SVG vektor (Instagram, Website, Facebook, TikTok), serta warna garis tepi (*border*).
+- **Identitas Resmi FYJ Channel**: Logo resmi bentuk pill melengkung halus (*frosted glass crest*), handles `@fyjchannel`, dan website `fyjchannel.co.id`.
+- **Palet Terintegrasi & Ukuran Teks**: Pengaturan warna latar footer bar (*pill*), warna teks dan ikon SVG vektor (Instagram, Website, Facebook, TikTok), warna garis tepi (*border*), serta slider ukuran font dinamis (11px s/d 18px).
 - **Penyesuaian Adaptif**: Sinkronisasi otomatis di kanvas statis 1:1, 4:5, maupun video bergerak Reels 9:16.
+
+### 10. Desain Responsif Penuh untuk Perangkat Smartphone & Mobile
+
+- **Mobile Viewport Optimization**: Kanvas Fabric.js otomatis diskalakan dengan *auto-scale transform* agar pas sempurna di layar smartphone tanpa terpotong (*no clipping*).
+- **Mobile Bottom Navigation**: Tampilan tab navigasi bawah (*bottom bar*) ramah sentuhan (Upload, Teks 1, Teks 2, Sosmed, Database, Gemini AI) dengan drawer geser yang nyaman digunakan satu tangan di HP.
 
 ---
 
@@ -149,9 +155,14 @@ Layanan REST API Python akan aktif di **`http://127.0.0.1:8000`** untuk menerima
 
 ```text
 ├── PRD.md                           # Dokumen Spesifikasi Produk Asli
+├── README.md                        # Dokumentasi Panduan Lengkap
 ├── package.json                     # Konfigurasi dependensi dan skrip
 ├── tsconfig.json                    # Konfigurasi TypeScript
 ├── next.config.js                   # Konfigurasi Next.js & Fabric externals
+├── JALANKAN_APLIKASI.bat            # Script 1-Klik Jalankan Studio Desain di Windows
+├── IZINKAN_FIREWALL_PORT_3030.bat   # Script Izin Firewall untuk Akses dari HP
+├── data/
+│   └── projects.json                # Database Server Sinkronisasi Antar-Perangkat
 ├── backend/
 │   └── ai_critic_service.py         # Python AI Microservice Bridge & WCAG Engine
 └── src/
@@ -160,16 +171,22 @@ Layanan REST API Python akan aktif di **`http://127.0.0.1:8000`** untuk menerima
     │   ├── layout.tsx               # Root Layout & Metadata SEO
     │   ├── page.tsx                 # Halaman Utama Studio Desain
     │   └── api/
-    │       └── critic/route.ts      # Next.js API Route untuk ACGT Critic Engine
+    │       ├── critic/route.ts      # Next.js API Route untuk ACGT Critic Engine
+    │       ├── gemini/route.ts      # Next.js API Route untuk Google Gemini Multimodal
+    │       └── projects/route.ts    # Next.js API Route untuk Database Server Proyek
     ├── components/
-    │   ├── Navbar.tsx               # Header, Selector Format, Presets, Export
-    │   ├── InteractiveCanvas.tsx    # Mesin Kanvas Fabric.js & Bounding Box Overlay
-    │   ├── ReelsMotionPlayer.tsx    # Mesin Animasi Video Reels 9:16 & Perekam MP4
-    │   ├── CriticDrawer.tsx         # Panel ACGT Inspector, Metrik, & Riwayat
-    │   └── AssetIngestionPanel.tsx  # Ingesti Tipografi, Media, Branding, Footer
+    │   ├── Navbar.tsx               # Header, Selector Format, Dropdown 10 Preset, Export
+    │   ├── InteractiveCanvas.tsx    # Mesin Kanvas Fabric.js, Bounding Box, & Auto-Scale HP
+    │   ├── ReelsMotionPlayer.tsx    # Mesin Animasi Video Reels 9:16 & Perekam WebM/MP4
+    │   ├── CriticDrawer.tsx         # Panel ACGT Inspector, Skor Kualitas, & Auto-Fix
+    │   ├── AssetIngestionPanel.tsx  # Ingesti Aset, Multi-Layer BG, Media Sosial & Brand FYJ
+    │   └── GeminiAIModal.tsx        # Modal AI Studio: Prompt Generator, Aset AI & Vision
     ├── lib/
-    │   ├── critic-engine.ts         # Logika Evaluasi Deterministik WCAG 2.1 & ACGT
-    │   └── preset-templates.ts      # 3 Preset Desain Siap Pakai & Vektor SVG
+    │   ├── critic-engine.ts         # Evaluasi Deterministik WCAG 2.1 AA/AAA & ACGT Engine
+    │   ├── preset-templates.ts      # 10 Template Desain Siap Pakai & Library Background
+    │   ├── ai-generative-assets.ts  # Generator Aset Vektor Cerdas AI (Background & Subjek)
+    │   ├── asset-database.ts        # Klien Sinkronisasi Database Proyek
+    │   └── social-footer-svg.ts     # Generator SVG Footer Media Sosial (IG, Web, FB, TikTok)
     └── types/
-        └── design.ts                # TypeScript Schema sesuai PRD Section 3.3
+        └── design.ts                # TypeScript Schema Sistem Desain Multimodal
 ```
