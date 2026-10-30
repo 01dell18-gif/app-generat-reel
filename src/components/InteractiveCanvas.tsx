@@ -188,6 +188,13 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
               headlineScale: Number((obj.scaleX || 1).toFixed(2)),
               headlineRotation: Math.round(obj.angle || 0),
             });
+          } else if (obj.dataId === 'subtitle') {
+            activeSelectionDataIdRef.current = 'subtitle';
+            applyUpdates({
+              subtitleFontSize: Math.round(obj.fontSize * (obj.scaleY || 1)),
+              subtitleX: Math.round(obj.left),
+              subtitleY: Math.round(obj.top),
+            });
           } else if (obj.dataId === 'mainMedia') {
             activeSelectionDataIdRef.current = 'mainMedia';
             const base = obj._baseScale || 1;

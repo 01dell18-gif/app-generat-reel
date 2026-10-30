@@ -293,6 +293,14 @@ export const ReelsMotionPlayer: React.FC<ReelsMotionPlayerProps> = ({
         ctx.fillText(l, 0, startY + idx * lineHeight);
       });
 
+      if (assets.subtitleText) {
+        const subSize = Math.round((assets.subtitleFontSize || 14) * 1.1);
+        ctx.font = `600 ${subSize}px "Plus Jakarta Sans", sans-serif`;
+        ctx.fillStyle = assets.subtitleColor || '#E2E8F0';
+        ctx.shadowBlur = 8;
+        ctx.fillText(assets.subtitleText, 0, startY + lines.length * lineHeight + 8);
+      }
+
       ctx.restore();
     }
 
