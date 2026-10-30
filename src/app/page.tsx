@@ -63,7 +63,7 @@ export default function StudioPage() {
     const template = PRESET_TEMPLATES.find((t) => t.id === presetId);
     if (template) {
       setActivePresetId(presetId);
-      setAssets({ ...template.data });
+      setAssets(JSON.parse(JSON.stringify(template.data)));
       setSelectedIssueId(null);
     }
   };

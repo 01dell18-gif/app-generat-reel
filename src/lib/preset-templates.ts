@@ -49,63 +49,70 @@ const RAW_LOGO_SVG = `
 </svg>
 `.trim();
 
-export const LOGO_FYJ = `data:image/svg+xml;utf8,${encodeURIComponent(RAW_LOGO_SVG)}`;
+function encodeSvg(svg: string): string {
+  const clean = svg.trim();
+  if (typeof Buffer !== 'undefined') {
+    return `data:image/svg+xml;base64,${Buffer.from(clean, 'utf-8').toString('base64')}`;
+  }
+  if (typeof btoa !== 'undefined') {
+    return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(clean)))}`;
+  }
+  return `data:image/svg+xml;utf8,${encodeURIComponent(clean)}`;
+}
+
+export const LOGO_FYJ = encodeSvg(RAW_LOGO_SVG);
 export const LOGO_SMK_KLUNGKUNG = LOGO_FYJ;
 
 // Subtle Garuda / Balinese Cultural Watermark
-export const WATERMARK_GARUDA = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" fill="none" opacity="0.18">
+const RAW_WATERMARK_GARUDA = `
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" fill="none" opacity="0.18">
   <defs>
     <radialGradient id="wmG" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="%23064E3B" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="%230284C7" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#064E3B" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#0284C7" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <circle cx="300" cy="300" r="260" fill="url(%23wmG)"/>
-  <!-- Crown & Feathers -->
-  <path d="M300 100 L320 180 L380 140 L340 210 L420 200 L350 250 L440 280 L350 310 L430 370 L340 370 L400 450 L300 400 L200 450 L260 370 L170 370 L250 310 L160 280 L250 250 L180 200 L260 210 L220 140 L280 180 Z" stroke="%23047857" stroke-width="4" fill="none"/>
-  <circle cx="300" cy="300" r="80" stroke="%23047857" stroke-width="4"/>
-  <path d="M260 280 C280 260 320 260 340 280 C340 320 260 320 260 280 Z" fill="%23047857"/>
-  <polygon points="300,290 315,330 285,330" fill="%23F59E0B"/>
-</svg>`;
+  <circle cx="300" cy="300" r="260" fill="url(#wmG)"/>
+  <path d="M300 100 L320 180 L380 140 L340 210 L420 200 L350 250 L440 280 L350 310 L430 370 L340 370 L400 450 L300 400 L200 450 L260 370 L170 370 L250 310 L160 280 L250 250 L180 200 L260 210 L220 140 L280 180 Z" stroke="#047857" stroke-width="4" fill="none"/>
+  <circle cx="300" cy="300" r="80" stroke="#047857" stroke-width="4"/>
+  <path d="M260 280 C280 260 320 260 340 280 C340 320 260 320 260 280 Z" fill="#047857"/>
+  <polygon points="300,290 315,330 285,330" fill="#F59E0B"/>
+</svg>
+`;
+export const WATERMARK_GARUDA = encodeSvg(RAW_WATERMARK_GARUDA);
 
-// Complete Template Background (Sky, Clouds, Rolling Green Hills) - Modern Aesthetic Waves
-export const TEMPLATE_BG_SMK = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
+// Complete Template Background 1 (Sky, Clouds, Rolling Green Hills) - Modern Aesthetic Waves
+const RAW_BG_SMK = `
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
   <defs>
-    <!-- Modern Vibrant Sky Gradient -->
     <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="%23BAE6FD"/>
-      <stop offset="35%" stop-color="%23E0F2FE"/>
-      <stop offset="65%" stop-color="%23F0F9FF"/>
-      <stop offset="100%" stop-color="%23FEF9C3"/>
+      <stop offset="0%" stop-color="#BAE6FD"/>
+      <stop offset="35%" stop-color="#E0F2FE"/>
+      <stop offset="65%" stop-color="#F0F9FF"/>
+      <stop offset="100%" stop-color="#FEF9C3"/>
     </linearGradient>
-    <!-- Sun Ambient Glow Halo -->
     <radialGradient id="sunAura" cx="75%" cy="20%" r="55%">
-      <stop offset="0%" stop-color="%23FEF08A" stop-opacity="0.6"/>
-      <stop offset="50%" stop-color="%23FDE047" stop-opacity="0.2"/>
-      <stop offset="100%" stop-color="%23FFFFFF" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#FEF08A" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="#FDE047" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
-    <!-- Rolling Hill 1 (Bright Lime Green) -->
     <linearGradient id="hill1" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="%23A3E635"/>
-      <stop offset="100%" stop-color="%2365A30D"/>
+      <stop offset="0%" stop-color="#A3E635"/>
+      <stop offset="100%" stop-color="#65A30D"/>
     </linearGradient>
-    <!-- Rolling Hill 2 (Deep Emerald Olive) -->
     <linearGradient id="hill2" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="%234D7C0F"/>
-      <stop offset="100%" stop-color="%2314532D"/>
+      <stop offset="0%" stop-color="#4D7C0F"/>
+      <stop offset="100%" stop-color="#14532D"/>
     </linearGradient>
-    <!-- Ambient Horizon Glow -->
     <linearGradient id="horizonGlow" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="%23FFFFFF" stop-opacity="0.5"/>
-      <stop offset="100%" stop-color="%2384CC16" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#84CC16" stop-opacity="0"/>
     </linearGradient>
   </defs>
 
-  <!-- Sky Canvas -->
-  <rect width="1080" height="1080" fill="url(%23skyGrad)"/>
-  <rect width="1080" height="1080" fill="url(%23sunAura)"/>
+  <rect width="1080" height="1080" fill="url(#skyGrad)"/>
+  <rect width="1080" height="1080" fill="url(#sunAura)"/>
 
-  <!-- Aesthetic Floating Soft Cloud Puffs -->
   <g opacity="0.85">
     <ellipse cx="200" cy="90" rx="150" ry="60" fill="white"/>
     <ellipse cx="310" cy="75" rx="130" ry="55" fill="white"/>
@@ -113,175 +120,192 @@ export const TEMPLATE_BG_SMK = `data:image/svg+xml;utf8,<svg xmlns="http://www.w
     <ellipse cx="750" cy="95" rx="120" ry="50" fill="white"/>
   </g>
 
-  <!-- Center Floating Clouds -->
   <g opacity="0.65">
     <ellipse cx="180" cy="300" rx="130" ry="50" fill="white"/>
     <ellipse cx="270" cy="285" rx="100" ry="45" fill="white"/>
     <ellipse cx="860" cy="320" rx="150" ry="55" fill="white"/>
   </g>
 
-  <!-- Rolling Hills Layer 1 (Upper Smooth Bezier Curve) -->
-  <path d="M-60 760 C160 660, 380 810, 620 740 C840 670, 990 730, 1160 670 L1160 1160 L-60 1160 Z" fill="url(%23hill1)"/>
-  <path d="M-60 760 C160 660, 380 810, 620 740 C840 670, 990 730, 1160 670" stroke="%23BEF264" stroke-width="3" fill="none" opacity="0.6"/>
+  <path d="M-60 760 C160 660, 380 810, 620 740 C840 670, 990 730, 1160 670 L1160 1160 L-60 1160 Z" fill="url(#hill1)"/>
+  <path d="M-60 760 C160 660, 380 810, 620 740 C840 670, 990 730, 1160 670" stroke="#BEF264" stroke-width="3" fill="none" opacity="0.6"/>
 
-  <!-- Rolling Hills Layer 2 (Lower Deep Organic Wave) -->
-  <path d="M-60 840 C140 750, 340 890, 580 810 C800 740, 950 820, 1160 740 L1160 1160 L-60 1160 Z" fill="url(%23hill2)"/>
-  <path d="M-60 840 C140 750, 340 890, 580 810 C800 740, 950 820, 1160 740" stroke="%23A3E635" stroke-width="2.5" fill="none" opacity="0.5"/>
+  <path d="M-60 840 C140 750, 340 890, 580 810 C800 740, 950 820, 1160 740 L1160 1160 L-60 1160 Z" fill="url(#hill2)"/>
+  <path d="M-60 840 C140 750, 340 890, 580 810 C800 740, 950 820, 1160 740" stroke="#A3E635" stroke-width="2.5" fill="none" opacity="0.5"/>
 
-  <!-- Soft Morning Mist Layer in Hills -->
   <ellipse cx="540" cy="970" rx="520" ry="70" fill="white" opacity="0.22"/>
-</svg>`;
+</svg>
+`;
+export const TEMPLATE_BG_SMK = encodeSvg(RAW_BG_SMK);
 
 // Preset Background 2: Modern Cyber & Tech Geometric Grid
-export const TEMPLATE_BG_CYBER_TECH = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
+const RAW_BG_CYBER_TECH = `
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
   <defs>
     <linearGradient id="cyberBg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="%23061126"/>
-      <stop offset="50%" stop-color="%230F172A"/>
-      <stop offset="100%" stop-color="%23022C43"/>
+      <stop offset="0%" stop-color="#061126"/>
+      <stop offset="50%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#022C43"/>
     </linearGradient>
     <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
       <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(56, 189, 248, 0.08)" stroke-width="1"/>
     </pattern>
     <radialGradient id="cyberGlow" cx="50%" cy="30%" r="50%">
-      <stop offset="0%" stop-color="%2306B6D4" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="%2306B6D4" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect width="1080" height="1080" fill="url(%23cyberBg)"/>
-  <rect width="1080" height="1080" fill="url(%23grid)"/>
-  <circle cx="540" cy="350" r="450" fill="url(%23cyberGlow)"/>
-  <polygon points="120,80 160,105 160,155 120,180 80,155 80,105" stroke="%2338BDF8" stroke-width="1.5" fill="none" opacity="0.25"/>
-  <polygon points="960,140 1000,165 1000,215 960,240 920,215 920,165" stroke="%2338BDF8" stroke-width="1.5" fill="none" opacity="0.25"/>
+  <rect width="1080" height="1080" fill="url(#cyberBg)"/>
+  <rect width="1080" height="1080" fill="url(#grid)"/>
+  <circle cx="540" cy="350" r="450" fill="url(#cyberGlow)"/>
+  <polygon points="120,80 160,105 160,155 120,180 80,155 80,105" stroke="#38BDF8" stroke-width="1.5" fill="none" opacity="0.25"/>
+  <polygon points="960,140 1000,165 1000,215 960,240 920,215 920,165" stroke="#38BDF8" stroke-width="1.5" fill="none" opacity="0.25"/>
   <path d="M0 900 Q 540 820 1080 920 L 1080 1080 L 0 1080 Z" fill="rgba(6, 182, 212, 0.08)"/>
-</svg>`;
+</svg>
+`;
+export const TEMPLATE_BG_CYBER_TECH = encodeSvg(RAW_BG_CYBER_TECH);
 
 // Preset Background 3: Royal Gold & Maroon Prestigious
-export const TEMPLATE_BG_ROYAL_GOLD = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
+const RAW_BG_ROYAL_GOLD = `
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
   <defs>
     <linearGradient id="maroonGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="%234A041D"/>
-      <stop offset="50%" stop-color="%232D0612"/>
-      <stop offset="100%" stop-color="%23140207"/>
+      <stop offset="0%" stop-color="#4A041D"/>
+      <stop offset="50%" stop-color="#2D0612"/>
+      <stop offset="100%" stop-color="#140207"/>
     </linearGradient>
     <radialGradient id="goldAura" cx="50%" cy="40%" r="55%">
-      <stop offset="0%" stop-color="%23F59E0B" stop-opacity="0.28"/>
-      <stop offset="70%" stop-color="%23B45309" stop-opacity="0.08"/>
-      <stop offset="100%" stop-color="%23000000" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.28"/>
+      <stop offset="70%" stop-color="#B45309" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect width="1080" height="1080" fill="url(%23maroonGrad)"/>
-  <circle cx="540" cy="400" r="500" fill="url(%23goldAura)"/>
-  <!-- Decorative Golden Arches -->
-  <circle cx="540" cy="450" r="420" stroke="%23FCD34D" stroke-width="1.5" stroke-dasharray="8 12" fill="none" opacity="0.25"/>
-  <circle cx="540" cy="450" r="380" stroke="%23F59E0B" stroke-width="1" fill="none" opacity="0.2"/>
-  <rect x="40" y="40" width="1000" height="1000" rx="20" stroke="%23FCD34D" stroke-width="1" fill="none" opacity="0.15"/>
-</svg>`;
+  <rect width="1080" height="1080" fill="url(#maroonGrad)"/>
+  <circle cx="540" cy="400" r="500" fill="url(#goldAura)"/>
+  <circle cx="540" cy="450" r="420" stroke="#FCD34D" stroke-width="1.5" stroke-dasharray="8 12" fill="none" opacity="0.25"/>
+  <circle cx="540" cy="450" r="380" stroke="#F59E0B" stroke-width="1" fill="none" opacity="0.2"/>
+  <rect x="40" y="40" width="1000" height="1000" rx="20" stroke="#FCD34D" stroke-width="1" fill="none" opacity="0.15"/>
+</svg>
+`;
+export const TEMPLATE_BG_ROYAL_GOLD = encodeSvg(RAW_BG_ROYAL_GOLD);
 
 // Preset Background 4: Vibrant Neon Mesh Gradient
-export const TEMPLATE_BG_VIBRANT_GRADIENT = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
+const RAW_BG_VIBRANT_GRADIENT = `
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
   <defs>
     <linearGradient id="meshBase" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="%231E1B4B"/>
-      <stop offset="100%" stop-color="%230F172A"/>
+      <stop offset="0%" stop-color="#1E1B4B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
     </linearGradient>
     <radialGradient id="orb1" cx="20%" cy="20%" r="50%">
-      <stop offset="0%" stop-color="%23EC4899" stop-opacity="0.45"/>
-      <stop offset="100%" stop-color="%23EC4899" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#EC4899" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#EC4899" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="orb2" cx="80%" cy="60%" r="50%">
-      <stop offset="0%" stop-color="%238B5CF6" stop-opacity="0.45"/>
-      <stop offset="100%" stop-color="%238B5CF6" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="orb3" cx="50%" cy="90%" r="50%">
-      <stop offset="0%" stop-color="%2306B6D4" stop-opacity="0.4"/>
-      <stop offset="100%" stop-color="%2306B6D4" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect width="1080" height="1080" fill="url(%23meshBase)"/>
-  <rect width="1080" height="1080" fill="url(%23orb1)"/>
-  <rect width="1080" height="1080" fill="url(%23orb2)"/>
-  <rect width="1080" height="1080" fill="url(%23orb3)"/>
-</svg>`;
+  <rect width="1080" height="1080" fill="url(#meshBase)"/>
+  <rect width="1080" height="1080" fill="url(#orb1)"/>
+  <rect width="1080" height="1080" fill="url(#orb2)"/>
+  <rect width="1080" height="1080" fill="url(#orb3)"/>
+</svg>
+`;
+export const TEMPLATE_BG_VIBRANT_GRADIENT = encodeSvg(RAW_BG_VIBRANT_GRADIENT);
 
 // Preset Background 5: Patriotik Merah-Putih & Golden Wings
-export const TEMPLATE_BG_PATRIOTIK = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
+const RAW_BG_PATRIOTIK = `
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
   <defs>
     <linearGradient id="redGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="%23991B1B"/>
-      <stop offset="50%" stop-color="%23DC2626"/>
-      <stop offset="100%" stop-color="%237F1D1D"/>
+      <stop offset="0%" stop-color="#991B1B"/>
+      <stop offset="50%" stop-color="#DC2626"/>
+      <stop offset="100%" stop-color="#7F1D1D"/>
     </linearGradient>
     <linearGradient id="whiteGlow" x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0%" stop-color="%23FFFFFF" stop-opacity="0.95"/>
-      <stop offset="60%" stop-color="%23F8FAFC" stop-opacity="0.4"/>
-      <stop offset="100%" stop-color="%23FFFFFF" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="60%" stop-color="#F8FAFC" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
   </defs>
-  <rect width="1080" height="1080" fill="url(%23redGrad)"/>
-  <!-- Indonesian flag wave bottom -->
-  <path d="M-50 780 C200 680, 450 820, 750 720 C950 650, 1080 710, 1150 690 L1150 1150 L-50 1150 Z" fill="url(%23whiteGlow)"/>
-  <circle cx="540" cy="380" r="420" fill="%23F59E0B" fill-opacity="0.12"/>
-  <circle cx="540" cy="380" r="320" stroke="%23FCD34D" stroke-width="2" stroke-dasharray="12 12" fill="none" opacity="0.3"/>
-</svg>`;
+  <rect width="1080" height="1080" fill="url(#redGrad)"/>
+  <path d="M-50 780 C200 680, 450 820, 750 720 C950 650, 1080 710, 1150 690 L1150 1150 L-50 1150 Z" fill="url(#whiteGlow)"/>
+  <circle cx="540" cy="380" r="420" fill="#F59E0B" fill-opacity="0.12"/>
+  <circle cx="540" cy="380" r="320" stroke="#FCD34D" stroke-width="2" stroke-dasharray="12 12" fill="none" opacity="0.3"/>
+</svg>
+`;
+export const TEMPLATE_BG_PATRIOTIK = encodeSvg(RAW_BG_PATRIOTIK);
 
 // Preset Background 6: PPDB & Educational Blue Dynamic Waves
-export const TEMPLATE_BG_PPDB = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
+const RAW_BG_PPDB = `
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
   <defs>
     <linearGradient id="ppdbBlue" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="%230F172A"/>
-      <stop offset="40%" stop-color="%231E3A8A"/>
-      <stop offset="100%" stop-color="%230284C7"/>
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="40%" stop-color="#1E3A8A"/>
+      <stop offset="100%" stop-color="#0284C7"/>
     </linearGradient>
     <linearGradient id="orangeWave" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="%23EA580C"/>
-      <stop offset="100%" stop-color="%23F59E0B"/>
+      <stop offset="0%" stop-color="#EA580C"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
     </linearGradient>
   </defs>
-  <rect width="1080" height="1080" fill="url(%23ppdbBlue)"/>
-  <path d="M-50 850 Q 300 700 650 860 T 1150 800 L 1150 1150 L -50 1150 Z" fill="url(%23orangeWave)" opacity="0.9"/>
-  <path d="M-50 890 Q 400 760 800 900 T 1150 850 L 1150 1150 L -50 1150 Z" fill="%23FFFFFF" opacity="0.15"/>
-  <circle cx="950" cy="180" r="220" fill="%2338BDF8" fill-opacity="0.15"/>
-  <circle cx="120" cy="300" r="140" fill="%23F59E0B" fill-opacity="0.12"/>
-</svg>`;
+  <rect width="1080" height="1080" fill="url(#ppdbBlue)"/>
+  <path d="M-50 850 Q 300 700 650 860 T 1150 800 L 1150 1150 L -50 1150 Z" fill="url(#orangeWave)" opacity="0.9"/>
+  <path d="M-50 890 Q 400 760 800 900 T 1150 850 L 1150 1150 L -50 1150 Z" fill="#FFFFFF" opacity="0.15"/>
+  <circle cx="950" cy="180" r="220" fill="#38BDF8" fill-opacity="0.15"/>
+  <circle cx="120" cy="300" r="140" fill="#F59E0B" fill-opacity="0.12"/>
+</svg>
+`;
+export const TEMPLATE_BG_PPDB = encodeSvg(RAW_BG_PPDB);
 
 // Preset Background 7: E-Sports & Gaming Neon Toxic Dark
-export const TEMPLATE_BG_ESPORTS = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
+const RAW_BG_ESPORTS = `
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
   <defs>
     <linearGradient id="esportBg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="%23090514"/>
-      <stop offset="50%" stop-color="%2317072B"/>
-      <stop offset="100%" stop-color="%2306010F"/>
+      <stop offset="0%" stop-color="#090514"/>
+      <stop offset="50%" stop-color="#17072B"/>
+      <stop offset="100%" stop-color="#06010F"/>
     </linearGradient>
     <radialGradient id="toxicGlow" cx="50%" cy="40%" r="55%">
-      <stop offset="0%" stop-color="%2384CC16" stop-opacity="0.35"/>
-      <stop offset="60%" stop-color="%23A855F7" stop-opacity="0.15"/>
-      <stop offset="100%" stop-color="%23000000" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#84CC16" stop-opacity="0.35"/>
+      <stop offset="60%" stop-color="#A855F7" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect width="1080" height="1080" fill="url(%23esportBg)"/>
-  <circle cx="540" cy="400" r="480" fill="url(%23toxicGlow)"/>
-  <polygon points="540,80 980,340 820,850 260,850 100,340" stroke="%2384CC16" stroke-width="2" stroke-opacity="0.3" fill="none"/>
-  <polygon points="540,120 940,360 800,820 280,820 140,360" stroke="%23A855F7" stroke-width="1.5" stroke-opacity="0.25" fill="none"/>
-</svg>`;
+  <rect width="1080" height="1080" fill="url(#esportBg)"/>
+  <circle cx="540" cy="400" r="480" fill="url(#toxicGlow)"/>
+  <polygon points="540,80 980,340 820,850 260,850 100,340" stroke="#84CC16" stroke-width="2" stroke-opacity="0.3" fill="none"/>
+  <polygon points="540,120 940,360 800,820 280,820 140,360" stroke="#A855F7" stroke-width="1.5" stroke-opacity="0.25" fill="none"/>
+</svg>
+`;
+export const TEMPLATE_BG_ESPORTS = encodeSvg(RAW_BG_ESPORTS);
 
 // Preset Background 8: Culinary & Warm Amber
-export const TEMPLATE_BG_CULINARY = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
+const RAW_BG_CULINARY = `
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080" preserveAspectRatio="none" fill="none">
   <defs>
     <linearGradient id="culinaryBg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="%23431407"/>
-      <stop offset="50%" stop-color="%237C2D12"/>
-      <stop offset="100%" stop-color="%231C0A00"/>
+      <stop offset="0%" stop-color="#431407"/>
+      <stop offset="50%" stop-color="#7C2D12"/>
+      <stop offset="100%" stop-color="#1C0A00"/>
     </linearGradient>
     <radialGradient id="warmSun" cx="50%" cy="35%" r="50%">
-      <stop offset="0%" stop-color="%23F59E0B" stop-opacity="0.45"/>
-      <stop offset="100%" stop-color="%23B45309" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#B45309" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect width="1080" height="1080" fill="url(%23culinaryBg)"/>
-  <circle cx="540" cy="380" r="420" fill="url(%23warmSun)"/>
-  <circle cx="540" cy="400" r="360" stroke="%23FDE68A" stroke-width="1.5" stroke-dasharray="10 10" fill="none" opacity="0.3"/>
-</svg>`;
+  <rect width="1080" height="1080" fill="url(#culinaryBg)"/>
+  <circle cx="540" cy="380" r="420" fill="url(#warmSun)"/>
+  <circle cx="540" cy="400" r="360" stroke="#FDE68A" stroke-width="1.5" stroke-dasharray="10 10" fill="none" opacity="0.3"/>
+</svg>
+`;
+export const TEMPLATE_BG_CULINARY = encodeSvg(RAW_BG_CULINARY);
 
 export const PRESET_BACKGROUND_LIBRARY = [
   { id: 'bg_hills_smk', name: 'Bukit Hijau & Langit (FYJ)', url: TEMPLATE_BG_SMK, previewGradient: 'linear-gradient(135deg, #38BDF8 0%, #84CC16 100%)' },
@@ -295,56 +319,42 @@ export const PRESET_BACKGROUND_LIBRARY = [
 ];
 
 // Default sample speaker / teacher photo
-export const SAMPLE_SPEAKER_PHOTO = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 650" fill="none">
+const RAW_SAMPLE_SPEAKER_PHOTO = `
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="650" viewBox="0 0 500 650" fill="none">
   <defs>
     <linearGradient id="suit" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="%231E293B"/>
-      <stop offset="100%" stop-color="%230F172A"/>
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
     </linearGradient>
     <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="%23FCD34D"/>
-      <stop offset="100%" stop-color="%23F59E0B"/>
+      <stop offset="0%" stop-color="#FCD34D"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
     </linearGradient>
     <radialGradient id="halo" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="%23FFFFFF" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="%23FFFFFF" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
-  <!-- Aura Halo -->
-  <circle cx="250" cy="300" r="220" fill="url(%23halo)" opacity="0.4"/>
-
-  <!-- Body / Formal Suit -->
-  <path d="M120 480 C120 380, 380 380, 380 480 L440 650 L60 650 Z" fill="url(%23suit)"/>
-  <!-- White Shirt -->
+  <circle cx="250" cy="300" r="220" fill="url(#halo)" opacity="0.4"/>
+  <path d="M120 480 C120 380, 380 380, 380 480 L440 650 L60 650 Z" fill="url(#suit)"/>
   <polygon points="250,380 290,480 210,480" fill="white"/>
-  <!-- Tie (Batik/Gold) -->
-  <polygon points="250,390 260,460 250,520 240,460" fill="%23D97706"/>
-
-  <!-- Neck -->
-  <rect x="225" y="320" width="50" height="70" rx="10" fill="url(%23skin)"/>
-
-  <!-- Head -->
-  <ellipse cx="250" cy="270" rx="75" ry="90" fill="url(%23skin)"/>
-  <!-- Hair -->
-  <path d="M175 250 C175 160, 325 160, 325 250 C325 180, 275 170, 250 170 C220 170, 180 180, 175 250 Z" fill="%2318181B"/>
-
-  <!-- Face details -->
-  <!-- Eyebrows -->
-  <path d="M205 240 Q220 235 235 242" stroke="%2327272A" stroke-width="4" stroke-linecap="round"/>
-  <path d="M265 242 Q280 235 295 240" stroke="%2327272A" stroke-width="4" stroke-linecap="round"/>
-  <!-- Eyes -->
-  <circle cx="220" cy="255" r="7" fill="%2318181B"/>
-  <circle cx="280" cy="255" r="7" fill="%2318181B"/>
-  <!-- Glasses -->
-  <rect x="200" y="244" width="38" height="24" rx="6" stroke="%231E293B" stroke-width="3" fill="none"/>
-  <rect x="262" y="244" width="38" height="24" rx="6" stroke="%231E293B" stroke-width="3" fill="none"/>
-  <line x1="238" y1="254" x2="262" y2="254" stroke="%231E293B" stroke-width="3"/>
-  <!-- Nose -->
-  <path d="M250 256 L246 278 L254 278" stroke="%23B45309" stroke-width="3" stroke-linecap="round" fill="none"/>
-  <!-- Smile -->
-  <path d="M230 300 Q250 315 270 300" stroke="%23B45309" stroke-width="4" stroke-linecap="round" fill="none"/>
-</svg>`;
+  <polygon points="250,390 260,460 250,520 240,460" fill="#D97706"/>
+  <rect x="225" y="320" width="50" height="70" rx="10" fill="url(#skin)"/>
+  <ellipse cx="250" cy="270" rx="75" ry="90" fill="url(#skin)"/>
+  <path d="M175 250 C175 160, 325 160, 325 250 C325 180, 275 170, 250 170 C220 170, 180 180, 175 250 Z" fill="#18181B"/>
+  <path d="M205 240 Q220 235 235 242" stroke="#27272A" stroke-width="4" stroke-linecap="round"/>
+  <path d="M265 242 Q280 235 295 240" stroke="#27272A" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="220" cy="255" r="7" fill="#18181B"/>
+  <circle cx="280" cy="255" r="7" fill="#18181B"/>
+  <rect x="200" y="244" width="38" height="24" rx="6" stroke="#1E293B" stroke-width="3" fill="none"/>
+  <rect x="262" y="244" width="38" height="24" rx="6" stroke="#1E293B" stroke-width="3" fill="none"/>
+  <line x1="238" y1="254" x2="262" y2="254" stroke="#1E293B" stroke-width="3"/>
+  <path d="M250 256 L246 278 L254 278" stroke="#B45309" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M230 300 Q250 315 270 300" stroke="#B45309" stroke-width="4" stroke-linecap="round" fill="none"/>
+</svg>
+`;
+export const SAMPLE_SPEAKER_PHOTO = encodeSvg(RAW_SAMPLE_SPEAKER_PHOTO);
 
 // Preset Templates
 export const PRESET_TEMPLATES: PresetTemplate[] = [
@@ -486,8 +496,8 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         tiktok: 'fyjchannel',
       },
       accentColor: '#DC2626',
-      bgColor: '#FEF2F2',
-      secondaryBgColor: '#991B1B',
+      bgColor: '#991B1B',
+      secondaryBgColor: '#7F1D1D',
       supportingGraphics: [],
     },
   },
@@ -550,8 +560,8 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         tiktok: 'fyjchannel',
       },
       accentColor: '#EA580C',
-      bgColor: '#F0F9FF',
-      secondaryBgColor: '#1E3A8A',
+      bgColor: '#1E3A8A',
+      secondaryBgColor: '#0F172A',
       supportingGraphics: [],
     },
   },
@@ -882,8 +892,8 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
       logoUrl: LOGO_SMK_KLUNGKUNG,
       logoLocked: true,
       institutionName: 'SOUNDWAVE MUSIC FEST',
-      customBgImageUrl: '',
-      useCustomBgImage: false,
+      customBgImageUrl: TEMPLATE_BG_VIBRANT_GRADIENT,
+      useCustomBgImage: true,
       backgroundLayers: [],
       watermarkUrl: '',
       showWatermark: false,
@@ -948,8 +958,8 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
       logoUrl: LOGO_SMK_KLUNGKUNG,
       logoLocked: true,
       institutionName: 'QUANTUM AI GLOBAL',
-      customBgImageUrl: '',
-      useCustomBgImage: false,
+      customBgImageUrl: TEMPLATE_BG_CYBER_TECH,
+      useCustomBgImage: true,
       backgroundLayers: [],
       watermarkUrl: '',
       showWatermark: false,

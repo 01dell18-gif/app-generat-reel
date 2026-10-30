@@ -42,9 +42,43 @@ const LAYER_ORDER: Record<string, number> = {
 
 function sanitizeMediaUrl(url: string): string {
   if (!url) return '';
-  if (url.startsWith('data:image/svg+xml;utf8,<svg') && !url.includes('%3Csvg')) {
-    const raw = url.replace('data:image/svg+xml;utf8,', '');
-    return `data:image/svg+xml;utf8,${encodeURIComponent(raw.trim())}`;
+  // If already standard base64 data url or http url, return directly
+  if (url.startsWith('data:image/svg+xml;base64,')) return url;
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) return url;
+
+  if (url.startsWith('data:image/svg+xml')) {
+    try {
+      let rawSvg = '';
+      if (url.includes(';utf8,')) {
+        rawSvg = decodeURIComponent(url.split(';utf8,')[1] || '');
+      } else if (url.includes(';base64,')) {
+        return url;
+      } else if (url.includes(',')) {
+        rawSvg = decodeURIComponent(url.split(',')[1] || '');
+      } else {
+        rawSvg = url;
+      }
+
+      // Ensure explicit width and height on root <svg> if absent
+      if (rawSvg.includes('<svg') && !rawSvg.includes('width=')) {
+        rawSvg = rawSvg.replace(/<svg\b([^>]*)>/i, '<svg width="1080" height="1080" $1>');
+      }
+
+      // Ensure xmlns is present
+      if (rawSvg.includes('<svg') && !rawSvg.includes('xmlns=')) {
+        rawSvg = rawSvg.replace(/<svg\b([^>]*)>/i, '<svg xmlns="http://www.w3.org/2000/svg" $1>');
+      }
+
+      // Convert to clean base64 data url
+      if (typeof window !== 'undefined' && typeof window.btoa === 'function') {
+        return `data:image/svg+xml;base64,${window.btoa(unescape(encodeURIComponent(rawSvg.trim())))}`;
+      } else if (typeof Buffer !== 'undefined') {
+        return `data:image/svg+xml;base64,${Buffer.from(rawSvg.trim(), 'utf-8').toString('base64')}`;
+      }
+      return url;
+    } catch {
+      return url;
+    }
   }
   return url;
 }
@@ -264,22 +298,31 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
       canvas.setHeight(canvasHeight);
       canvas.clear();
 
-      // 1. LAYER 1: BACKGROUND (Multi-Layer Backgrounds, Template Image, or Gradient)
+      // ALWAYS set the template background color immediately so canvas is NEVER blank or white
+      const effectiveBgColor = assets.bgColor || '#070B14';
+      canvas.setBackgroundColor(effectiveBgColor, () => {
+        if (canvas && isMounted) canvas.renderAll();
+      });
+
+      // 1. LAYER 1: BACKGROUND (Multi-Layer Backgrounds, Template Image, or Color)
       const visibleBgLayers = (assets.backgroundLayers || []).filter((l) => l.visible && l.url);
       if (visibleBgLayers.length > 0) {
         visibleBgLayers.forEach((layer, idx) => {
-          fabric.Image.fromURL(layer.url, (bgImg: any) => {
-            if (!isMounted || !canvas) return;
+          const safeLayerUrl = sanitizeMediaUrl(layer.url);
+          fabric.Image.fromURL(safeLayerUrl, (bgImg: any) => {
+            if (!isMounted || !canvas || !bgImg) return;
             const layerScale = layer.scale || 1.0;
             const posX = canvasWidth / 2 + (layer.x || 0);
             const posY = canvasHeight / 2 + (layer.y || 0);
+            const origW = (bgImg.width && bgImg.width > 20) ? bgImg.width : 1080;
+            const origH = (bgImg.height && bgImg.height > 20) ? bgImg.height : 1080;
             bgImg.set({
               left: posX,
               top: posY,
               originX: 'center',
               originY: 'center',
-              scaleX: (canvasWidth / (bgImg.width || 1080)) * layerScale,
-              scaleY: (canvasHeight / (bgImg.height || 1080)) * layerScale,
+              scaleX: (canvasWidth / origW) * layerScale,
+              scaleY: (canvasHeight / origH) * layerScale,
               opacity: layer.opacity ?? 1.0,
               angle: layer.rotation || 0,
               flipX: !!layer.flipH,
@@ -312,8 +355,6 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           canvas.add(bgImg);
           enforceLayerOrdering(canvas);
         });
-      } else {
-        canvas.setBackgroundColor(assets.bgColor || '#E0F2FE', canvas.renderAll.bind(canvas));
       }
 
       // 2. LAYER 2: FOTO SUBJEK UTAMA (Urutan Belakang No. 2 setelah Background)
@@ -788,7 +829,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           boxShadow: '0 24px 60px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.15), 0 0 30px rgba(56, 189, 248, 0.08)',
           borderRadius: '24px',
           overflow: 'hidden',
-          backgroundColor: '#FFFFFF',
+          backgroundColor: assets.bgColor || '#070B14',
           transform: scaleFactor < 1 ? `scale(${scaleFactor})` : undefined,
           transformOrigin: 'center center',
           transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
